@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>スプレッドシート自動集計ツール | GAS デモ</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --bg2: #161b22;
+      --bg3: #21262d;
+      --border: #30363d;
+      --accent: #00d4ff;
+      --accent2: #0099bb;
+      --text: #e6edf3;
+      --text2: #8b949e;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --purple: #a371f7;
+      --red: #f85149;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ナビ */
+    .nav {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-sep { color: var(--text2); }
+
+    /* ヒーロー */
+    .hero {
+      background: linear-gradient(135deg, var(--bg2) 0%, #0d1117 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 60px 24px 48px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0,212,255,0.1);
+      border: 1px solid rgba(0,212,255,0.3);
+      color: var(--accent);
+      padding: 4px 12px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      margin-bottom: 16px;
+    }
+    .hero h1 {
+      font-size: clamp(24px, 4vw, 40px);
+      font-weight: 700;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+    .hero p {
+      color: var(--text2);
+      font-size: 16px;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    /* セクション共通 */
+    .section { padding: 48px 24px; max-width: 960px; margin: 0 auto; }
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-title .num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      color: var(--bg);
+      border-radius: 50%;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* デモエリア */
+    .demo-container {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .demo-header {
+      background: var(--bg3);
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--text2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-r { background: #f85149; }
+    .dot-y { background: #d29922; }
+    .dot-g { background: #3fb950; }
+    .demo-body { padding: 24px; }
+
+    /* シートグリッド */
+    .sheets-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 640px) {
+      .sheets-row { grid-template-columns: 1fr; }
+    }
+
+    .sheet-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .sheet-card.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(0,212,255,0.2);
+    }
+    .sheet-tab {
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+    }
+    .sheet-tab-a { color: #3fb950; }
+    .sheet-tab-b { color: #a371f7; }
+    .sheet-tab-c { color: #f0883e; }
+    .sheet-tab-s { color: var(--accent); }
+
+    table.mini {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+    table.mini th {
+      background: rgba(255,255,255,0.04);
+      color: var(--text2);
+      padding: 4px 8px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-weight: 500;
+    }
+    table.mini td {
+      padding: 3px 8px;
+      border-bottom: 1px solid rgba(48,54,61,0.5);
+      font-variant-numeric: tabular-nums;
+    }
+    table.mini tr:last-child td { border-bottom: none; }
+    table.mini .num-cell { text-align: right; color: var(--accent); }
+
+    /* 下矢印 & 集計エリア */
+    .arrow-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin: 8px 0;
+      color: var(--text2);
+      font-size: 22px;
+    }
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 50%;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .output-area {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+    }
+    .output-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+    }
+    .output-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .output-count {
+      font-size: 11px;
+      color: var(--text2);
+    }
+
+    .result-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 80px;
+      padding: 5px 12px;
+      font-size: 11px;
+      border-bottom: 1px solid rgba(48,54,61,0.4);
+      opacity: 0;
+      transform: translateX(-8px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .result-row.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .result-row.header {
+      background: rgba(255,255,255,0.03);
+      color: var(--text2);
+      font-weight: 500;
+      opacity: 1;
+      transform: none;
+    }
+    .result-row.header.show { opacity: 1; }
+    .result-row .tag {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .tag-a { background: rgba(63,185,80,0.15); color: #3fb950; }
+    .tag-b { background: rgba(163,113,247,0.15); color: #a371f7; }
+    .tag-c { background: rgba(240,136,62,0.15); color: #f0883e; }
+    .result-row .amount { text-align: right; color: var(--accent); font-weight: 600; }
+
+    /* ボタン */
+    .btn-row { display: flex; justify-content: center; margin: 20px 0 4px; gap: 12px; }
+    .btn {
+      padding: 10px 28px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+    }
+    .btn-primary:hover { background: #33ddff; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,212,255,0.3); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-reset {
+      background: transparent;
+      color: var(--text2);
+      border: 1px solid var(--border);
+    }
+    .btn-reset:hover { border-color: var(--text2); color: var(--text); }
+
+    .status-msg {
+      text-align: center;
+      font-size: 13px;
+      min-height: 20px;
+      color: var(--text2);
+      margin-top: 8px;
+    }
+    .status-msg.success { color: var(--green); }
+
+    /* コードブロック */
+    .code-wrap {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .code-header {
+      background: var(--bg3);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .code-lang {
+      font-size: 12px;
+      color: var(--text2);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text2);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    pre {
+      padding: 20px;
+      overflow-x: auto;
+      font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      tab-size: 2;
+    }
+    .kw { color: #ff7b72; }
+    .fn { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .cmt { color: #8b949e; font-style: italic; }
+    .num-lit { color: #79c0ff; }
+    .prop { color: #79c0ff; }
+    .obj { color: #ffa657; }
+
+    /* 解決できること */
+    .benefits {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .benefit-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .benefit-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .benefit-icon { font-size: 28px; margin-bottom: 10px; }
+    .benefit-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+    .benefit-desc { font-size: 13px; color: var(--text2); line-height: 1.5; }
+
+    /* フッター */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text2);
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="../../index.html">ポートフォリオ Top</a>
+  <span class="nav-sep">/</span>
+  <span>GAS デモ</span>
+  <span class="nav-sep">/</span>
+  <span>スプレッドシート自動集計</span>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">Google Apps Script</div>
+  <h1>スプレッドシート自動集計ツール</h1>
+  <p>複数シートに分散したデータをワンクリックで結合・集計。手作業コピペを完全に排除します。</p>
+</div>
+
+<!-- デモ -->
+<section class="section">
+  <div class="section-title"><span class="num">1</span> インタラクティブデモ</div>
+
+  <div class="demo-container">
+    <div class="demo-header">
+      <span class="dot dot-r"></span>
+      <span class="dot dot-y"></span>
+      <span class="dot dot-g"></span>
+      <span style="margin-left:4px;">SpreadsheetApp — mergeSheets.gs</span>
+    </div>
+    <div class="demo-body">
+
+      <!-- 元シート3枚 -->
+      <div class="sheets-row">
+        <!-- シートA -->
+        <div class="sheet-card" id="sheetA">
+          <div class="sheet-tab sheet-tab-a">シートA（1月）</div>
+          <table class="mini">
+            <thead><tr><th>商品名</th><th>カテゴリ</th><th class="num-cell">金額</th></tr></thead>
+            <tbody>
+              <tr><td>商品X</td><td>電子機器</td><td class="num-cell">12,000</td></tr>
+              <tr><td>商品Y</td><td>書籍</td><td class="num-cell">1,800</td></tr>
+              <tr><td>商品Z</td><td>電子機器</td><td class="num-cell">34,000</td></tr>
+              <tr><td>商品W</td><td>食品</td><td class="num-cell">980</td></tr>
+              <tr><td>商品V</td><td>書籍</td><td class="num-cell">2,400</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- シートB -->
+        <div class="sheet-card" id="sheetB">
+          <div class="sheet-tab sheet-tab-b">シートB（2月）</div>
+          <table class="mini">
+            <thead><tr><th>商品名</th><th>カテゴリ</th><th class="num-cell">金額</th></tr></thead>
+            <tbody>
+              <tr><td>商品P</td><td>食品</td><td class="num-cell">1,200</td></tr>
+              <tr><td>商品Q</td><td>電子機器</td><td class="num-cell">28,500</td></tr>
+              <tr><td>商品R</td><td>書籍</td><td class="num-cell">3,200</td></tr>
+              <tr><td>商品S</td><td>食品</td><td class="num-cell">650</td></tr>
+              <tr><td>商品T</td><td>電子機器</td><td class="num-cell">9,800</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- シートC -->
+        <div class="sheet-card" id="sheetC">
+          <div class="sheet-tab sheet-tab-c">シートC（3月）</div>
+          <table class="mini">
+            <thead><tr><th>商品名</th><th>カテゴリ</th><th class="num-cell">金額</th></tr></thead>
+            <tbody>
+              <tr><td>商品M</td><td>電子機器</td><td class="num-cell">56,000</td></tr>
+              <tr><td>商品N</td><td>食品</td><td class="num-cell">450</td></tr>
+              <tr><td>商品O</td><td>書籍</td><td class="num-cell">1,500</td></tr>
+              <tr><td>商品K</td><td>電子機器</td><td class="num-cell">18,000</td></tr>
+              <tr><td>商品L</td><td>食品</td><td class="num-cell">2,800</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ボタン -->
+      <div class="btn-row">
+        <button class="btn btn-primary" id="runBtn" onclick="runMerge()">集計実行</button>
+        <button class="btn btn-reset" id="resetBtn" onclick="resetDemo()">リセット</button>
+      </div>
+      <p class="status-msg" id="statusMsg">「集計実行」を押すと3シートのデータが下の集計シートに統合されます</p>
+
+      <!-- 矢印 -->
+      <div class="arrow-row" id="arrows" style="opacity:0.2;transition:opacity 0.3s;">
+        &#8595; &nbsp; &#8595; &nbsp; &#8595;
+      </div>
+
+      <!-- 集計シート -->
+      <div class="output-area" id="outputArea">
+        <div class="output-header">
+          <span class="output-label">集計シート（全データ統合済み）</span>
+          <span class="output-count" id="rowCount">0 件</span>
+        </div>
+        <div id="resultBody">
+          <div class="result-row header show">
+            <span>商品名</span><span>カテゴリ</span><span>出所シート</span><span style="text-align:right;">金額</span>
+          </div>
+          <!-- JS で追加 -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- GASコード -->
+<section class="section">
+  <div class="section-title"><span class="num">2</span> 実際の GAS コード</div>
+
+  <div class="code-wrap">
+    <div class="code-header">
+      <div class="code-lang">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        JavaScript (Google Apps Script)
+      </div>
+      <button class="copy-btn" onclick="copyCode()">コピー</button>
+    </div>
+    <pre id="codeBlock"><span class="kw">function</span> <span class="fn">mergeSheets</span>() {
+  <span class="kw">const</span> ss = <span class="obj">SpreadsheetApp</span>.<span class="fn">getActiveSpreadsheet</span>();
+  <span class="kw">const</span> sheets = [<span class="str">'シートA'</span>, <span class="str">'シートB'</span>, <span class="str">'シートC'</span>];
+  <span class="kw">const</span> output = ss.<span class="fn">getSheetByName</span>(<span class="str">'集計'</span>) || ss.<span class="fn">insertSheet</span>(<span class="str">'集計'</span>);
+  output.<span class="fn">clearContents</span>();
+
+  <span class="kw">let</span> allData = [];
+  sheets.<span class="fn">forEach</span>(name => {
+    <span class="kw">const</span> sh = ss.<span class="fn">getSheetByName</span>(name);
+    <span class="kw">if</span> (!sh) <span class="kw">return</span>;
+    <span class="kw">const</span> data = sh.<span class="fn">getDataRange</span>().<span class="fn">getValues</span>();
+    allData = allData.<span class="fn">concat</span>(data.<span class="fn">slice</span>(<span class="num-lit">1</span>)); <span class="cmt">// ヘッダー除く</span>
+  });
+
+  output.<span class="fn">getRange</span>(<span class="num-lit">1</span>, <span class="num-lit">1</span>, allData.<span class="prop">length</span>, allData[<span class="num-lit">0</span>].<span class="prop">length</span>).<span class="fn">setValues</span>(allData);
+  <span class="obj">SpreadsheetApp</span>.<span class="fn">getUi</span>().<span class="fn">alert</span>(<span class="str">'集計完了！'</span> + allData.<span class="prop">length</span> + <span class="str">'件のデータを統合しました。'</span>);
+}</pre>
+  </div>
+</section>
+
+<!-- 解決できること -->
+<section class="section">
+  <div class="section-title"><span class="num">3</span> このツールで解決できること</div>
+
+  <div class="benefits">
+    <div class="benefit-card">
+      <div class="benefit-icon">&#128336;</div>
+      <div class="benefit-title">月次集計の時間を 95% 削減</div>
+      <div class="benefit-desc">毎月30分かかっていたシート間のコピペ作業が、ボタン1クリック・数秒で完了します。</div>
+    </div>
+    <div class="benefit-card">
+      <div class="benefit-icon">&#128683;</div>
+      <div class="benefit-title">ヒューマンエラーをゼロに</div>
+      <div class="benefit-desc">コピペ漏れ・行ズレ・上書きミスなど、手作業に付きもののミスを完全排除します。</div>
+    </div>
+    <div class="benefit-card">
+      <div class="benefit-icon">&#128200;</div>
+      <div class="benefit-title">シート数・行数に制限なし</div>
+      <div class="benefit-desc">3シートのサンプルですが、100シート・1万行規模でも同じコードで動作します。</div>
+    </div>
+    <div class="benefit-card">
+      <div class="benefit-icon">&#128736;</div>
+      <div class="benefit-title">カスタマイズで用途を拡張</div>
+      <div class="benefit-desc">集計後に並び替え・重複除去・グラフ自動生成なども追加対応可能です。</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Tomoya &amp; Co. ポートフォリオ &mdash; GAS 自動化デモ</p>
+</footer>
+
+<script>
+  const allRows = [
+    { name: '商品X', cat: '電子機器', sheet: 'A', tag: 'tag-a', amount: '12,000' },
+    { name: '商品Y', cat: '書籍',     sheet: 'A', tag: 'tag-a', amount: '1,800' },
+    { name: '商品Z', cat: '電子機器', sheet: 'A', tag: 'tag-a', amount: '34,000' },
+    { name: '商品W', cat: '食品',     sheet: 'A', tag: 'tag-a', amount: '980' },
+    { name: '商品V', cat: '書籍',     sheet: 'A', tag: 'tag-a', amount: '2,400' },
+    { name: '商品P', cat: '食品',     sheet: 'B', tag: 'tag-b', amount: '1,200' },
+    { name: '商品Q', cat: '電子機器', sheet: 'B', tag: 'tag-b', amount: '28,500' },
+    { name: '商品R', cat: '書籍',     sheet: 'B', tag: 'tag-b', amount: '3,200' },
+    { name: '商品S', cat: '食品',     sheet: 'B', tag: 'tag-b', amount: '650' },
+    { name: '商品T', cat: '電子機器', sheet: 'B', tag: 'tag-b', amount: '9,800' },
+    { name: '商品M', cat: '電子機器', sheet: 'C', tag: 'tag-c', amount: '56,000' },
+    { name: '商品N', cat: '食品',     sheet: 'C', tag: 'tag-c', amount: '450' },
+    { name: '商品O', cat: '書籍',     sheet: 'C', tag: 'tag-c', amount: '1,500' },
+    { name: '商品K', cat: '電子機器', sheet: 'C', tag: 'tag-c', amount: '18,000' },
+    { name: '商品L', cat: '食品',     sheet: 'C', tag: 'tag-c', amount: '2,800' },
+  ];
+
+  let running = false;
+
+  function runMerge() {
+    if (running) return;
+    running = true;
+    document.getElementById('runBtn').disabled = true;
+    document.getElementById('statusMsg').textContent = '集計中...';
+    document.getElementById('statusMsg').className = 'status-msg';
+
+    // シートをハイライト
+    ['sheetA', 'sheetB', 'sheetC'].forEach((id, i) => {
+      setTimeout(() => {
+        document.getElementById(id).classList.add('active');
+      }, i * 200);
+    });
+
+    // 矢印アニメ
+    setTimeout(() => {
+      document.getElementById('arrows').style.opacity = '1';
+    }, 700);
+
+    // 行を順番に追加
+    const body = document.getElementById('resultBody');
+    // ヘッダー行をクリア前に保持
+    const header = body.querySelector('.header');
+    // ヘッダー以外を削除
+    Array.from(body.children).forEach(c => { if (!c.classList.contains('header')) c.remove(); });
+
+    allRows.forEach((row, i) => {
+      setTimeout(() => {
+        const div = document.createElement('div');
+        div.className = 'result-row';
+        div.innerHTML = `<span>${row.name}</span><span>${row.cat}</span><span><span class="tag ${row.tag}">シート${row.sheet}</span></span><span class="amount">¥${row.amount}</span>`;
+        body.appendChild(div);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => div.classList.add('show'));
+        });
+        document.getElementById('rowCount').textContent = (i + 1) + ' 件';
+      }, 900 + i * 80);
+    });
+
+    setTimeout(() => {
+      document.getElementById('statusMsg').textContent = '集計完了！15件のデータを統合しました。';
+      document.getElementById('statusMsg').className = 'status-msg success';
+      running = false;
+    }, 900 + allRows.length * 80 + 200);
+  }
+
+  function resetDemo() {
+    running = false;
+    document.getElementById('runBtn').disabled = false;
+    ['sheetA', 'sheetB', 'sheetC'].forEach(id => document.getElementById(id).classList.remove('active'));
+    document.getElementById('arrows').style.opacity = '0.2';
+    const body = document.getElementById('resultBody');
+    Array.from(body.children).forEach(c => { if (!c.classList.contains('header')) c.remove(); });
+    document.getElementById('rowCount').textContent = '0 件';
+    document.getElementById('statusMsg').textContent = '「集計実行」を押すと3シートのデータが下の集計シートに統合されます';
+    document.getElementById('statusMsg').className = 'status-msg';
+  }
+
+  function copyCode() {
+    const code = `function mergeSheets() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheets = ['シートA', 'シートB', 'シートC'];
+  const output = ss.getSheetByName('集計') || ss.insertSheet('集計');
+  output.clearContents();
+
+  let allData = [];
+  sheets.forEach(name => {
+    const sh = ss.getSheetByName(name);
+    if (!sh) return;
+    const data = sh.getDataRange().getValues();
+    allData = allData.concat(data.slice(1));
+  });
+
+  output.getRange(1, 1, allData.length, allData[0].length).setValues(allData);
+  SpreadsheetApp.getUi().alert('集計完了！' + allData.length + '件のデータを統合しました。');
+}`;
+    navigator.clipboard.writeText(code).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = 'コピー済み';
+      setTimeout(() => btn.textContent = 'コピー', 2000);
+    });
+  }
+</script>
+</body>
+</html>

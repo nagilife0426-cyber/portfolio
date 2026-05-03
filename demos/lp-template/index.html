@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>からだ整体院 | 完全個室・国家資格保有・当日予約OK</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --green: #4a7c59;
+      --green-light: #6aa37a;
+      --green-dark: #3a6247;
+      --green-bg: #f0f7f2;
+      --text: #2d2d2d;
+      --text-sub: #666666;
+      --bg: #ffffff;
+      --bg2: #f5f5f5;
+      --border: #e0e0e0;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      line-height: 1.7;
+    }
+
+    a { color: var(--green); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* PORTFOLIO NOTICE */
+    .portfolio-notice {
+      background: #0d1117;
+      color: #8b949e;
+      text-align: center;
+      padding: 8px 16px;
+      font-size: 12px;
+    }
+    .portfolio-notice a { color: #00d4ff; }
+
+    /* NAV */
+    nav {
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 0 24px;
+    }
+
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 64px;
+    }
+
+    .logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--green);
+      letter-spacing: 0.05em;
+    }
+    .logo span { color: var(--text); font-weight: 400; font-size: 14px; }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 14px;
+      color: var(--text-sub);
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--green); text-decoration: none; }
+
+    .nav-cta {
+      background: var(--green);
+      color: #fff !important;
+      padding: 8px 20px;
+      border-radius: 4px;
+      font-weight: 600;
+      transition: background 0.2s !important;
+    }
+    .nav-cta:hover { background: var(--green-dark) !important; }
+
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+    }
+
+    /* HERO */
+    .hero {
+      background: linear-gradient(135deg, #1a3d2b 0%, #2d5a3d 50%, #4a7c59 100%);
+      color: #fff;
+      padding: 100px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(255,255,255,0.04) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.06) 0%, transparent 50%);
+    }
+
+    .hero-inner { position: relative; max-width: 700px; margin: 0 auto; }
+
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #fff;
+      font-size: 13px;
+      padding: 5px 16px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+      letter-spacing: 0.05em;
+    }
+
+    .hero h1 {
+      font-size: clamp(28px, 6vw, 52px);
+      font-weight: 700;
+      line-height: 1.35;
+      margin-bottom: 20px;
+      letter-spacing: 0.02em;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: #a8d5b5;
+    }
+
+    .hero p {
+      font-size: 16px;
+      opacity: 0.88;
+      margin-bottom: 36px;
+      line-height: 1.8;
+    }
+
+    .hero-btns {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      background: #fff;
+      color: var(--green-dark) !important;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 14px 36px;
+      border-radius: 6px;
+      text-decoration: none !important;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.25); }
+
+    .btn-secondary {
+      display: inline-block;
+      background: transparent;
+      border: 2px solid rgba(255,255,255,0.7);
+      color: #fff !important;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 12px 28px;
+      border-radius: 6px;
+      text-decoration: none !important;
+      transition: background 0.2s;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.12); }
+
+    .hero-note {
+      margin-top: 24px;
+      font-size: 13px;
+      opacity: 0.7;
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .hero-note span::before { content: '✓ '; }
+
+    /* SECTIONS */
+    section { padding: 80px 24px; }
+
+    .section-inner { max-width: 1100px; margin: 0 auto; }
+
+    .section-label {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--green);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: clamp(22px, 4vw, 32px);
+      font-weight: 700;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .section-sub {
+      text-align: center;
+      color: var(--text-sub);
+      font-size: 15px;
+      margin-bottom: 52px;
+    }
+
+    /* FEATURES */
+    .features-section { background: var(--bg); }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .features-grid { grid-template-columns: 1fr; }
+    }
+
+    .feature-card {
+      text-align: center;
+      padding: 36px 24px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .feature-card:hover { border-color: var(--green); box-shadow: 0 4px 20px rgba(74,124,89,0.1); }
+
+    .feature-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--green-bg);
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+
+    .feature-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--green-dark);
+    }
+
+    .feature-desc {
+      font-size: 14px;
+      color: var(--text-sub);
+      line-height: 1.75;
+    }
+
+    /* MENU */
+    .menu-section { background: var(--bg2); }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .menu-grid { grid-template-columns: 1fr; }
+    }
+
+    .menu-card {
+      background: var(--bg);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .menu-card.featured {
+      border: 2px solid var(--green);
+      position: relative;
+    }
+
+    .popular-badge {
+      position: absolute;
+      top: -1px;
+      right: 20px;
+      background: var(--green);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 0 0 6px 6px;
+      letter-spacing: 0.05em;
+    }
+
+    .menu-header {
+      background: var(--green-bg);
+      padding: 28px 24px;
+      text-align: center;
+    }
+
+    .menu-card.featured .menu-header {
+      background: linear-gradient(135deg, var(--green-bg), #d4ead9);
+    }
+
+    .menu-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--green-dark);
+      margin-bottom: 8px;
+    }
+
+    .menu-price {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .menu-price small { font-size: 14px; font-weight: 400; color: var(--text-sub); }
+
+    .menu-duration {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-top: 4px;
+    }
+
+    .menu-body { padding: 24px; flex: 1; }
+
+    .menu-features {
+      list-style: none;
+      margin-bottom: 20px;
+    }
+    .menu-features li {
+      font-size: 14px;
+      color: var(--text-sub);
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .menu-features li:last-child { border-bottom: none; }
+    .menu-features li::before {
+      content: '✓';
+      color: var(--green);
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .menu-btn {
+      display: block;
+      text-align: center;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 700;
+      background: var(--green-bg);
+      color: var(--green-dark);
+      transition: background 0.2s;
+    }
+    .menu-card.featured .menu-btn {
+      background: var(--green);
+      color: #fff;
+    }
+    .menu-btn:hover { opacity: 0.85; text-decoration: none; }
+
+    /* TESTIMONIALS */
+    .testimonials-section { background: var(--bg); }
+
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .testimonials-grid { grid-template-columns: 1fr; }
+    }
+
+    .testimonial-card {
+      background: var(--bg2);
+      border-radius: 10px;
+      padding: 24px;
+      border-left: 3px solid var(--green);
+    }
+
+    .testimonial-text {
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    .testimonial-text::before { content: '"'; color: var(--green); font-size: 24px; line-height: 1; display: block; margin-bottom: 6px; }
+
+    .testimonial-author {
+      font-size: 13px;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .author-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--green-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--green-dark);
+      font-size: 16px;
+    }
+
+    .stars { color: #f59e0b; font-size: 14px; }
+
+    /* ACCESS */
+    .access-section { background: var(--bg2); }
+
+    .access-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: start;
+    }
+
+    @media (max-width: 768px) {
+      .access-layout { grid-template-columns: 1fr; }
+    }
+
+    .map-placeholder {
+      background: #d8e8dc;
+      border-radius: 10px;
+      aspect-ratio: 4/3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--green-dark);
+      border: 1px solid var(--border);
+      gap: 10px;
+    }
+    .map-placeholder span { font-size: 40px; }
+    .map-placeholder p { font-size: 14px; opacity: 0.7; }
+
+    .access-info h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--green-dark);
+    }
+
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    .info-table tr { border-bottom: 1px solid var(--border); }
+    .info-table th {
+      text-align: left;
+      padding: 12px 0;
+      color: var(--text-sub);
+      font-weight: 600;
+      white-space: nowrap;
+      width: 100px;
+    }
+    .info-table td {
+      padding: 12px 0;
+      color: var(--text);
+    }
+
+    .hours-table { font-size: 14px; width: 100%; border-collapse: collapse; }
+    .hours-table th, .hours-table td {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+    }
+    .hours-table th { background: var(--green-bg); color: var(--green-dark); font-weight: 600; text-align: center; }
+    .hours-table td { text-align: center; }
+    .hours-table .closed { color: var(--text-sub); }
+    .hours-table .open { color: var(--green-dark); font-weight: 600; }
+
+    /* CTA SECTION */
+    .cta-section {
+      background: linear-gradient(135deg, #1a3d2b, #4a7c59);
+      color: #fff;
+      padding: 80px 24px;
+      text-align: center;
+    }
+
+    .cta-section h2 {
+      font-size: clamp(24px, 4vw, 36px);
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .cta-section p {
+      font-size: 16px;
+      opacity: 0.88;
+      margin-bottom: 36px;
+    }
+
+    .cta-tel {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      letter-spacing: 0.05em;
+    }
+
+    .cta-tel-sub { font-size: 13px; opacity: 0.7; margin-bottom: 24px; }
+
+    /* FOOTER */
+    footer {
+      background: #1a1a1a;
+      color: #999;
+      padding: 32px 24px;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    footer .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    footer .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      list-style: none;
+      margin-bottom: 16px;
+    }
+    footer .footer-links a { color: #999; font-size: 12px; }
+    footer .footer-links a:hover { color: #ccc; }
+
+    /* SCROLL ANIMATION */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Portfolio Notice -->
+  <div class="portfolio-notice">
+    ポートフォリオ用デモ &mdash; 整体院LP（HTML/CSSテンプレート）
+    <a href="../../index.html" style="margin-left:12px;">&larr; ポートフォリオに戻る</a>
+  </div>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-inner">
+      <div class="logo">からだ整体院<span>　Karada Seitai</span></div>
+      <ul class="nav-links">
+        <li><a href="#features">特徴</a></li>
+        <li><a href="#menu">メニュー</a></li>
+        <li><a href="#voice">お客様の声</a></li>
+        <li><a href="#access">アクセス</a></li>
+        <li><a href="#reserve" class="nav-cta">今すぐ予約</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-badge">新宿区・西新宿 &nbsp;｜&nbsp; 完全予約制</div>
+      <h1>つらい肩こり・腰痛を<br><em>根本から解消</em>します</h1>
+      <p>国家資格を持つ施術師が、あなたの体の歪みを丁寧に分析。<br>
+      完全個室のプライベート空間で、心も体もリフレッシュ。</p>
+      <div class="hero-btns">
+        <a href="#reserve" class="btn-primary">今すぐ予約する</a>
+        <a href="#menu" class="btn-secondary">メニューを見る</a>
+      </div>
+      <div class="hero-note">
+        <span>当日予約OK</span>
+        <span>初回限定割引あり</span>
+        <span>キャンセル無料</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features-section" id="features">
+    <div class="section-inner">
+      <div class="section-label fade-in">Features</div>
+      <h2 class="section-title fade-in">選ばれる3つの理由</h2>
+      <p class="section-sub fade-in">大切な体だから、妥協しない施術環境を整えました。</p>
+      <div class="features-grid">
+        <div class="feature-card fade-in">
+          <div class="feature-icon">&#127968;</div>
+          <div class="feature-title">完全個室</div>
+          <div class="feature-desc">他のお客様と一切顔を合わせない、プライベート空間。施術中も周囲を気にせずリラックスできます。</div>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="feature-icon">&#127891;</div>
+          <div class="feature-title">国家資格保有</div>
+          <div class="feature-desc">柔道整復師・あん摩マッサージ指圧師の国家資格を保有。解剖学に基づいた安全・効果的な施術を提供します。</div>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="feature-icon">&#128197;</div>
+          <div class="feature-title">当日予約OK</div>
+          <div class="feature-desc">「急にひどくなった」「今日どうしても辛い」そんなときもLINEで当日予約が可能です。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MENU -->
+  <section class="menu-section" id="menu">
+    <div class="section-inner">
+      <div class="section-label fade-in">Menu</div>
+      <h2 class="section-title fade-in">施術メニュー</h2>
+      <p class="section-sub fade-in">お体の状態と目的に合わせてお選びください。</p>
+      <div class="menu-grid">
+        <!-- Standard -->
+        <div class="menu-card fade-in">
+          <div class="menu-header">
+            <div class="menu-name">スタンダードコース</div>
+            <div class="menu-price">&#165;4,980<small>（税込）</small></div>
+            <div class="menu-duration">60分</div>
+          </div>
+          <div class="menu-body">
+            <ul class="menu-features">
+              <li>全身ほぐしマッサージ</li>
+              <li>姿勢チェック</li>
+              <li>アフターカウンセリング</li>
+              <li>ホットタオル付き</li>
+            </ul>
+            <a href="#reserve" class="menu-btn">このコースを予約</a>
+          </div>
+        </div>
+        <!-- Popular -->
+        <div class="menu-card featured fade-in">
+          <div class="popular-badge">人気No.1</div>
+          <div class="menu-header">
+            <div class="menu-name">根本改善コース</div>
+            <div class="menu-price">&#165;7,980<small>（税込）</small></div>
+            <div class="menu-duration">90分</div>
+          </div>
+          <div class="menu-body">
+            <ul class="menu-features">
+              <li>体の歪み・骨格分析</li>
+              <li>ピンポイント整体施術</li>
+              <li>ストレッチ指導</li>
+              <li>ご自宅でできるケア指導</li>
+              <li>次回予約割引10%</li>
+            </ul>
+            <a href="#reserve" class="menu-btn">このコースを予約</a>
+          </div>
+        </div>
+        <!-- Premium -->
+        <div class="menu-card fade-in">
+          <div class="menu-header">
+            <div class="menu-name">プレミアムコース</div>
+            <div class="menu-price">&#165;11,800<small>（税込）</small></div>
+            <div class="menu-duration">120分</div>
+          </div>
+          <div class="menu-body">
+            <ul class="menu-features">
+              <li>根本改善コース全内容</li>
+              <li>温熱療法（岩盤ベッド）</li>
+              <li>アロマトリートメント</li>
+              <li>栄養・生活習慣アドバイス</li>
+              <li>月1回定期割引プランあり</li>
+            </ul>
+            <a href="#reserve" class="menu-btn">このコースを予約</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="testimonials-section" id="voice">
+    <div class="section-inner">
+      <div class="section-label fade-in">Testimonials</div>
+      <h2 class="section-title fade-in">お客様の声</h2>
+      <p class="section-sub fade-in">実際にご来院いただいたお客様からいただいた声です。</p>
+      <div class="testimonials-grid">
+        <div class="testimonial-card fade-in">
+          <div class="testimonial-text">
+            長年悩んでいた肩こりが、3回の施術でかなり楽になりました。先生が丁寧に原因を説明してくれるので、自分の体の状態がよくわかります。完全個室なので恥ずかしくないのも助かります。
+          </div>
+          <div class="testimonial-author">
+            <div class="author-avatar">&#128100;</div>
+            <div>
+              <div style="color:#2d2d2d;font-weight:600;">S.Mさん・30代女性</div>
+              <div class="stars">★★★★★</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card fade-in">
+          <div class="testimonial-text">
+            テレワークで腰がひどくなり、友人に紹介してもらいました。当日予約できたのでとても助かりました。施術後は体が軽くなって、その日の夜ぐっすり眠れました。また来たいと思います。
+          </div>
+          <div class="testimonial-author">
+            <div class="author-avatar">&#128100;</div>
+            <div>
+              <div style="color:#2d2d2d;font-weight:600;">K.Tさん・40代男性</div>
+              <div class="stars">★★★★★</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card fade-in">
+          <div class="testimonial-text">
+            初めて整体に来ましたが、先生がとても丁寧に話を聞いてくれて安心できました。ストレッチの方法も教えてもらえて、自宅でも続けています。体が変わってきているのを実感しています！
+          </div>
+          <div class="testimonial-author">
+            <div class="author-avatar">&#128100;</div>
+            <div>
+              <div style="color:#2d2d2d;font-weight:600;">Y.Hさん・20代女性</div>
+              <div class="stars">★★★★&#9733;</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACCESS -->
+  <section class="access-section" id="access">
+    <div class="section-inner">
+      <div class="section-label fade-in">Access</div>
+      <h2 class="section-title fade-in">アクセス・営業時間</h2>
+      <div class="access-layout fade-in">
+        <!-- Map -->
+        <div class="map-placeholder">
+          <span>&#128205;</span>
+          <strong>新宿区西新宿1-1-1</strong>
+          <p>&#x1F4F7; Google Mapsを埋め込む場所</p>
+          <p style="font-size:12px;margin-top:4px;">iframe src="https://www.google.com/maps/embed?..."</p>
+        </div>
+        <!-- Info -->
+        <div class="access-info">
+          <h3>からだ整体院</h3>
+          <table class="info-table">
+            <tr>
+              <th>住所</th>
+              <td>東京都新宿区西新宿1-1-1<br>〇〇ビル3F</td>
+            </tr>
+            <tr>
+              <th>電話</th>
+              <td>03-XXXX-XXXX</td>
+            </tr>
+            <tr>
+              <th>最寄駅</th>
+              <td>JR新宿駅 西口より徒歩5分<br>都営大江戸線 西新宿駅より徒歩2分</td>
+            </tr>
+            <tr>
+              <th>駐車場</th>
+              <td>なし（近隣コインパーキングご利用ください）</td>
+            </tr>
+          </table>
+          <table class="hours-table">
+            <tr>
+              <th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th><th>日</th>
+            </tr>
+            <tr>
+              <td class="open">10-20</td>
+              <td class="open">10-20</td>
+              <td class="closed">休</td>
+              <td class="open">10-20</td>
+              <td class="open">10-20</td>
+              <td class="open">10-18</td>
+              <td class="open">10-18</td>
+            </tr>
+          </table>
+          <p style="font-size:12px;color:#999;margin-top:8px;">※祝日は通常営業。年末年始は休診となる場合があります。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section" id="reserve">
+    <h2>まずは気軽にご相談ください</h2>
+    <p>初回のカウンセリングは無料。<br>体の状態をしっかりお聞きしてから施術プランをご提案します。</p>
+    <div class="cta-tel">03-XXXX-XXXX</div>
+    <div class="cta-tel-sub">受付時間 10:00〜19:00（水曜定休）</div>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <a href="tel:03XXXXXXXX" class="btn-primary" style="font-size:15px;">電話で予約する</a>
+      <a href="#" class="btn-secondary" style="font-size:15px;">LINEで予約する</a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <ul class="footer-links">
+        <li><a href="#">プライバシーポリシー</a></li>
+        <li><a href="#">特定商取引法に基づく表記</a></li>
+        <li><a href="#">お問い合わせ</a></li>
+      </ul>
+      <p>&copy; 2024 からだ整体院. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Fade-in on scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>

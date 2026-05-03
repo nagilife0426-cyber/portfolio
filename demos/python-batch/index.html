@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>デモ07: 日報自動生成バッチ | Python</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0d1117;
+      color: #e6edf3;
+      font-family: 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif;
+      min-height: 100vh;
+    }
+
+    a { color: #00d4ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 20px;
+      color: #8b949e;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: #00d4ff; text-decoration: none; }
+
+    .hero {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px 24px 48px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      color: #00d4ff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      letter-spacing: 0.05em;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: clamp(24px, 5vw, 40px);
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 16px;
+    }
+    h1 span { color: #00d4ff; }
+
+    .subtitle {
+      font-size: 16px;
+      color: #8b949e;
+      line-height: 1.7;
+      max-width: 640px;
+    }
+
+    /* DEMO SECTION */
+    .demo-section {
+      background: #161b22;
+      border-top: 1px solid #30363d;
+      border-bottom: 1px solid #30363d;
+      padding: 48px 24px;
+    }
+
+    .demo-inner {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #00d4ff;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .demo-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 680px) {
+      .demo-layout { grid-template-columns: 1fr; }
+    }
+
+    .demo-panel {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      background: #161b22;
+      padding: 10px 16px;
+      font-size: 12px;
+      color: #8b949e;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red { background: #ff5f57; }
+    .dot-yellow { background: #febc2e; }
+    .dot-green { background: #28c840; }
+
+    .panel-body { padding: 16px; }
+
+    /* Task Table */
+    .task-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .task-table th {
+      text-align: left;
+      padding: 8px 10px;
+      color: #8b949e;
+      font-weight: 600;
+      border-bottom: 1px solid #30363d;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .task-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #21262d;
+      vertical-align: top;
+    }
+    .task-table tr:last-child td { border-bottom: none; }
+
+    .status-done {
+      display: inline-block;
+      background: rgba(35, 197, 94, 0.15);
+      border: 1px solid rgba(35, 197, 94, 0.4);
+      color: #23c55e;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    .status-wip {
+      display: inline-block;
+      background: rgba(251, 191, 36, 0.15);
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      color: #fbbf24;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    .generate-btn {
+      display: block;
+      width: 100%;
+      margin-top: 16px;
+      padding: 12px;
+      background: linear-gradient(135deg, #00d4ff, #0099cc);
+      border: none;
+      border-radius: 6px;
+      color: #0d1117;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      letter-spacing: 0.03em;
+    }
+    .generate-btn:hover { opacity: 0.85; }
+    .generate-btn:active { transform: scale(0.98); }
+
+    .report-output {
+      font-family: 'Courier New', monospace;
+      font-size: 12.5px;
+      line-height: 1.7;
+      color: #e6edf3;
+      white-space: pre-wrap;
+      min-height: 280px;
+      padding: 4px 0;
+    }
+
+    .report-placeholder {
+      color: #484f58;
+      font-style: italic;
+      font-size: 13px;
+      padding: 40px 0;
+      text-align: center;
+    }
+
+    .copy-btn {
+      display: block;
+      width: 100%;
+      margin-top: 12px;
+      padding: 8px;
+      background: transparent;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #8b949e;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover { border-color: #00d4ff; color: #00d4ff; }
+    .copy-btn.copied { border-color: #23c55e; color: #23c55e; }
+
+    /* CODE SECTION */
+    .code-section {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 48px 24px;
+    }
+
+    .code-block {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .code-header {
+      background: #1c2128;
+      padding: 10px 16px;
+      font-size: 12px;
+      color: #8b949e;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    pre {
+      padding: 20px;
+      overflow-x: auto;
+      font-size: 13.5px;
+      line-height: 1.65;
+    }
+
+    code { font-family: 'Fira Code', 'Courier New', monospace; }
+
+    /* Syntax highlight */
+    .kw { color: #ff7b72; }
+    .fn { color: #d2a8ff; }
+    .st { color: #a5d6ff; }
+    .cm { color: #8b949e; font-style: italic; }
+    .nm { color: #ffa657; }
+    .bi { color: #79c0ff; }
+
+    /* BENEFITS SECTION */
+    .benefits-section {
+      background: #161b22;
+      border-top: 1px solid #30363d;
+      padding: 48px 24px;
+    }
+
+    .benefits-inner {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .benefit-card {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 20px;
+      transition: border-color 0.2s;
+    }
+    .benefit-card:hover { border-color: rgba(0, 212, 255, 0.4); }
+
+    .benefit-icon {
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    .benefit-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #e6edf3;
+    }
+
+    .benefit-desc {
+      font-size: 13px;
+      color: #8b949e;
+      line-height: 1.6;
+    }
+
+    h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .section-sub {
+      color: #8b949e;
+      font-size: 14px;
+      margin-bottom: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <a href="../../index.html" class="back-link">
+    &larr; ポートフォリオに戻る
+  </a>
+
+  <div class="hero">
+    <div class="badge">DEMO 07 &nbsp;&bull;&nbsp; Python / Automation</div>
+    <h1>日報自動生成<span>バッチ</span></h1>
+    <p class="subtitle">Excelのタスクデータを読み込み、整形済みの日報テキストを1クリックで生成。
+    毎日の日報作成にかかる工数を<strong style="color:#e6edf3;">約10分 → 0秒</strong>に削減します。</p>
+  </div>
+
+  <!-- DEMO -->
+  <div class="demo-section">
+    <div class="demo-inner">
+      <div class="section-label">Interactive Demo</div>
+      <div class="demo-layout">
+
+        <!-- Left: Input Table -->
+        <div>
+          <div class="demo-panel">
+            <div class="panel-header">
+              <div class="dot dot-red"></div>
+              <div class="dot dot-yellow"></div>
+              <div class="dot dot-green"></div>
+              <span style="margin-left:6px;">tasks.xlsx &mdash; タスクシート</span>
+            </div>
+            <div class="panel-body">
+              <table class="task-table" id="taskTable">
+                <thead>
+                  <tr>
+                    <th>タスク名</th>
+                    <th>担当者</th>
+                    <th style="text-align:right;">h</th>
+                    <th>状態</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>LP修正対応</td>
+                    <td>田中</td>
+                    <td style="text-align:right;">2.0</td>
+                    <td><span class="status-done">完了</span></td>
+                  </tr>
+                  <tr>
+                    <td>EC在庫確認バッチ作成</td>
+                    <td>田中</td>
+                    <td style="text-align:right;">3.5</td>
+                    <td><span class="status-done">完了</span></td>
+                  </tr>
+                  <tr>
+                    <td>月次レポート集計</td>
+                    <td>田中</td>
+                    <td style="text-align:right;">1.5</td>
+                    <td><span class="status-done">完了</span></td>
+                  </tr>
+                  <tr>
+                    <td>新機能仕様確認</td>
+                    <td>田中</td>
+                    <td style="text-align:right;">2.0</td>
+                    <td><span class="status-wip">対応中</span></td>
+                  </tr>
+                  <tr>
+                    <td>テスト環境セットアップ</td>
+                    <td>田中</td>
+                    <td style="text-align:right;">1.0</td>
+                    <td><span class="status-wip">対応中</span></td>
+                  </tr>
+                </tbody>
+              </table>
+              <button class="generate-btn" onclick="generateReport()">日報を生成する</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Output -->
+        <div>
+          <div class="demo-panel" style="height:100%;">
+            <div class="panel-header">
+              <div class="dot dot-red"></div>
+              <div class="dot dot-yellow"></div>
+              <div class="dot dot-green"></div>
+              <span style="margin-left:6px;">生成された日報テキスト</span>
+            </div>
+            <div class="panel-body">
+              <div id="reportOutput">
+                <div class="report-placeholder">「日報を生成する」ボタンを押すと<br>日報テキストが自動生成されます</div>
+              </div>
+              <button class="copy-btn" id="copyBtn" onclick="copyReport()" style="display:none;">クリップボードにコピー</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CODE -->
+  <div class="code-section">
+    <div class="section-label">Actual Code</div>
+    <h2>実装コード</h2>
+    <p class="section-sub" style="margin-bottom:24px;">本番環境では以下のPythonスクリプトをcronやタスクスケジューラで自動実行します。</p>
+    <div class="code-block">
+      <div class="code-header">
+        <span>daily_report.py</span>
+        <span style="color:#484f58;">Python 3.10+</span>
+      </div>
+      <pre><code><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">from</span> datetime <span class="kw">import</span> date
+
+<span class="kw">def</span> <span class="fn">generate_daily_report</span>(excel_path):
+    df = pd.<span class="fn">read_excel</span>(excel_path, sheet_name=<span class="st">'タスク'</span>)
+    today = date.<span class="fn">today</span>().<span class="fn">strftime</span>(<span class="st">'%Y年%m月%d日'</span>)
+
+    completed = df[df[<span class="st">'ステータス'</span>] == <span class="st">'完了'</span>]
+    total_hours = completed[<span class="st">'所要時間(h)'</span>].<span class="fn">sum</span>()
+
+    report = <span class="st">f"""
+【日報】{today}
+
+■ 本日の完了タスク（{len(completed)}件）
+"""</span>
+    <span class="kw">for</span> _, row <span class="kw">in</span> completed.<span class="fn">iterrows</span>():
+        report += <span class="st">f"・{row['タスク名']}（{row['所要時間(h)']}h）\n"</span>
+
+    report += <span class="st">f"""
+■ 合計作業時間: {total_hours}h
+■ 進捗率: {len(completed)}/{len(df)}件完了
+"""</span>
+    <span class="kw">return</span> report
+
+<span class="bi">print</span>(<span class="fn">generate_daily_report</span>(<span class="st">'tasks.xlsx'</span>))</code></pre>
+    </div>
+  </div>
+
+  <!-- BENEFITS -->
+  <div class="benefits-section">
+    <div class="benefits-inner">
+      <div class="section-label">Solutions</div>
+      <h2>このスクリプトで解決できること</h2>
+      <p class="section-sub">繰り返し作業をゼロにして、本来の業務に集中できる環境を作ります。</p>
+      <div class="benefits-grid">
+        <div class="benefit-card">
+          <div class="benefit-icon">&#9200;</div>
+          <div class="benefit-title">毎日10分の節約</div>
+          <div class="benefit-desc">日報を手動で書く時間を完全に自動化。年間で約40時間の工数削減。</div>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">&#128203;</div>
+          <div class="benefit-title">記入ミス・漏れをゼロに</div>
+          <div class="benefit-desc">Excelのデータを直接参照するため、手動転記によるミスが発生しません。</div>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">&#128200;</div>
+          <div class="benefit-title">進捗の可視化</div>
+          <div class="benefit-desc">完了率・合計工数を自動計算。チーム全体の生産性をリアルタイムで把握できます。</div>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">&#128336;</div>
+          <div class="benefit-title">cron連携で全自動化</div>
+          <div class="benefit-desc">スケジューラと組み合わせれば退勤時刻に自動でメール送信まで完結します。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let reportText = '';
+
+    function generateReport() {
+      const btn = document.querySelector('.generate-btn');
+      btn.textContent = '生成中...';
+      btn.disabled = true;
+
+      setTimeout(() => {
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}年${String(today.getMonth()+1).padStart(2,'0')}月${String(today.getDate()).padStart(2,'0')}日`;
+
+        const tasks = [
+          { name: 'LP修正対応', hours: 2.0, done: true },
+          { name: 'EC在庫確認バッチ作成', hours: 3.5, done: true },
+          { name: '月次レポート集計', hours: 1.5, done: true },
+          { name: '新機能仕様確認', hours: 2.0, done: false },
+          { name: 'テスト環境セットアップ', hours: 1.0, done: false },
+        ];
+
+        const completed = tasks.filter(t => t.done);
+        const totalHours = completed.reduce((sum, t) => sum + t.hours, 0);
+
+        let lines = [];
+        lines.push(`件名: 【日報】${dateStr} 田中`);
+        lines.push('');
+        lines.push('お疲れ様です、田中です。');
+        lines.push('本日の業務報告をお送りします。');
+        lines.push('');
+        lines.push(`■ 本日の完了タスク（${completed.length}件）`);
+        completed.forEach(t => {
+          lines.push(`  ・${t.name}（${t.hours}h）`);
+        });
+        lines.push('');
+        lines.push(`■ 合計作業時間: ${totalHours}h`);
+        lines.push(`■ 進捗率: ${completed.length}/${tasks.length}件完了`);
+        lines.push('');
+        lines.push('■ 特記事項');
+        lines.push('  ・EC在庫バッチは明日テスト環境での動作確認予定');
+        lines.push('  ・新機能仕様は明日AM中に確認完了予定');
+        lines.push('');
+        lines.push('以上、よろしくお願いいたします。');
+
+        reportText = lines.join('\n');
+
+        const output = document.getElementById('reportOutput');
+        output.innerHTML = `<div class="report-output">${escapeHtml(reportText)}</div>`;
+
+        const copyBtn = document.getElementById('copyBtn');
+        copyBtn.style.display = 'block';
+        copyBtn.textContent = 'クリップボードにコピー';
+        copyBtn.classList.remove('copied');
+
+        btn.textContent = '再生成する';
+        btn.disabled = false;
+      }, 800);
+    }
+
+    function copyReport() {
+      if (!reportText) return;
+      navigator.clipboard.writeText(reportText).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = 'コピーしました!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'クリップボードにコピー';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+  </script>
+</body>
+</html>

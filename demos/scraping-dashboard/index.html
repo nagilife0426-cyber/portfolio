@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>デモ10: 競合価格収集ダッシュボード | スクレイピング</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0d1117;
+      color: #e6edf3;
+      font-family: 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif;
+      min-height: 100vh;
+    }
+
+    a { color: #00d4ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 20px;
+      color: #8b949e;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: #00d4ff; text-decoration: none; }
+
+    /* HERO */
+    .hero {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 20px 24px 48px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      color: #00d4ff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      letter-spacing: 0.05em;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: clamp(24px, 5vw, 40px);
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 16px;
+    }
+    h1 span { color: #00d4ff; }
+
+    .subtitle {
+      font-size: 16px;
+      color: #8b949e;
+      line-height: 1.7;
+      max-width: 680px;
+    }
+
+    /* DEMO SECTION */
+    .demo-section {
+      background: #161b22;
+      border-top: 1px solid #30363d;
+      border-bottom: 1px solid #30363d;
+      padding: 48px 24px;
+    }
+
+    .demo-inner { max-width: 960px; margin: 0 auto; }
+
+    .section-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #00d4ff;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    /* TARGET LIST */
+    .target-panel {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      background: #161b22;
+      padding: 10px 16px;
+      font-size: 12px;
+      color: #8b949e;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .dots { display: flex; gap: 5px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red { background: #ff5f57; }
+    .dot-yellow { background: #febc2e; }
+    .dot-green { background: #28c840; }
+
+    .panel-body { padding: 16px; }
+
+    .target-list { list-style: none; margin-bottom: 12px; }
+
+    .target-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #21262d;
+      font-size: 13px;
+    }
+    .target-item:last-child { border-bottom: none; }
+
+    .target-name { flex: 1; color: #e6edf3; }
+    .target-url { flex: 2; color: #484f58; font-family: monospace; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .target-remove { background: none; border: none; color: #484f58; cursor: pointer; font-size: 16px; padding: 0 4px; transition: color 0.2s; }
+    .target-remove:hover { color: #ff7b72; }
+
+    .add-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .add-input {
+      flex: 1;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 5px;
+      padding: 7px 10px;
+      color: #e6edf3;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .add-input:focus { border-color: #00d4ff; }
+    .add-input::placeholder { color: #484f58; }
+
+    .add-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 5px;
+      color: #8b949e;
+      font-size: 13px;
+      padding: 7px 14px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .add-btn:hover { border-color: #00d4ff; color: #00d4ff; }
+
+    .run-btn {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, #00d4ff, #0099cc);
+      border: none;
+      border-radius: 6px;
+      color: #0d1117;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      letter-spacing: 0.03em;
+    }
+    .run-btn:hover { opacity: 0.85; }
+    .run-btn:active { transform: scale(0.99); }
+    .run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* LOADING */
+    .loading-overlay {
+      display: none;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .loading-overlay.active { display: block; }
+
+    .loading-bar-wrap {
+      background: #21262d;
+      border-radius: 4px;
+      height: 6px;
+      overflow: hidden;
+      margin: 16px auto;
+      max-width: 360px;
+    }
+    .loading-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #00d4ff, #0066ff);
+      border-radius: 4px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .loading-status { font-size: 13px; color: #8b949e; }
+
+    /* DASHBOARD */
+    .dashboard { display: none; }
+    .dashboard.active { display: block; }
+
+    /* Summary Cards */
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 640px) { .summary-cards { grid-template-columns: 1fr; } }
+
+    .summary-card {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px 20px;
+    }
+
+    .summary-card.highlight { border-color: rgba(0, 212, 255, 0.4); }
+
+    .summary-label { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+    .summary-value { font-size: 22px; font-weight: 700; color: #e6edf3; }
+    .summary-value.cyan { color: #00d4ff; }
+    .summary-value.green { color: #23c55e; }
+    .summary-sub { font-size: 12px; color: #8b949e; margin-top: 4px; }
+
+    /* Price Table */
+    .price-table-wrap {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .price-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .price-table th {
+      background: #161b22;
+      padding: 10px 14px;
+      text-align: left;
+      color: #8b949e;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid #30363d;
+    }
+
+    .price-table td {
+      padding: 11px 14px;
+      border-bottom: 1px solid #21262d;
+    }
+    .price-table tr:last-child td { border-bottom: none; }
+
+    .price-cell { text-align: right; font-family: monospace; }
+    .price-cell.cheapest {
+      color: #23c55e;
+      font-weight: 700;
+      background: rgba(35, 197, 94, 0.07);
+    }
+    .price-cell.pricey { color: #8b949e; }
+
+    .cheapest-badge {
+      display: inline-block;
+      background: rgba(35, 197, 94, 0.15);
+      border: 1px solid rgba(35, 197, 94, 0.4);
+      color: #23c55e;
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 20px;
+      margin-left: 4px;
+    }
+
+    /* Chart */
+    .chart-panel {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .chart-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chart-title { font-size: 13px; font-weight: 600; color: #e6edf3; }
+
+    .chart-legend {
+      display: flex;
+      gap: 14px;
+      font-size: 11px;
+      color: #8b949e;
+    }
+
+    .legend-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+
+    .chart-body { padding: 16px; }
+
+    canvas { display: block; width: 100%; }
+
+    /* Product selector */
+    .product-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .product-tab {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 5px;
+      color: #8b949e;
+      font-size: 12px;
+      padding: 5px 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .product-tab.active { border-color: #00d4ff; color: #00d4ff; background: rgba(0,212,255,0.08); }
+
+    /* Export */
+    .export-btn {
+      background: transparent;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #8b949e;
+      font-size: 13px;
+      padding: 8px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .export-btn:hover { border-color: #23c55e; color: #23c55e; }
+
+    /* CODE SECTION */
+    .code-section {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 48px 24px;
+    }
+
+    .code-block {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .code-header {
+      background: #1c2128;
+      padding: 10px 16px;
+      font-size: 12px;
+      color: #8b949e;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    pre { padding: 20px; overflow-x: auto; font-size: 13.5px; line-height: 1.65; }
+    code { font-family: 'Fira Code', 'Courier New', monospace; }
+
+    .kw { color: #ff7b72; }
+    .fn { color: #d2a8ff; }
+    .st { color: #a5d6ff; }
+    .cm { color: #8b949e; font-style: italic; }
+    .nm { color: #ffa657; }
+    .bi { color: #79c0ff; }
+    .cl { color: #ffa657; font-weight: bold; }
+
+    /* BENEFITS */
+    .benefits-section {
+      background: #161b22;
+      border-top: 1px solid #30363d;
+      padding: 48px 24px;
+    }
+
+    .benefits-inner { max-width: 960px; margin: 0 auto; }
+
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .benefit-card {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 20px;
+      transition: border-color 0.2s;
+    }
+    .benefit-card:hover { border-color: rgba(0, 212, 255, 0.4); }
+
+    .benefit-icon { font-size: 28px; margin-bottom: 12px; }
+    .benefit-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+    .benefit-desc { font-size: 13px; color: #8b949e; line-height: 1.6; }
+
+    h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+
+    .flex-between { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+  </style>
+</head>
+<body>
+
+  <a href="../../index.html" class="back-link">&larr; ポートフォリオに戻る</a>
+
+  <div class="hero">
+    <div class="badge">DEMO 10 &nbsp;&bull;&nbsp; Python / Scraping / Dashboard</div>
+    <h1>競合価格収集<span>ダッシュボード</span></h1>
+    <p class="subtitle">複数ECサイトの価格をスクレイピングで自動収集し、最安値・価格推移をリアルタイムで可視化。
+    価格調査にかかる工数を<strong style="color:#e6edf3;">週2時間 → 0分</strong>に削減します。</p>
+  </div>
+
+  <!-- DEMO -->
+  <div class="demo-section">
+    <div class="demo-inner">
+      <div class="section-label">Interactive Demo</div>
+
+      <!-- Target List -->
+      <div class="target-panel">
+        <div class="panel-header">
+          <div class="dots">
+            <div class="dot dot-red"></div>
+            <div class="dot dot-yellow"></div>
+            <div class="dot dot-green"></div>
+          </div>
+          <span>監視対象商品リスト</span>
+          <span id="itemCount" style="font-size:11px;color:#484f58;">3商品</span>
+        </div>
+        <div class="panel-body">
+          <ul class="target-list" id="targetList">
+            <li class="target-item" data-id="1">
+              <span class="target-name">ワイヤレスイヤホン A社</span>
+              <span class="target-url">https://siteA.example.com/items/earphone-001</span>
+              <button class="target-remove" onclick="removeTarget(1)">&#10005;</button>
+            </li>
+            <li class="target-item" data-id="2">
+              <span class="target-name">スマホケース B社</span>
+              <span class="target-url">https://siteB.example.com/products/case-x</span>
+              <button class="target-remove" onclick="removeTarget(2)">&#10005;</button>
+            </li>
+            <li class="target-item" data-id="3">
+              <span class="target-name">モバイルバッテリー C社</span>
+              <span class="target-url">https://siteC.example.com/goods/battery-pro</span>
+              <button class="target-remove" onclick="removeTarget(3)">&#10005;</button>
+            </li>
+          </ul>
+          <div class="add-row" style="margin-bottom:16px;">
+            <input type="text" class="add-input" id="addName" placeholder="商品名">
+            <input type="text" class="add-input" id="addUrl" placeholder="URL（ダミー可）">
+            <button class="add-btn" onclick="addTarget()">追加</button>
+          </div>
+          <button class="run-btn" id="runBtn" onclick="startScraping()">データ収集を実行する</button>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div class="loading-overlay" id="loadingOverlay">
+        <div style="color:#8b949e;font-size:13px;margin-bottom:8px;">データを収集しています...</div>
+        <div class="loading-bar-wrap">
+          <div class="loading-bar" id="loadingBar"></div>
+        </div>
+        <div class="loading-status" id="loadingStatus">サイトA に接続中...</div>
+      </div>
+
+      <!-- Dashboard -->
+      <div class="dashboard" id="dashboard">
+
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+          <div class="summary-card highlight">
+            <div class="summary-label">最安値サイト</div>
+            <div class="summary-value cyan" id="cheapestSite">-</div>
+            <div class="summary-sub" id="cheapestNote">-</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">監視商品数</div>
+            <div class="summary-value" id="totalItems">-</div>
+            <div class="summary-sub">前回比 +0件</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">価格下落アラート</div>
+            <div class="summary-value green" id="alertCount">-</div>
+            <div class="summary-sub">対前日比 -5%以上</div>
+          </div>
+        </div>
+
+        <!-- Price Table -->
+        <div class="price-table-wrap">
+          <div class="panel-header">
+            <span>商品別価格比較</span>
+            <button class="export-btn" onclick="exportCSV()">&#8681; CSVエクスポート</button>
+          </div>
+          <table class="price-table">
+            <thead>
+              <tr>
+                <th>商品名</th>
+                <th style="text-align:right;">サイトA</th>
+                <th style="text-align:right;">サイトB</th>
+                <th style="text-align:right;">サイトC</th>
+                <th style="text-align:right;">最安値</th>
+              </tr>
+            </thead>
+            <tbody id="priceTableBody">
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Chart -->
+        <div class="chart-panel">
+          <div class="chart-header">
+            <span class="chart-title">価格推移グラフ（過去7日）</span>
+            <div class="chart-legend">
+              <span><span class="legend-dot" style="background:#00d4ff;"></span>サイトA</span>
+              <span><span class="legend-dot" style="background:#23c55e;"></span>サイトB</span>
+              <span><span class="legend-dot" style="background:#fbbf24;"></span>サイトC</span>
+            </div>
+          </div>
+          <div class="chart-body">
+            <div class="product-tabs" id="productTabs"></div>
+            <canvas id="priceChart" height="200"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CODE -->
+  <div class="code-section">
+    <div class="section-label">Actual Code</div>
+    <h2>実装コード</h2>
+    <p style="color:#8b949e;font-size:14px;margin-bottom:24px;">本番ではcronで定期実行し、結果をDBまたはGoogle Spreadsheetsに保存します。</p>
+    <div class="code-block">
+      <div class="code-header">
+        <span>price_monitor.py</span>
+        <span style="color:#484f58;">Python 3.10+ / requests + BeautifulSoup4</span>
+      </div>
+      <pre><code><span class="kw">import</span> requests
+<span class="kw">from</span> bs4 <span class="kw">import</span> <span class="cl">BeautifulSoup</span>
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+<span class="kw">import</span> time
+
+<span class="kw">class</span> <span class="cl">PriceMonitor</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="bi">self</span>, targets):
+        <span class="cm"># targets = [{'name': '商品名', 'url': 'URL', 'selector': 'CSSセレクタ'}]</span>
+        <span class="bi">self</span>.targets = targets
+        <span class="bi">self</span>.results = []
+
+    <span class="kw">def</span> <span class="fn">scrape</span>(<span class="bi">self</span>):
+        <span class="kw">for</span> target <span class="kw">in</span> <span class="bi">self</span>.targets:
+            <span class="kw">try</span>:
+                res = requests.<span class="fn">get</span>(target[<span class="st">'url'</span>],
+                                   headers={<span class="st">'User-Agent'</span>: <span class="st">'Mozilla/5.0'</span>},
+                                   timeout=<span class="nm">10</span>)
+                soup = <span class="cl">BeautifulSoup</span>(res.text, <span class="st">'html.parser'</span>)
+                price_el = soup.<span class="fn">select_one</span>(target[<span class="st">'selector'</span>])
+
+                <span class="kw">if</span> price_el:
+                    price = <span class="bi">int</span>(price_el.text.<span class="fn">strip</span>()
+                                .<span class="fn">replace</span>(<span class="st">'¥'</span>,<span class="st">''</span>).<span class="fn">replace</span>(<span class="st">','</span>,<span class="st">''</span>))
+                    <span class="bi">self</span>.results.<span class="fn">append</span>({
+                        <span class="st">'name'</span>: target[<span class="st">'name'</span>],
+                        <span class="st">'url'</span>: target[<span class="st">'url'</span>],
+                        <span class="st">'price'</span>: price,
+                        <span class="st">'scraped_at'</span>: datetime.<span class="fn">now</span>().<span class="fn">isoformat</span>()
+                    })
+            <span class="kw">except</span> <span class="cl">Exception</span> <span class="kw">as</span> e:
+                <span class="bi">print</span>(<span class="st">f"エラー ({target['name']}): {e}"</span>)
+
+            time.<span class="fn">sleep</span>(<span class="nm">1</span>)  <span class="cm"># サーバー負荷軽減</span>
+
+        <span class="kw">return</span> pd.<span class="fn">DataFrame</span>(<span class="bi">self</span>.results)
+
+    <span class="kw">def</span> <span class="fn">export_csv</span>(<span class="bi">self</span>, path=<span class="st">'prices.csv'</span>):
+        df = <span class="bi">self</span>.<span class="fn">scrape</span>()
+        df.<span class="fn">to_csv</span>(path, index=<span class="kw">False</span>, encoding=<span class="st">'utf-8-sig'</span>)
+        <span class="bi">print</span>(<span class="st">f"保存完了: {path}"</span>)</code></pre>
+    </div>
+  </div>
+
+  <!-- BENEFITS -->
+  <div class="benefits-section">
+    <div class="benefits-inner">
+      <div class="section-label">Solutions</div>
+      <h2>このシステムで解決できること</h2>
+      <p style="color:#8b949e;font-size:14px;margin-bottom:0;">競合の価格動向を常に把握し、利益を最大化する価格設定を実現します。</p>
+      <div class="benefits-grid">
+        <div class="benefit-card">
+          <div class="benefit-icon">&#128269;</div>
+          <div class="benefit-title">全競合の価格を1か所に</div>
+          <div class="benefit-desc">複数サイトを手動で巡回する必要がなくなり、常に最新価格を一覧で確認できます。</div>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">&#128241;</div>
+          <div class="benefit-title">価格下落アラート</div>
+          <div class="benefit-desc">競合が突然値下げした場合も即時検知。機会損失を防ぎ素早い価格対応が可能です。</div>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">&#128200;</div>
+          <div class="benefit-title">推移グラフで戦略立案</div>
+          <div class="benefit-desc">7日・30日のトレンドを可視化。季節性・イベント需要に合わせた価格戦略を立てられます。</div>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">&#128196;</div>
+          <div class="benefit-title">CSVエクスポートで活用</div>
+          <div class="benefit-desc">Excelや経営ツールと連携。社内共有・レポート作成に即座に使えるデータを提供します。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // === DATA ===
+    let targetIdCounter = 4;
+    const targets = [
+      { id: 1, name: 'ワイヤレスイヤホン A社', url: 'https://siteA.example.com/items/earphone-001' },
+      { id: 2, name: 'スマホケース B社', url: 'https://siteB.example.com/products/case-x' },
+      { id: 3, name: 'モバイルバッテリー C社', url: 'https://siteC.example.com/goods/battery-pro' },
+    ];
+
+    // Simulated price data
+    const priceData = {
+      'ワイヤレスイヤホン A社': { A: 4980, B: 5280, C: 4750 },
+      'スマホケース B社': { A: 1280, B: 980, C: 1180 },
+      'モバイルバッテリー C社': { A: 3480, B: 3280, C: 3680 },
+    };
+
+    // 7-day history per product per site
+    const historyData = {
+      'ワイヤレスイヤホン A社': {
+        A: [5200, 5100, 5050, 5000, 4980, 4980, 4980],
+        B: [5280, 5280, 5280, 5350, 5300, 5280, 5280],
+        C: [4900, 4850, 4800, 4780, 4750, 4750, 4750],
+      },
+      'スマホケース B社': {
+        A: [1380, 1350, 1320, 1280, 1280, 1280, 1280],
+        B: [1080, 1050, 1020, 1000, 990, 980, 980],
+        C: [1200, 1200, 1200, 1180, 1180, 1180, 1180],
+      },
+      'モバイルバッテリー C社': {
+        A: [3600, 3580, 3520, 3500, 3480, 3480, 3480],
+        B: [3400, 3380, 3320, 3300, 3280, 3280, 3280],
+        C: [3800, 3780, 3720, 3700, 3680, 3680, 3680],
+      },
+    };
+
+    let activeProduct = null;
+    let chartInstance = null;
+    let csvDataCache = null;
+
+    function updateItemCount() {
+      document.getElementById('itemCount').textContent = targets.length + '商品';
+    }
+
+    function addTarget() {
+      const nameEl = document.getElementById('addName');
+      const urlEl = document.getElementById('addUrl');
+      const name = nameEl.value.trim();
+      const url = urlEl.value.trim() || 'https://example.com/item/' + targetIdCounter;
+      if (!name) { nameEl.style.borderColor = '#ff7b72'; setTimeout(() => nameEl.style.borderColor = '#30363d', 1200); return; }
+
+      const id = targetIdCounter++;
+      targets.push({ id, name, url });
+
+      // Add to price data with random prices
+      priceData[name] = {
+        A: Math.floor(Math.random() * 5000 + 1000),
+        B: Math.floor(Math.random() * 5000 + 1000),
+        C: Math.floor(Math.random() * 5000 + 1000),
+      };
+
+      const li = document.createElement('li');
+      li.className = 'target-item';
+      li.dataset.id = id;
+      li.innerHTML = `<span class="target-name">${escHtml(name)}</span><span class="target-url">${escHtml(url)}</span><button class="target-remove" onclick="removeTarget(${id})">&#10005;</button>`;
+      document.getElementById('targetList').appendChild(li);
+
+      nameEl.value = '';
+      urlEl.value = '';
+      updateItemCount();
+    }
+
+    function removeTarget(id) {
+      const idx = targets.findIndex(t => t.id === id);
+      if (idx !== -1) targets.splice(idx, 1);
+      const el = document.querySelector(`[data-id="${id}"]`);
+      if (el) el.remove();
+      updateItemCount();
+    }
+
+    function startScraping() {
+      const btn = document.getElementById('runBtn');
+      btn.disabled = true;
+      btn.textContent = '収集中...';
+
+      document.getElementById('dashboard').classList.remove('active');
+      const overlay = document.getElementById('loadingOverlay');
+      overlay.classList.add('active');
+
+      const sites = ['サイトA', 'サイトB', 'サイトC'];
+      const productNames = targets.map(t => t.name);
+      const steps = [];
+      productNames.forEach(p => sites.forEach(s => steps.push(`${p} を ${s} で確認中...`)));
+      steps.push('データを集計中...');
+
+      const bar = document.getElementById('loadingBar');
+      const status = document.getElementById('loadingStatus');
+      let i = 0;
+
+      const interval = setInterval(() => {
+        if (i >= steps.length) {
+          clearInterval(interval);
+          overlay.classList.remove('active');
+          buildDashboard();
+          document.getElementById('dashboard').classList.add('active');
+          btn.disabled = false;
+          btn.textContent = '再収集する';
+          return;
+        }
+        status.textContent = steps[i];
+        bar.style.width = ((i + 1) / steps.length * 100) + '%';
+        i++;
+      }, 180);
+    }
+
+    function buildDashboard() {
+      const productNames = targets.map(t => t.name);
+
+      // Resolve prices (use priceData for tracked items)
+      const rows = productNames.map(name => {
+        const p = priceData[name] || {
+          A: Math.floor(Math.random() * 5000 + 1000),
+          B: Math.floor(Math.random() * 5000 + 1000),
+          C: Math.floor(Math.random() * 5000 + 1000),
+        };
+        const min = Math.min(p.A, p.B, p.C);
+        const cheapestSite = p.A === min ? 'A' : p.B === min ? 'B' : 'C';
+        return { name, ...p, min, cheapestSite };
+      });
+
+      csvDataCache = rows;
+
+      // Summary
+      const siteCount = { A: 0, B: 0, C: 0 };
+      rows.forEach(r => siteCount[r.cheapestSite]++);
+      const topSite = Object.entries(siteCount).sort((a,b)=>b[1]-a[1])[0];
+      document.getElementById('cheapestSite').textContent = 'サイト' + topSite[0];
+      document.getElementById('cheapestNote').textContent = productNames.length + '商品中' + topSite[1] + '品で最安';
+      document.getElementById('totalItems').textContent = productNames.length;
+      document.getElementById('alertCount').textContent = rows.filter(r => {
+        const history = historyData[r.name];
+        if (!history) return false;
+        const prev = Math.min(history.A[5], history.B[5], history.C[5]);
+        const curr = r.min;
+        return (prev - curr) / prev >= 0.03;
+      }).length;
+
+      // Price table
+      const tbody = document.getElementById('priceTableBody');
+      tbody.innerHTML = '';
+      rows.forEach(r => {
+        const cells = ['A', 'B', 'C'].map(s => {
+          const isCheapest = r.cheapestSite === s;
+          return `<td class="price-cell ${isCheapest ? 'cheapest' : 'pricey'}">
+            ¥${r[s].toLocaleString()}${isCheapest ? '<span class="cheapest-badge">最安</span>' : ''}
+          </td>`;
+        }).join('');
+        tbody.innerHTML += `<tr>
+          <td>${escHtml(r.name)}</td>
+          ${cells}
+          <td class="price-cell" style="color:#00d4ff;font-weight:700;">¥${r.min.toLocaleString()}</td>
+        </tr>`;
+      });
+
+      // Product tabs
+      const tabsEl = document.getElementById('productTabs');
+      tabsEl.innerHTML = '';
+      productNames.forEach((name, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'product-tab' + (idx === 0 ? ' active' : '');
+        btn.textContent = name.length > 12 ? name.slice(0,12) + '...' : name;
+        btn.title = name;
+        btn.onclick = () => {
+          document.querySelectorAll('.product-tab').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          drawChart(name);
+        };
+        tabsEl.appendChild(btn);
+      });
+
+      activeProduct = productNames[0];
+      drawChart(activeProduct);
+    }
+
+    function drawChart(productName) {
+      activeProduct = productName;
+      const canvas = document.getElementById('priceChart');
+      const ctx = canvas.getContext('2d');
+
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = 200 * dpr;
+      canvas.style.width = rect.width + 'px';
+      canvas.style.height = '200px';
+      ctx.scale(dpr, dpr);
+
+      const W = rect.width;
+      const H = 200;
+      const PAD = { top: 20, right: 20, bottom: 30, left: 55 };
+      const plotW = W - PAD.left - PAD.right;
+      const plotH = H - PAD.top - PAD.bottom;
+
+      const history = historyData[productName];
+      const days = ['6日前','5日前','4日前','3日前','2日前','昨日','今日'];
+
+      const allVals = history ? [...history.A, ...history.B, ...history.C] : [1000, 5000];
+      const minV = Math.floor(Math.min(...allVals) * 0.96);
+      const maxV = Math.ceil(Math.max(...allVals) * 1.02);
+
+      const px = i => PAD.left + (i / 6) * plotW;
+      const py = v => PAD.top + (1 - (v - minV) / (maxV - minV)) * plotH;
+
+      ctx.clearRect(0, 0, W, H);
+
+      // Grid
+      ctx.strokeStyle = '#21262d';
+      ctx.lineWidth = 1;
+      for (let g = 0; g <= 4; g++) {
+        const y = PAD.top + (g / 4) * plotH;
+        ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(W - PAD.right, y); ctx.stroke();
+        const val = Math.round(maxV - (g / 4) * (maxV - minV));
+        ctx.fillStyle = '#484f58';
+        ctx.font = '11px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText('¥' + val.toLocaleString(), PAD.left - 6, y + 4);
+      }
+
+      // X labels
+      ctx.fillStyle = '#484f58';
+      ctx.textAlign = 'center';
+      days.forEach((d, i) => ctx.fillText(d, px(i), H - 6));
+
+      // Lines
+      if (history) {
+        const series = [
+          { data: history.A, color: '#00d4ff' },
+          { data: history.B, color: '#23c55e' },
+          { data: history.C, color: '#fbbf24' },
+        ];
+
+        series.forEach(({ data, color }) => {
+          // Area fill
+          ctx.beginPath();
+          ctx.moveTo(px(0), py(data[0]));
+          data.forEach((v, i) => ctx.lineTo(px(i), py(v)));
+          ctx.lineTo(px(6), H - PAD.bottom);
+          ctx.lineTo(px(0), H - PAD.bottom);
+          ctx.closePath();
+          ctx.fillStyle = color + '18';
+          ctx.fill();
+
+          // Line
+          ctx.beginPath();
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2;
+          ctx.lineJoin = 'round';
+          ctx.moveTo(px(0), py(data[0]));
+          data.forEach((v, i) => ctx.lineTo(px(i), py(v)));
+          ctx.stroke();
+
+          // Dots
+          data.forEach((v, i) => {
+            ctx.beginPath();
+            ctx.arc(px(i), py(v), 3.5, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+          });
+        });
+      }
+    }
+
+    function exportCSV() {
+      if (!csvDataCache) return;
+      const headers = ['商品名', 'サイトA価格', 'サイトB価格', 'サイトC価格', '最安値', '最安サイト', '収集日時'];
+      const now = new Date().toISOString().slice(0, 19);
+      const rows = csvDataCache.map(r =>
+        [r.name, r.A, r.B, r.C, r.min, 'サイト' + r.cheapestSite, now].join(',')
+      );
+      const csv = '﻿' + [headers.join(','), ...rows].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'price_data_' + now.slice(0,10) + '.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function escHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    window.addEventListener('resize', () => {
+      if (activeProduct && document.getElementById('dashboard').classList.contains('active')) {
+        drawChart(activeProduct);
+      }
+    });
+  </script>
+</body>
+</html>

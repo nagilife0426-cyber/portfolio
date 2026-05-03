@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="なぎ - GAS・Python業務自動化エンジニア。繰り返し作業をコードで消します。クラウドワークスでご依頼受付中。">
+  <meta property="og:title" content="なぎ | 業務自動化エンジニア - GAS・Python">
+  <meta property="og:description" content="GAS・Pythonで業務を自動化。実際に動くデモで仕事の質をご確認ください。">
+  <meta property="og:type" content="website">
+  <title>なぎ | 業務自動化エンジニア - GAS・Python</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body>
+
+  <!-- ========================================
+       Navigation
+       ======================================== -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">&lt;<span>nagi</span> /&gt;</a>
+      <ul class="nav-links">
+        <li><a href="#demos">デモ</a></li>
+        <li><a href="#categories">対応範囲</a></li>
+        <li><a href="#how">進め方</a></li>
+        <li><a href="#contact" class="nav-cta">依頼する</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ========================================
+       Hero
+       ======================================== -->
+  <section class="hero" id="top">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="container">
+      <div class="hero-content">
+        <p class="hero-eyebrow">
+          <span class="hero-eyebrow-text" data-text="業務自動化エンジニア / クラウドワークス">業務自動化エンジニア / クラウドワークス</span>
+        </p>
+        <h1 class="hero-title">
+          繰り返し作業を<br>
+          <span class="highlight">コードで消す</span>、<br>
+          自動化エンジニア。
+        </h1>
+        <p class="hero-description fade-up fade-up-delay-1">
+          毎日の集計・転記・通知・レポート作成——<br>
+          GAS と Python で「もうやらなくていい仕事」に変えます。<br>
+          実際に動くデモで品質を確認してからご依頼ください。
+        </p>
+        <div class="hero-actions fade-up fade-up-delay-2">
+          <a href="#demos" class="btn-primary">
+            <span>デモを見る</span>
+            <span>↓</span>
+          </a>
+          <a href="#contact" class="btn-secondary">
+            <span>クラウドワークスで依頼</span>
+            <span>→</span>
+          </a>
+        </div>
+        <div class="hero-stats fade-up fade-up-delay-3">
+          <div class="stat-item">
+            <span class="stat-num" data-target="10" data-suffix="+">10+</span>
+            <span class="stat-label">デモ公開中</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num" data-target="6" data-suffix="分野">6分野</span>
+            <span class="stat-label">対応ジャンル</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num" data-target="100" data-suffix="%">100%</span>
+            <span class="stat-label">動作確認済み</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================
+       Categories
+       ======================================== -->
+  <section class="section categories" id="categories">
+    <div class="container">
+      <p class="section-label">対応ジャンル</p>
+      <h2 class="section-title">6つの自動化領域</h2>
+      <p class="section-subtitle">小さな改善から業務全体の自動化まで、幅広い領域に対応します。</p>
+      <div class="categories-grid reveal">
+        <div class="category-card">
+          <span class="category-icon">📊</span>
+          <div class="category-name">GAS</div>
+          <div class="category-desc">Googleサービス連携・スプレッドシート自動化</div>
+        </div>
+        <div class="category-card">
+          <span class="category-icon">🐍</span>
+          <div class="category-name">Python</div>
+          <div class="category-desc">CSV処理・スクレイピング・バッチ処理</div>
+        </div>
+        <div class="category-card">
+          <span class="category-icon">📋</span>
+          <div class="category-name">VBA</div>
+          <div class="category-desc">Excel・Accessマクロ自動化</div>
+        </div>
+        <div class="category-card">
+          <span class="category-icon">🤖</span>
+          <div class="category-name">Bot</div>
+          <div class="category-desc">LINE・Slack通知自動化</div>
+        </div>
+        <div class="category-card">
+          <span class="category-icon">🌐</span>
+          <div class="category-name">LP</div>
+          <div class="category-desc">業種別レスポンシブLPテンプレート</div>
+        </div>
+        <div class="category-card">
+          <span class="category-icon">🔍</span>
+          <div class="category-name">スクレイピング</div>
+          <div class="category-desc">価格監視・競合調査・データ収集</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================
+       Demos
+       ======================================== -->
+  <section class="section" id="demos">
+    <div class="container">
+      <p class="section-label">制作実績・デモ</p>
+      <h2 class="section-title">動くデモ一覧</h2>
+      <p class="section-subtitle">すべて実際に動作します。「デモを見る」から挙動を確認してから依頼してください。</p>
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <span class="filter-label">絞り込み:</span>
+        <button class="filter-btn active" data-genre="all">すべて</button>
+        <button class="filter-btn" data-genre="GAS">GAS</button>
+        <button class="filter-btn" data-genre="Python">Python</button>
+        <button class="filter-btn" data-genre="VBA">VBA</button>
+        <button class="filter-btn" data-genre="Bot">Bot</button>
+        <button class="filter-btn" data-genre="LP">LP</button>
+        <button class="filter-btn" data-genre="Scraping">スクレイピング</button>
+      </div>
+
+      <!-- Demo Cards Grid -->
+      <div class="demos-grid">
+
+        <!-- 01 -->
+        <article class="demo-card reveal" data-genre="GAS">
+          <div class="demo-card-header">
+            <div>
+              <div class="demo-num"># 01</div>
+              <h3 class="demo-title">スプレッドシート自動集計ツール</h3>
+            </div>
+            <span class="badge badge-GAS">GAS</span>
+          </div>
+          <p class="demo-desc">複数シートのデータを1クリックで集計・整形。月次・週次レポートの作成時間をゼロに近づけます。</p>
+          <div class="demo-footer">
+            <a href="demos/gas-spreadsheet/index.html" class="btn-demo">
+              デモを見る <span class="arrow">→</span>
+            </a>
+          </div>
+        </article>
+
+        <!-- 02 -->
+        <article class="demo-card reveal" data-genre="GAS">
+          <div class="demo-card-header">
+            <div>
+              <div class="demo-num"># 02</div>
+              <h3 class="demo-title">フォーム→スプレッドシート自動仕分け</h3>
+            </div>
+            <span class="badge badge-GAS">GAS</span>
+          </div>
+          <p class="demo-desc">Googleフォームの回答をタグ別に自動振り分け。問い合わせ種別・部署・ステータスで即座に分類します。</p>
+          <div class="demo-footer">
+            <a href="demos/gas-form/index.html" class="btn-demo">
+              デモを見る <span class="arrow">→</span>
+            </a>
+          </div>
+        </article>
+
+        <!-- 03 -->
+        <article class="demo-card reveal" data-genre="GAS">
+          <div class="demo-card-header">
+            <div>
+              <div class="demo-num"># 03</div>
+              <h3 class="demo-title">Gmail一括ラベル付け</h3>
+            </div>
+            <span class="badge badge-GAS">GAS</span>
+          </div>
+          <p class="demo-desc">条件に合うメールに自動でラベルを付与。送信元・件名・本文キーワードをルールとして登録できます。</p>
+          <div class="demo-footer">
+            <a href="demos/gas-gmail/index.html" class="btn-demo">
+              デモを見る <span class="arrow">→</span>
+            </a>
+          </div>
+        </article>
+
+        <!-- 04 -->
+        <article class="demo-card reveal" data-genre="Python">
+          <div class="demo-card-header">
+            <div>
+              <div class="demo-num"># 04</div>
+              <h3 class="demo-title">CSV一括変換・クレンジング</h3>
+            </div>
+            <span class="badge badge-Python">Python</span>
+          </div>
+          <p class="demo-desc">複数CSVを結合・フォーマット統一して出力。文字コード変換・重複除去・空白除去を一括処理します。</p>
+          <div class="demo-footer">
+            <a href="demos/python-csv/index.html" class="btn-demo">
+              デモを見る <span class="arrow">→</span>
+            </a>
+          </div>
+        </article>
+
+        <!-- 05 -->
+        <article class="demo-card reveal" data-genre="Python">
+          <div class="demo-card-header">
+            <div>
+              <div class="demo-num"># 05</div>
+              <h3 class="demo-title">価格監視スクレイピング</h3>
+            </div>
+            <span class="badge badge-Python">Python</span>
+          </div>
+          <p class="demo-desc">指定URLの価格を定期取得・変動を通知。閾値設定でメール or Slackアラートを自動送信します。</p>
+          <div class="demo-footer">
+            <a href="demos/python-scraping/index.html" class="btn-demo">
+              デモを見る <span class="arrow">→</span>
+            </a>
+          </div>
+        </article>
+
+        <!-- 06 -->
+        <article class="demo-card reveal" data-genre="Python">
+          <div class="demo-card-header">
+            <div>
+              <div class="demo-num"># 06</div>
+              <h3 class="demo-title">日報自動生成バッチ</h3>
+            </div>
+            <span class="badge badge-Python">Python</span>
+          </div>
+          <p class="demo-desc">Excelデータから日報テキストを自動生成。テンプレートに数値を差し込み、メール送信まで自動化します。</p>
+          <div class="demo-footer">
+            <a href="demos/python-batch/index.html" class="btn-demo">
+              デモを見る <span class="arrow">→</span>
+            </a>
+          </div>
+        </article>
+
+        <!-- 07 -->
+        <article class="demo-card reveal" data-genre="VBA">
+          <div class="demo-card-header">
+            <div>
+              <div class="demo-num"># 07</div>
+              <h3 class="demo-title">Excel自動レポート生成マクロ</h3>
+            </div>
+            <span class="badge badge-VBA">VBA</span>
+          </div>
+          <p class="demo-desc">ボタン1つで月次レポートを自動作成。データ集計・グラフ更新・PDF出力まで全自動で完結します。</p>
+          <div class="demo-footer">
+            <a href="demos/vba-excel/index.html" class="btn-demo">
+              デモを見る <span class="arrow">→</span>
+            </a>
+          </div>
+        </article>
+
+        <!-- 08 -->
+        <article class="demo-card reveal" data-genre="Bot">
+          <div class="demo-card-header">
+            <div>
+              <div class="demo-num"># 08</div>
+              <h3 class="demo-title">LINE/Slack通知Bot</h3>
+            </div>
+            <span class="badge badge-Bot">Bot</span>
+          </div>
+          <p class="demo-desc">スプレッドシート更新を即時LINE/Slackに通知。承認フロー・期限アラート・在庫通知などに活用できます。</p>
+          <div class="demo-footer">
+            <a href="demos/line-bot/index.html" class="btn-demo">
+              デモを見る <span class="arrow">→</span>
+            </a>
+          </div>
+        </article>
+
+        <!-- 09 -->
+        <article class="demo-card reveal" data-genre="LP">
+          <div class="demo-card-header">
+            <div>
+              <div class="demo-num"># 09</div>
+              <h3 class="demo-title">業種別LPテンプレート</h3>
+            </div>
+            <span class="badge badge-LP">HTML/CSS</span>
+          </div>
+          <p class="demo-desc">整体院・サロン向けのレスポンシブLP。SEO構造・予約フォーム・スマホ最適化が全て含まれています。</p>
+          <div class="demo-footer">
+            <a href="demos/lp-template/index.html" class="btn-demo">
+              デモを見る <span class="arrow">→</span>
+            </a>
+          </div>
+        </article>
+
+        <!-- 10 -->
+        <article class="demo-card reveal" data-genre="Scraping">
+          <div class="demo-card-header">
+            <div>
+              <div class="demo-num"># 10</div>
+              <h3 class="demo-title">競合価格収集ダッシュボード</h3>
+            </div>
+            <span class="badge badge-Scraping">スクレイピング</span>
+          </div>
+          <p class="demo-desc">複数サイトの価格データを一覧表示。自動収集・グラフ化・エクスポートをまとめたWebダッシュボードです。</p>
+          <div class="demo-footer">
+            <a href="demos/scraping-dashboard/index.html" class="btn-demo">
+              デモを見る <span class="arrow">→</span>
+            </a>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================
+       How It Works
+       ======================================== -->
+  <section class="section how-it-works" id="how">
+    <div class="container">
+      <p class="section-label">仕事の進め方</p>
+      <h2 class="section-title">3ステップで完結</h2>
+      <p class="section-subtitle">要件のすり合わせから納品まで、シンプルなフローで進めます。</p>
+      <div class="steps-container reveal">
+        <div class="step-card">
+          <div class="step-num">01</div>
+          <h3 class="step-title">叩き台提案</h3>
+          <p class="step-desc">
+            「こんなことできますか？」という段階でOKです。
+            業務内容をヒアリングし、自動化できる範囲と費用感を
+            まずお伝えします。叩き台のサンプルコードを作ることもあります。
+          </p>
+          <span class="step-tag">// ヒアリング → 概算見積もり</span>
+        </div>
+        <div class="step-card">
+          <div class="step-num">02</div>
+          <h3 class="step-title">要件確定</h3>
+          <p class="step-desc">
+            入力データの形式・操作手順・エラー時の動作など
+            細かな仕様を確認します。後から「想定と違った」が
+            起きないよう、認識のずれをここで潰します。
+          </p>
+          <span class="step-tag">// 仕様書 → 金額確定 → 着手</span>
+        </div>
+        <div class="step-card">
+          <div class="step-num">03</div>
+          <h3 class="step-title">納品</h3>
+          <p class="step-desc">
+            コード本体＋使い方ドキュメントをセットで納品します。
+            「自分で少し変更できる」ようにコメントを丁寧に書きます。
+            修正対応もお気軽にご相談ください。
+          </p>
+          <span class="step-tag">// コード + ドキュメント納品</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================
+       Contact
+       ======================================== -->
+  <section class="section contact" id="contact">
+    <div class="contact-bg"></div>
+    <div class="container">
+      <div class="contact-content reveal">
+        <p class="section-label" style="text-align:center; margin-bottom:16px;">お問い合わせ</p>
+        <h2 class="contact-title">
+          自動化できるか、<br>
+          まず相談してみてください。
+        </h2>
+        <p class="contact-desc">
+          「こんなことできる？」「どれくらいかかる？」だけでも大丈夫です。
+          クラウドワークスのメッセージからお気軽にご連絡ください。
+        </p>
+        <a
+          href="https://crowdworks.jp"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="contact-btn"
+        >
+          <span>クラウドワークスからご依頼ください</span>
+          <span>↗</span>
+        </a>
+        <p class="contact-note">
+          // crowdworks.jp で「なぎ」「業務自動化」で検索できます
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================
+       Footer
+       ======================================== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <p class="footer-copy">© 2026 なぎ | 業務自動化エンジニア</p>
+        <ul class="footer-links">
+          <li><a href="#demos">デモ一覧</a></li>
+          <li><a href="#how">進め方</a></li>
+          <li>
+            <a href="https://crowdworks.jp" target="_blank" rel="noopener noreferrer">
+              クラウドワークス ↗
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gmail 一括ラベル付け | GAS デモ</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --bg2: #161b22;
+      --bg3: #21262d;
+      --border: #30363d;
+      --accent: #00d4ff;
+      --text: #e6edf3;
+      --text2: #8b949e;
+      --green: #3fb950;
+      --yellow: #d29922;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .nav {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-sep { color: var(--text2); }
+
+    .hero {
+      background: linear-gradient(135deg, var(--bg2) 0%, #0d1117 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 60px 24px 48px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0,212,255,0.1);
+      border: 1px solid rgba(0,212,255,0.3);
+      color: var(--accent);
+      padding: 4px 12px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      margin-bottom: 16px;
+    }
+    .hero h1 { font-size: clamp(24px, 4vw, 40px); font-weight: 700; margin-bottom: 16px; letter-spacing: -0.02em; }
+    .hero p { color: var(--text2); font-size: 16px; max-width: 560px; margin: 0 auto; }
+
+    .section { padding: 48px 24px; max-width: 960px; margin: 0 auto; }
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-title .num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px; height: 28px;
+      background: var(--accent);
+      color: var(--bg);
+      border-radius: 50%;
+      font-size: 13px; font-weight: 700; flex-shrink: 0;
+    }
+
+    /* デモ */
+    .demo-container {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .demo-header {
+      background: var(--bg3);
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--text2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-r { background: #f85149; }
+    .dot-y { background: #d29922; }
+    .dot-g { background: #3fb950; }
+    .demo-body { padding: 24px; }
+
+    /* 操作パネル */
+    .control-panel {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+    }
+    @media (max-width: 600px) {
+      .control-panel { grid-template-columns: 1fr; }
+    }
+    .ctrl-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+      margin-bottom: 6px;
+    }
+    .ctrl-input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .ctrl-input:focus { outline: none; border-color: var(--accent); }
+
+    .run-btn {
+      padding: 8px 20px;
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      height: 36px;
+    }
+    .run-btn:hover { background: #33ddff; }
+    .run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* 件数カウンター */
+    .counter-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 10px 14px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+    }
+    .counter-bar.done {
+      border-color: var(--green);
+    }
+    .counter-text { flex: 1; }
+    .counter-badge {
+      background: rgba(0,212,255,0.15);
+      color: var(--accent);
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* メールリスト */
+    .mail-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .mail-item {
+      display: grid;
+      grid-template-columns: 20px 130px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      background: var(--bg3);
+      border: 1px solid transparent;
+      border-radius: 6px;
+      font-size: 13px;
+      transition: all 0.3s;
+      cursor: default;
+    }
+    .mail-item:hover { background: var(--bg2); border-color: var(--border); }
+    .mail-item.matched {
+      background: rgba(0,212,255,0.05);
+      border-color: rgba(0,212,255,0.2);
+    }
+    .mail-unread .mail-from { font-weight: 700; color: var(--text); }
+    .mail-unread .mail-subject { font-weight: 600; }
+    .mail-dot {
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      opacity: 0;
+    }
+    .mail-unread .mail-dot { opacity: 1; }
+    .mail-from { color: var(--text2); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mail-subject { color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
+    .mail-labels { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; min-width: 60px; }
+
+    .label-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      opacity: 0;
+      transform: scale(0.8);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .label-tag.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* ラベルの色パレット */
+    .lc0 { background: rgba(0,212,255,0.15);  color: #00d4ff; }
+    .lc1 { background: rgba(63,185,80,0.15);  color: #3fb950; }
+    .lc2 { background: rgba(163,113,247,0.15); color: #a371f7; }
+    .lc3 { background: rgba(240,136,62,0.15); color: #f0883e; }
+    .lc4 { background: rgba(248,81,73,0.15);  color: #f85149; }
+    .lc5 { background: rgba(210,169,34,0.15); color: #d2a8ff; }
+
+    /* 既存ラベル（表示用） */
+    .existing-label { opacity: 1; transform: none; }
+
+    /* コード */
+    .code-wrap {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .code-header {
+      background: var(--bg3);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .code-lang { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 6px; }
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text2);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+    pre {
+      padding: 20px;
+      overflow-x: auto;
+      font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .kw   { color: #ff7b72; }
+    .fn   { color: #d2a8ff; }
+    .str  { color: #a5d6ff; }
+    .cmt  { color: #8b949e; font-style: italic; }
+    .num-lit { color: #79c0ff; }
+    .prop { color: #79c0ff; }
+    .obj  { color: #ffa657; }
+
+    /* benefits */
+    .benefits { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .benefit-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .benefit-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .benefit-icon { font-size: 28px; margin-bottom: 10px; }
+    .benefit-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+    .benefit-desc { font-size: 13px; color: var(--text2); line-height: 1.5; }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text2);
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="../../index.html">ポートフォリオ Top</a>
+  <span class="nav-sep">/</span>
+  <span>GAS デモ</span>
+  <span class="nav-sep">/</span>
+  <span>Gmail 一括ラベル付け</span>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">Google Apps Script</div>
+  <h1>Gmail 一括ラベル付け</h1>
+  <p>キーワード指定で受信トレイを自動整理。手作業フィルタでは追いきれないメールを全件処理します。</p>
+</div>
+
+<!-- デモ -->
+<section class="section">
+  <div class="section-title"><span class="num">1</span> インタラクティブデモ</div>
+
+  <div class="demo-container">
+    <div class="demo-header">
+      <span class="dot dot-r"></span>
+      <span class="dot dot-y"></span>
+      <span class="dot dot-g"></span>
+      <span style="margin-left:4px;">GmailApp — labelEmails.gs</span>
+    </div>
+    <div class="demo-body">
+
+      <!-- 操作パネル -->
+      <div class="control-panel">
+        <div class="ctrl-group">
+          <label>検索キーワード（件名に含まれる語句）</label>
+          <input class="ctrl-input" id="kwInput" type="text" placeholder="例: 請求書" value="請求書">
+        </div>
+        <div class="ctrl-group">
+          <label>付与するラベル名</label>
+          <input class="ctrl-input" id="labelInput" type="text" placeholder="例: 重要" value="重要">
+        </div>
+        <button class="run-btn" id="runBtn" onclick="runLabel()">ラベル付け実行</button>
+      </div>
+
+      <!-- カウンター -->
+      <div class="counter-bar" id="counterBar">
+        <span class="counter-text" id="counterText">キーワードを入力して「ラベル付け実行」を押してください</span>
+        <span class="counter-badge" id="counterBadge">0 件</span>
+      </div>
+
+      <!-- メール一覧 -->
+      <div class="mail-list" id="mailList">
+
+        <div class="mail-item mail-unread" data-subject="【請求書】2026年4月分のご請求">
+          <span class="mail-dot"></span>
+          <span class="mail-from">経理部 田中</span>
+          <span class="mail-subject">【請求書】2026年4月分のご請求</span>
+          <span class="mail-labels"></span>
+        </div>
+
+        <div class="mail-item" data-subject="ミーティングの件について">
+          <span class="mail-dot"></span>
+          <span class="mail-from">山田 花子</span>
+          <span class="mail-subject">ミーティングの件について</span>
+          <span class="mail-labels"></span>
+        </div>
+
+        <div class="mail-item mail-unread" data-subject="請求書の確認をお願いします">
+          <span class="mail-dot"></span>
+          <span class="mail-from">佐藤 商事</span>
+          <span class="mail-subject">請求書の確認をお願いします</span>
+          <span class="mail-labels"></span>
+        </div>
+
+        <div class="mail-item" data-subject="プロジェクト進捗報告">
+          <span class="mail-dot"></span>
+          <span class="mail-from">開発チーム</span>
+          <span class="mail-subject">プロジェクト進捗報告</span>
+          <span class="mail-labels"></span>
+        </div>
+
+        <div class="mail-item mail-unread" data-subject="【重要】請求書に訂正があります">
+          <span class="mail-dot"></span>
+          <span class="mail-from">鈴木 株式会社</span>
+          <span class="mail-subject">【重要】請求書に訂正があります</span>
+          <span class="mail-labels"></span>
+        </div>
+
+        <div class="mail-item" data-subject="来週のランチについて">
+          <span class="mail-dot"></span>
+          <span class="mail-from">中村 次郎</span>
+          <span class="mail-subject">来週のランチについて</span>
+          <span class="mail-labels"></span>
+        </div>
+
+        <div class="mail-item mail-unread" data-subject="請求書発行のご案内">
+          <span class="mail-dot"></span>
+          <span class="mail-from">クラウド会計サービス</span>
+          <span class="mail-subject">請求書発行のご案内</span>
+          <span class="mail-labels"></span>
+        </div>
+
+        <div class="mail-item" data-subject="採用面接のご案内">
+          <span class="mail-dot"></span>
+          <span class="mail-from">人事部</span>
+          <span class="mail-subject">採用面接のご案内</span>
+          <span class="mail-labels"></span>
+        </div>
+
+        <div class="mail-item" data-subject="ニュースレター：5月号">
+          <span class="mail-dot"></span>
+          <span class="mail-from">メルマガ配信</span>
+          <span class="mail-subject">ニュースレター：5月号</span>
+          <span class="mail-labels"><span class="label-tag lc2 existing-label show">newsletter</span></span>
+        </div>
+
+        <div class="mail-item mail-unread" data-subject="請求書の件、至急ご確認ください">
+          <span class="mail-dot"></span>
+          <span class="mail-from">取引先A社</span>
+          <span class="mail-subject">請求書の件、至急ご確認ください</span>
+          <span class="mail-labels"></span>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- GASコード -->
+<section class="section">
+  <div class="section-title"><span class="num">2</span> 実際の GAS コード</div>
+
+  <div class="code-wrap">
+    <div class="code-header">
+      <div class="code-lang">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        JavaScript (Google Apps Script)
+      </div>
+      <button class="copy-btn" onclick="copyCode()">コピー</button>
+    </div>
+    <pre><span class="kw">function</span> <span class="fn">labelEmails</span>(keyword, labelName) {
+  <span class="kw">const</span> label = <span class="obj">GmailApp</span>.<span class="fn">getUserLabelByName</span>(labelName)
+    || <span class="obj">GmailApp</span>.<span class="fn">createLabel</span>(labelName);
+
+  <span class="kw">const</span> threads = <span class="obj">GmailApp</span>.<span class="fn">search</span>(<span class="str">'subject:'</span> + keyword + <span class="str">' -label:'</span> + labelName);
+  threads.<span class="fn">forEach</span>(thread => {
+    thread.<span class="fn">addLabel</span>(label);
+  });
+
+  <span class="kw">return</span> threads.<span class="prop">length</span> + <span class="str">'件にラベル「'</span> + labelName + <span class="str">'」を付与しました'</span>;
+}</pre>
+  </div>
+</section>
+
+<!-- 解決できること -->
+<section class="section">
+  <div class="section-title"><span class="num">3</span> このツールで解決できること</div>
+
+  <div class="benefits">
+    <div class="benefit-card">
+      <div class="benefit-icon">&#128270;</div>
+      <div class="benefit-title">過去メールも一括対応</div>
+      <div class="benefit-desc">Gmailフィルタは「以降」しか適用されませんが、GASなら過去の全受信トレイを遡ってラベル付けできます。</div>
+    </div>
+    <div class="benefit-card">
+      <div class="benefit-icon">&#127775;</div>
+      <div class="benefit-title">重複付与なし</div>
+      <div class="benefit-desc"><code>-label:ラベル名</code> をクエリに含めることで、既にラベル済みのスレッドを除外し、二重処理を防ぎます。</div>
+    </div>
+    <div class="benefit-card">
+      <div class="benefit-icon">&#9201;</div>
+      <div class="benefit-title">定期実行で自動化</div>
+      <div class="benefit-desc">GASのタイマートリガーを設定すれば、毎朝9時に自動実行してメールボックスを常に整理できます。</div>
+    </div>
+    <div class="benefit-card">
+      <div class="benefit-icon">&#128274;</div>
+      <div class="benefit-title">複数ルールに対応</div>
+      <div class="benefit-desc">「請求書→経理」「クレーム→要対応」など、複数のキーワード・ラベルペアを一括処理できます。</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Tomoya &amp; Co. ポートフォリオ &mdash; GAS 自動化デモ</p>
+</footer>
+
+<script>
+  const labelColors = ['lc0', 'lc1', 'lc3', 'lc4', 'lc5'];
+  let colorIndex = 0;
+  const labelColorMap = {};
+  let running = false;
+
+  function getLabelColor(name) {
+    if (!labelColorMap[name]) {
+      labelColorMap[name] = labelColors[colorIndex % labelColors.length];
+      colorIndex++;
+    }
+    return labelColorMap[name];
+  }
+
+  function runLabel() {
+    if (running) return;
+    const kw = document.getElementById('kwInput').value.trim();
+    const labelName = document.getElementById('labelInput').value.trim();
+    if (!kw || !labelName) {
+      document.getElementById('counterText').textContent = 'キーワードとラベル名を入力してください';
+      return;
+    }
+
+    running = true;
+    document.getElementById('runBtn').disabled = true;
+    const bar = document.getElementById('counterBar');
+    bar.className = 'counter-bar';
+    document.getElementById('counterText').textContent = 'Gmail を検索中... subject:' + kw;
+    document.getElementById('counterBadge').textContent = '0 件';
+
+    // まずラベルを既存のものから削除
+    document.querySelectorAll('.mail-item').forEach(item => {
+      const labels = item.querySelector('.mail-labels');
+      Array.from(labels.querySelectorAll('.label-tag')).forEach(tag => {
+        if (!tag.classList.contains('existing-label')) {
+          tag.remove();
+        }
+      });
+      item.classList.remove('matched');
+    });
+
+    const color = getLabelColor(labelName);
+    const items = document.querySelectorAll('.mail-item');
+    const matched = [];
+
+    items.forEach(item => {
+      const subject = item.dataset.subject || '';
+      if (subject.includes(kw)) {
+        matched.push(item);
+      }
+    });
+
+    setTimeout(() => {
+      document.getElementById('counterText').textContent = matched.length + ' 件が見つかりました — ラベル付け中...';
+    }, 500);
+
+    matched.forEach((item, i) => {
+      setTimeout(() => {
+        item.classList.add('matched');
+        const labels = item.querySelector('.mail-labels');
+
+        // 既存の同名ラベルが無ければ追加
+        const exists = Array.from(labels.querySelectorAll('.label-tag'))
+          .some(t => t.textContent.trim() === labelName);
+        if (!exists) {
+          const tag = document.createElement('span');
+          tag.className = 'label-tag ' + color;
+          tag.textContent = labelName;
+          labels.appendChild(tag);
+          requestAnimationFrame(() => requestAnimationFrame(() => tag.classList.add('show')));
+        }
+        document.getElementById('counterBadge').textContent = (i + 1) + ' 件';
+      }, 700 + i * 150);
+    });
+
+    const totalDelay = 700 + matched.length * 150 + 300;
+    setTimeout(() => {
+      if (matched.length > 0) {
+        bar.className = 'counter-bar done';
+        document.getElementById('counterText').textContent =
+          matched.length + '件にラベル「' + labelName + '」を付与しました';
+      } else {
+        document.getElementById('counterText').textContent =
+          '「' + kw + '」を含む件名のメールは見つかりませんでした';
+      }
+      running = false;
+      document.getElementById('runBtn').disabled = false;
+    }, totalDelay);
+  }
+
+  function copyCode() {
+    const code = `function labelEmails(keyword, labelName) {
+  const label = GmailApp.getUserLabelByName(labelName)
+    || GmailApp.createLabel(labelName);
+
+  const threads = GmailApp.search('subject:' + keyword + ' -label:' + labelName);
+  threads.forEach(thread => {
+    thread.addLabel(label);
+  });
+
+  return threads.length + '件にラベル「' + labelName + '」を付与しました';
+}`;
+    navigator.clipboard.writeText(code).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = 'コピー済み';
+      setTimeout(() => btn.textContent = 'コピー', 2000);
+    });
+  }
+
+  // Enter キーで実行
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') runLabel();
+  });
+</script>
+</body>
+</html>

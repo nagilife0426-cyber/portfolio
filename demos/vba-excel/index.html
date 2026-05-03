@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Excel自動レポート生成マクロ | VBA デモ</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --bg3: #21262d;
+    --accent: #00d4ff;
+    --green: #3fb950;
+    --red: #f85149;
+    --yellow: #d29922;
+    --excel: #1d6f42;
+    --excel2: #217346;
+    --text: #c9d1d9;
+    --text-muted: #8b949e;
+    --border: #30363d;
+    --radius: 8px;
+  }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .nav { padding: 12px 24px; border-bottom: 1px solid var(--border); background: var(--bg2); display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); }
+  .nav a { color: var(--accent); }
+
+  .hero { padding: 56px 24px 40px; max-width: 1000px; margin: 0 auto; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; background: rgba(33,115,70,.25); color: #4ade80; border: 1px solid rgba(33,115,70,.5); margin-bottom: 16px; }
+  .hero h1 { font-size: clamp(26px,4vw,40px); font-weight: 700; line-height: 1.2; margin-bottom: 16px; }
+  .hero h1 span { color: var(--accent); }
+  .hero p { color: var(--text-muted); font-size: 16px; max-width: 680px; }
+
+  .section { max-width: 1000px; margin: 0 auto; padding: 0 24px 56px; }
+  .section-title { font-size: 20px; font-weight: 700; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .section-title::before { content: ''; display: inline-block; width: 4px; height: 20px; background: var(--accent); border-radius: 2px; }
+
+  .demo-box { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+
+  /* excel window mock */
+  .excel-win { border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+  .excel-titlebar { background: var(--excel2); padding: 8px 14px; display: flex; align-items: center; justify-content: space-between; }
+  .excel-titlebar-title { font-size: 12px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px; }
+  .excel-icon { font-size: 14px; }
+  .excel-dots { display: flex; gap: 5px; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; background: #555; }
+  .dot.red { background: var(--red); } .dot.yellow { background: var(--yellow); } .dot.green { background: var(--green); }
+
+  /* tabs */
+  .excel-tabs { background: #1a1a2e; display: flex; gap: 2px; padding: 4px 8px 0; border-bottom: 1px solid var(--border); }
+  .tab { padding: 5px 14px; font-size: 11px; font-weight: 600; border-radius: 4px 4px 0 0; cursor: pointer; transition: all .2s; border: 1px solid transparent; border-bottom: none; color: var(--text-muted); }
+  .tab.active { background: var(--bg2); border-color: var(--border); color: var(--text); }
+  .tab.report { color: #4ade80; }
+  .tab.report.active { background: rgba(33,115,70,.15); border-color: rgba(33,115,70,.4); }
+  .tab.new { color: var(--accent); opacity: 0; transition: opacity .5s; }
+  .tab.new.show { opacity: 1; }
+
+  /* sheet content */
+  .sheet { padding: 0; overflow: auto; max-height: 340px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .col-header { background: #2a2a3e; color: var(--text-muted); text-align: center; padding: 4px 6px; font-size: 10px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 2; }
+  .row-num { background: #2a2a3e; color: var(--text-muted); text-align: center; padding: 4px 8px; font-size: 10px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); min-width: 32px; }
+  td.cell { padding: 4px 10px; border-right: 1px solid rgba(48,54,61,.4); border-bottom: 1px solid rgba(48,54,61,.4); white-space: nowrap; }
+  td.cell.header-cell { background: var(--excel2); color: #fff; font-weight: 700; }
+  td.cell.num { text-align: right; font-family: 'SFMono-Regular', Consolas, monospace; }
+  td.cell.formula { color: var(--accent); text-align: right; font-family: 'SFMono-Regular', Consolas, monospace; }
+  td.cell.big-title { font-size: 15px; font-weight: 800; color: #fff; }
+  td.cell.stat-label { font-weight: 700; color: var(--text); }
+  td.cell.stat-value { color: var(--accent); font-weight: 700; text-align: right; font-family: 'SFMono-Regular', Consolas, monospace; }
+  td.cell.highlight { background: rgba(0,212,255,.08); }
+  .flash { animation: flashIn .5s ease; }
+  @keyframes flashIn { from { background: rgba(0,212,255,.3); } to {} }
+
+  /* btn */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 20px; border-radius: var(--radius); border: none; cursor: pointer; font-size: 14px; font-weight: 600; transition: all .2s; }
+  .btn-excel { background: var(--excel2); color: #fff; }
+  .btn-excel:hover { background: #28a158; transform: translateY(-1px); }
+  .btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; }
+
+  /* stats summary */
+  .summary-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .summary-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; flex: 1; min-width: 130px; }
+  .summary-card-label { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; text-transform: uppercase; letter-spacing: .05em; }
+  .summary-card-value { font-size: 20px; font-weight: 800; color: var(--accent); }
+
+  /* code */
+  pre { background: #0a0e13; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; overflow-x: auto; font-size: 13px; line-height: 1.7; }
+  .token-kw { color: #ff7b72; }
+  .token-fn { color: #d2a8ff; }
+  .token-str { color: #a5d6ff; }
+  .token-cm { color: var(--text-muted); font-style: italic; }
+  .token-bi { color: #ffa657; }
+  .token-num { color: #79c0ff; }
+  .token-type { color: #ffa657; }
+  .token-var { color: var(--text); }
+
+  /* use cases */
+  .use-cases { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+  .use-case { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; transition: border-color .2s; }
+  .use-case:hover { border-color: var(--accent); }
+  .use-case-icon { font-size: 24px; margin-bottom: 10px; }
+  .use-case h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; color: var(--accent); }
+  .use-case p { font-size: 13px; color: var(--text-muted); }
+
+  .step-log { font-size: 12px; color: var(--text-muted); font-family: 'SFMono-Regular', Consolas, monospace; min-height: 18px; margin-top: 8px; }
+
+  /* chart canvas */
+  canvas { border-radius: 4px; display: block; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="../../index.html">← ホームへ戻る</a>
+  <span>/</span>
+  <span>VBA デモ</span>
+  <span>/</span>
+  <span>Excel 自動レポート生成マクロ</span>
+</nav>
+
+<section class="hero">
+  <div class="badge">VBA / Excel マクロ</div>
+  <h1>Excel 自動<span>レポート生成</span>マクロ</h1>
+  <p>売上データシートから月次レポートを1クリックで自動生成します。集計・グラフ作成・書式設定まですべて自動化。</p>
+</section>
+
+<!-- DEMO -->
+<section class="section">
+  <div class="section-title">インタラクティブデモ</div>
+  <div class="demo-box">
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+      <button class="btn btn-excel" id="run-btn" onclick="runMacro()">レポート生成</button>
+      <button class="btn btn-secondary" onclick="resetMacro()">リセット</button>
+    </div>
+    <div class="step-log" id="step-log"></div>
+
+    <!-- Excel mock window -->
+    <div class="excel-win" style="margin-top:14px;">
+      <div class="excel-titlebar">
+        <div class="excel-titlebar-title">
+          <span class="excel-icon">📊</span>
+          <span>月次売上管理.xlsm — Excel</span>
+        </div>
+        <div class="excel-dots">
+          <div class="dot yellow"></div>
+          <div class="dot green"></div>
+          <div class="dot red"></div>
+        </div>
+      </div>
+      <div class="excel-tabs">
+        <div class="tab active" id="tab-data" onclick="switchTab('data')">売上データ</div>
+        <div class="tab report" id="tab-report" onclick="switchTab('report')">月次レポート</div>
+      </div>
+
+      <!-- data sheet -->
+      <div class="sheet" id="sheet-data">
+        <table>
+          <thead>
+            <tr>
+              <th class="col-header"></th>
+              <th class="col-header">A</th>
+              <th class="col-header">B</th>
+              <th class="col-header">C</th>
+              <th class="col-header">D</th>
+            </tr>
+          </thead>
+          <tbody id="data-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- report sheet -->
+      <div class="sheet hidden" id="sheet-report">
+        <div id="report-content" style="padding:16px;">
+          <div style="font-size:12px;color:var(--text-muted);text-align:center;padding:40px;">
+            「レポート生成」ボタンを押すと、ここに月次レポートが表示されます
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- CODE -->
+<section class="section">
+  <div class="section-title">実装コード（VBA）</div>
+  <pre><code><span class="token-kw">Sub</span> <span class="token-fn">GenerateMonthlyReport</span>()
+    <span class="token-kw">Dim</span> <span class="token-var">ws</span> <span class="token-kw">As</span> <span class="token-type">Worksheet</span>
+    <span class="token-kw">Dim</span> <span class="token-var">reportSheet</span> <span class="token-kw">As</span> <span class="token-type">Worksheet</span>
+
+    <span class="token-kw">Set</span> <span class="token-var">ws</span> = <span class="token-bi">ThisWorkbook</span>.<span class="token-fn">Sheets</span>(<span class="token-str">"売上データ"</span>)
+
+    <span class="token-cm">' レポートシートを作成（既存なら削除して再作成）</span>
+    <span class="token-kw">On Error Resume Next</span>
+    <span class="token-bi">Application</span>.<span class="token-var">DisplayAlerts</span> = <span class="token-kw">False</span>
+    <span class="token-bi">ThisWorkbook</span>.<span class="token-fn">Sheets</span>(<span class="token-str">"月次レポート"</span>).<span class="token-fn">Delete</span>
+    <span class="token-bi">Application</span>.<span class="token-var">DisplayAlerts</span> = <span class="token-kw">True</span>
+    <span class="token-kw">On Error GoTo</span> <span class="token-num">0</span>
+
+    <span class="token-kw">Set</span> <span class="token-var">reportSheet</span> = <span class="token-bi">ThisWorkbook</span>.<span class="token-fn">Sheets</span>.<span class="token-fn">Add</span>(<span class="token-var">After</span>:=<span class="token-var">ws</span>)
+    <span class="token-var">reportSheet</span>.<span class="token-var">Name</span> = <span class="token-str">"月次レポート"</span>
+
+    <span class="token-cm">' ヘッダー・集計値を設定</span>
+    <span class="token-kw">With</span> <span class="token-var">reportSheet</span>
+        .<span class="token-fn">Cells</span>(<span class="token-num">1</span>, <span class="token-num">1</span>).<span class="token-var">Value</span> = <span class="token-str">"月次売上レポート"</span>
+        .<span class="token-fn">Cells</span>(<span class="token-num">1</span>, <span class="token-num">1</span>).<span class="token-var">Font</span>.<span class="token-var">Size</span> = <span class="token-num">16</span>
+        .<span class="token-fn">Cells</span>(<span class="token-num">1</span>, <span class="token-num">1</span>).<span class="token-var">Font</span>.<span class="token-var">Bold</span> = <span class="token-kw">True</span>
+
+        <span class="token-kw">Dim</span> <span class="token-var">lastRow</span> <span class="token-kw">As Long</span>
+        <span class="token-var">lastRow</span> = <span class="token-var">ws</span>.<span class="token-fn">Cells</span>(<span class="token-var">ws</span>.<span class="token-var">Rows</span>.<span class="token-var">Count</span>, <span class="token-num">1</span>).<span class="token-fn">End</span>(<span class="token-bi">xlUp</span>).<span class="token-var">Row</span>
+
+        .<span class="token-fn">Cells</span>(<span class="token-num">3</span>, <span class="token-num">1</span>).<span class="token-var">Value</span> = <span class="token-str">"合計売上"</span>
+        .<span class="token-fn">Cells</span>(<span class="token-num">3</span>, <span class="token-num">2</span>).<span class="token-var">Value</span> = <span class="token-bi">Application</span>.<span class="token-var">WorksheetFunction</span>. _
+            <span class="token-fn">Sum</span>(<span class="token-var">ws</span>.<span class="token-fn">Range</span>(<span class="token-str">"C2:C"</span> &amp; <span class="token-var">lastRow</span>))
+
+        .<span class="token-fn">Cells</span>(<span class="token-num">4</span>, <span class="token-num">1</span>).<span class="token-var">Value</span> = <span class="token-str">"平均売上"</span>
+        .<span class="token-fn">Cells</span>(<span class="token-num">4</span>, <span class="token-num">2</span>).<span class="token-var">Value</span> = <span class="token-bi">Application</span>.<span class="token-var">WorksheetFunction</span>. _
+            <span class="token-fn">Average</span>(<span class="token-var">ws</span>.<span class="token-fn">Range</span>(<span class="token-str">"C2:C"</span> &amp; <span class="token-var">lastRow</span>))
+    <span class="token-kw">End With</span>
+
+    <span class="token-bi">MsgBox</span> <span class="token-str">"月次レポートを生成しました！"</span>
+<span class="token-kw">End Sub</span></code></pre>
+</section>
+
+<!-- USE CASES -->
+<section class="section">
+  <div class="section-title">解決できること</div>
+  <div class="use-cases">
+    <div class="use-case">
+      <div class="use-case-icon">📋</div>
+      <h3>月次レポート自動化</h3>
+      <p>毎月のコピペ作業をボタン1つに。集計ミスを完全に排除し、報告書作成を数分で完了。</p>
+    </div>
+    <div class="use-case">
+      <div class="use-case-icon">📊</div>
+      <h3>グラフ自動生成</h3>
+      <p>データ更新のたびに棒グラフ・折れ線グラフを自動再描画。フォーマット設定も自動適用。</p>
+    </div>
+    <div class="use-case">
+      <div class="use-case-icon">📧</div>
+      <h3>メール自動送信</h3>
+      <p>Outlook連携でレポート完成後に担当者へ自動メール。添付ファイル名も自動命名。</p>
+    </div>
+    <div class="use-case">
+      <div class="use-case-icon">🔗</div>
+      <h3>複数シート・ファイル連携</h3>
+      <p>複数部署のExcelを統合集計。フォルダ内の全ファイルを順次処理するバッチ処理も可能。</p>
+    </div>
+  </div>
+</section>
+
+<script>
+const DATA_ROWS = [
+  ['月','商品カテゴリ','売上金額','担当者'],
+  ['1月','家電',320000,'田中'],
+  ['1月','衣料',185000,'佐藤'],
+  ['2月','家電',410000,'田中'],
+  ['2月','食品',95000,'鈴木'],
+  ['2月','衣料',220000,'佐藤'],
+  ['3月','家電',280000,'田中'],
+  ['3月','食品',130000,'鈴木'],
+  ['3月','衣料',195000,'佐藤'],
+  ['4月','家電',375000,'田中'],
+  ['4月','食品',110000,'鈴木'],
+];
+
+const MONTHLY = {
+  '1月': 505000,
+  '2月': 725000,
+  '3月': 605000,
+  '4月': 485000,
+};
+
+const MACRO_STEPS = [
+  'Sub GenerateMonthlyReport() 実行開始',
+  '売上データシートを参照...',
+  '既存「月次レポート」シートを削除',
+  '新規シート「月次レポート」を作成',
+  'データ最終行を検出: 11行',
+  '集計値を計算中 (SUM / AVERAGE / MAX / MIN)...',
+  'ヘッダーと書式を適用...',
+  'グラフオブジェクトを挿入...',
+  'レポート生成完了！',
+];
+
+let running = false;
+
+function buildDataTable() {
+  const tbody = document.getElementById('data-tbody');
+  tbody.innerHTML = '';
+  DATA_ROWS.forEach((row, ri) => {
+    const tr = document.createElement('tr');
+    const num = document.createElement('td');
+    num.className = 'row-num'; num.textContent = ri + 1;
+    tr.appendChild(num);
+    row.forEach((cell, ci) => {
+      const td = document.createElement('td');
+      td.className = 'cell' + (ri === 0 ? ' header-cell' : '') + (ci === 2 && ri > 0 ? ' num' : '');
+      td.textContent = ci === 2 && ri > 0 ? '¥' + parseInt(cell).toLocaleString() : cell;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+buildDataTable();
+
+function switchTab(name) {
+  document.getElementById('sheet-data').classList.toggle('hidden', name !== 'data');
+  document.getElementById('sheet-report').classList.toggle('hidden', name !== 'report');
+  document.getElementById('tab-data').classList.toggle('active', name === 'data');
+  document.getElementById('tab-report').classList.toggle('active', name === 'report');
+}
+
+async function runMacro() {
+  if (running) return;
+  running = true;
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+
+  for (let i = 0; i < MACRO_STEPS.length; i++) {
+    document.getElementById('step-log').textContent = '> ' + MACRO_STEPS[i];
+    await delay(280);
+  }
+
+  // show report tab
+  document.getElementById('tab-report').classList.add('show');
+  switchTab('report');
+  buildReport();
+  await delay(100);
+  drawBarChart();
+
+  btn.disabled = false;
+  running = false;
+}
+
+function buildReport() {
+  const months = Object.keys(MONTHLY);
+  const values = Object.values(MONTHLY);
+  const total = values.reduce((a, b) => a + b, 0);
+  const avg = Math.round(total / values.length);
+  const max = Math.max(...values);
+  const min = Math.min(...values);
+
+  const html = `
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <tr><td colspan="4" class="cell big-title flash" style="padding:14px 10px 10px;background:var(--excel2);">
+        月次売上レポート（2026年1〜4月）
+      </td></tr>
+      <tr>
+        <td class="cell" style="padding:10px;color:var(--text-muted);font-size:10px;text-transform:uppercase;">指標</td>
+        <td class="cell" style="padding:10px;color:var(--text-muted);font-size:10px;text-transform:uppercase;">金額</td>
+        <td class="cell" style="padding:10px;color:var(--text-muted);font-size:10px;text-transform:uppercase;">月</td>
+        <td class="cell" style="padding:10px;color:var(--text-muted);font-size:10px;text-transform:uppercase;">備考</td>
+      </tr>
+      <tr>
+        <td class="cell stat-label flash">合計売上</td>
+        <td class="cell stat-value flash">¥${total.toLocaleString()}</td>
+        <td class="cell flash">—</td>
+        <td class="cell flash" style="color:var(--text-muted);font-size:11px;">=SUM(C2:C11)</td>
+      </tr>
+      <tr>
+        <td class="cell stat-label flash">月平均売上</td>
+        <td class="cell stat-value flash">¥${avg.toLocaleString()}</td>
+        <td class="cell flash">—</td>
+        <td class="cell flash" style="color:var(--text-muted);font-size:11px;">=AVERAGE(月計)</td>
+      </tr>
+      <tr>
+        <td class="cell stat-label flash">最大月売上</td>
+        <td class="cell stat-value flash" style="color:var(--green);">¥${max.toLocaleString()}</td>
+        <td class="cell flash" style="color:var(--green);">${months[values.indexOf(max)]}</td>
+        <td class="cell flash" style="color:var(--text-muted);font-size:11px;">=MAX(月計)</td>
+      </tr>
+      <tr>
+        <td class="cell stat-label flash">最小月売上</td>
+        <td class="cell stat-value flash" style="color:var(--yellow);">¥${min.toLocaleString()}</td>
+        <td class="cell flash" style="color:var(--yellow);">${months[values.indexOf(min)]}</td>
+        <td class="cell flash" style="color:var(--text-muted);font-size:11px;">=MIN(月計)</td>
+      </tr>
+    </table>
+    <div style="padding:12px 10px 4px;font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;">月別売上グラフ</div>
+    <div style="padding:4px 10px 14px;"><canvas id="bar-chart" height="140"></canvas></div>
+  `;
+  document.getElementById('report-content').innerHTML = html;
+}
+
+function drawBarChart() {
+  const canvas = document.getElementById('bar-chart');
+  if (!canvas) return;
+  canvas.width = canvas.parentElement.clientWidth - 8;
+  const W = canvas.width, H = 140;
+  const ctx = canvas.getContext('2d');
+  const months = Object.keys(MONTHLY);
+  const values = Object.values(MONTHLY);
+  const max = Math.max(...values);
+  const pad = { top: 16, right: 16, bottom: 28, left: 72 };
+  const cw = W - pad.left - pad.right;
+  const ch = H - pad.top - pad.bottom;
+  const barW = (cw / months.length) * .55;
+  const gap = cw / months.length;
+
+  ctx.fillStyle = '#0d1117'; ctx.fillRect(0, 0, W, H);
+
+  // y grid
+  [0, .25, .5, .75, 1].forEach(t => {
+    const y = pad.top + ch * t;
+    ctx.strokeStyle = '#30363d'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cw, y); ctx.stroke();
+    const val = Math.round(max * (1 - t));
+    ctx.fillStyle = '#8b949e'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText('¥' + (val / 10000).toFixed(0) + '万', pad.left - 6, y + 3);
+  });
+
+  // bars
+  months.forEach((m, i) => {
+    const v = values[i];
+    const bh = (v / max) * ch;
+    const x = pad.left + gap * i + (gap - barW) / 2;
+    const y = pad.top + ch - bh;
+    const g = ctx.createLinearGradient(0, y, 0, y + bh);
+    g.addColorStop(0, '#00d4ff');
+    g.addColorStop(1, '#0066aa');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.roundRect(x, y, barW, bh, [4, 4, 0, 0]);
+    ctx.fill();
+    // x label
+    ctx.fillStyle = '#8b949e'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(m, x + barW / 2, H - 8);
+    // value
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 10px sans-serif';
+    ctx.fillText('¥' + (v / 10000).toFixed(0) + '万', x + barW / 2, y - 4);
+  });
+}
+
+function resetMacro() {
+  document.getElementById('sheet-report').classList.add('hidden');
+  document.getElementById('sheet-data').classList.remove('hidden');
+  document.getElementById('tab-data').classList.add('active');
+  document.getElementById('tab-report').classList.remove('active');
+  document.getElementById('tab-report').classList.remove('show');
+  document.getElementById('step-log').textContent = '';
+  document.getElementById('report-content').innerHTML = `
+    <div style="font-size:12px;color:var(--text-muted);text-align:center;padding:40px;">
+      「レポート生成」ボタンを押すと、ここに月次レポートが表示されます
+    </div>`;
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>
