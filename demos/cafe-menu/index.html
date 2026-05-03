@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MORI CAFE | デジタルメニュー</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brown: #6b4c32;
+      --brown-light: #8b6845;
+      --caramel: #d4a76a;
+      --cream: #f5f0e8;
+      --off-white: #faf7f2;
+      --white: #ffffff;
+      --text: #3a2a1a;
+      --text-mid: #6b4c32;
+      --text-light: #a08060;
+      --green: #4a7c59;
+    }
+
+    body {
+      font-family: 'Hiragino Mincho ProN', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', Georgia, serif;
+      background: var(--off-white);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* Credit */
+    .credit-bar {
+      background: var(--brown);
+      color: rgba(255,255,255,0.65);
+      text-align: center;
+      font-size: 11px;
+      padding: 6px 16px;
+      font-family: 'Hiragino Kaku Gothic ProN', sans-serif;
+      letter-spacing: 0.05em;
+    }
+    .credit-bar a { color: var(--caramel); text-decoration: none; }
+
+    /* Header */
+    header {
+      background: var(--brown);
+      color: white;
+      padding: 0 32px;
+    }
+    .header-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 70px;
+    }
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-icon {
+      width: 44px; height: 44px;
+      background: var(--caramel);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+    .logo-text-main {
+      font-size: 20px;
+      font-weight: 400;
+      letter-spacing: 0.15em;
+      line-height: 1.1;
+    }
+    .logo-text-sub {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--caramel);
+      font-family: 'Hiragino Kaku Gothic ProN', sans-serif;
+      text-transform: uppercase;
+    }
+    .header-info {
+      font-size: 12px;
+      color: rgba(255,255,255,0.7);
+      text-align: right;
+      line-height: 1.7;
+      font-family: 'Hiragino Kaku Gothic ProN', sans-serif;
+    }
+
+    /* Hero banner */
+    .hero-banner {
+      background: linear-gradient(135deg, var(--brown) 0%, #8b5e3c 50%, var(--caramel) 100%);
+      color: white;
+      text-align: center;
+      padding: 48px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-banner::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero-banner h2 {
+      font-size: clamp(20px, 4vw, 30px);
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .hero-banner p {
+      font-size: 14px;
+      color: rgba(255,255,255,0.75);
+      letter-spacing: 0.08em;
+      position: relative;
+      font-family: 'Hiragino Kaku Gothic ProN', sans-serif;
+    }
+    .season-badge {
+      display: inline-block;
+      background: var(--caramel);
+      color: var(--brown);
+      font-size: 11px;
+      font-family: 'Hiragino Kaku Gothic ProN', sans-serif;
+      font-weight: 700;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+      letter-spacing: 0.1em;
+      position: relative;
+    }
+
+    /* Tab nav */
+    .tab-nav {
+      background: var(--cream);
+      border-bottom: 2px solid rgba(107,76,50,0.15);
+      padding: 0 32px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 2px 12px rgba(107,76,50,0.08);
+    }
+    .tab-list {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      gap: 0;
+      list-style: none;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 18px 28px;
+      font-size: 14px;
+      font-family: 'Hiragino Mincho ProN', serif;
+      color: var(--text-light);
+      letter-spacing: 0.1em;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.25s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tab-btn:hover { color: var(--brown); }
+    .tab-btn.active {
+      color: var(--brown);
+      border-bottom-color: var(--caramel);
+      font-weight: 600;
+    }
+
+    /* Main content */
+    main { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+
+    /* Tab content */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Category title */
+    .cat-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(107,76,50,0.2);
+    }
+    .cat-icon { font-size: 32px; }
+    .cat-title { font-size: 22px; font-weight: 400; letter-spacing: 0.1em; }
+    .cat-count { font-size: 12px; color: var(--text-light); font-family: 'Hiragino Kaku Gothic ProN', sans-serif; margin-top: 2px; }
+
+    /* Menu grid */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    /* Menu card */
+    .menu-card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      border: 1px solid rgba(107,76,50,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .menu-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(107,76,50,0.12);
+    }
+    .menu-emoji {
+      font-size: 40px;
+      flex-shrink: 0;
+      width: 52px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--cream);
+      border-radius: 12px;
+    }
+    .menu-info { flex: 1; }
+    .menu-name {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: var(--text);
+    }
+    .menu-desc { font-size: 12px; color: var(--text-light); line-height: 1.7; margin-bottom: 10px; }
+    .menu-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .menu-price { font-size: 16px; font-weight: 700; color: var(--brown); }
+    .menu-price span { font-size: 11px; font-weight: 400; color: var(--text-light); margin-left: 2px; }
+    .menu-badge {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-family: 'Hiragino Kaku Gothic ProN', sans-serif;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+    .badge-hot { background: #fff0e6; color: #c0530a; }
+    .badge-new { background: #e8f5e9; color: #2d7a3a; }
+    .badge-limited { background: #fce4ec; color: #c2185b; }
+    .badge-recommend { background: #e8eaf6; color: #3949ab; }
+
+    /* Section divider */
+    .menu-section-title {
+      font-size: 13px;
+      letter-spacing: 0.2em;
+      color: var(--text-light);
+      text-transform: uppercase;
+      font-family: 'Hiragino Kaku Gothic ProN', sans-serif;
+      margin: 32px 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .menu-section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(107,76,50,0.15);
+    }
+
+    /* Highlight card */
+    .menu-card.highlight {
+      background: linear-gradient(135deg, #faf0dc, #f5e8cc);
+      border-color: var(--caramel);
+    }
+
+    /* Footer */
+    footer {
+      background: var(--brown);
+      color: rgba(255,255,255,0.65);
+      padding: 32px 24px;
+      text-align: center;
+    }
+    footer .f-logo { font-size: 18px; color: var(--caramel); margin-bottom: 8px; letter-spacing: 0.15em; }
+    footer p { font-size: 12px; line-height: 1.7; font-family: 'Hiragino Kaku Gothic ProN', sans-serif; }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .menu-grid { grid-template-columns: 1fr; }
+      .tab-btn { padding: 14px 16px; font-size: 13px; }
+      .header-info { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="credit-bar">
+    🎨 デザインサンプル - <a href="../../index.html">Tomoya &amp; Co. 制作</a>
+  </div>
+
+  <header>
+    <div class="header-inner">
+      <div class="header-logo">
+        <div class="logo-icon">🌿</div>
+        <div>
+          <div class="logo-text-main">MORI CAFE</div>
+          <div class="logo-text-sub">Natural &amp; Japanese Modern</div>
+        </div>
+      </div>
+      <div class="header-info">
+        営業時間 10:00〜20:00（火曜定休）<br>
+        東京都世田谷区奥沢3-12-4
+      </div>
+    </div>
+  </header>
+
+  <div class="hero-banner">
+    <span class="season-badge">🍃 2026年 初夏メニュー</span>
+    <h2>季節を味わう、ひとりの時間。</h2>
+    <p>旬の素材にこだわった和モダンなカフェメニューをご用意しています</p>
+  </div>
+
+  <nav class="tab-nav">
+    <ul class="tab-list">
+      <li><button class="tab-btn active" data-tab="drink">☕ ドリンク</button></li>
+      <li><button class="tab-btn" data-tab="food">🍱 フード</button></li>
+      <li><button class="tab-btn" data-tab="sweets">🍡 スイーツ</button></li>
+    </ul>
+  </nav>
+
+  <main>
+
+    <!-- ドリンク -->
+    <div class="tab-content active" id="tab-drink">
+      <div class="cat-header">
+        <span class="cat-icon">☕</span>
+        <div>
+          <div class="cat-title">ドリンクメニュー</div>
+          <div class="cat-count">全14品 — こだわりのスペシャルティコーヒーと国産茶</div>
+        </div>
+      </div>
+
+      <div class="menu-section-title">コーヒー</div>
+      <div class="menu-grid">
+        <div class="menu-card highlight">
+          <div class="menu-emoji">☕</div>
+          <div class="menu-info">
+            <div class="menu-name">シングルオリジンドリップ</div>
+            <div class="menu-desc">エチオピア・イルガチェフェ。花のような香りとベリーの甘い後味。丁寧にハンドドリップで。</div>
+            <div class="menu-footer">
+              <div class="menu-price">¥680 <span>税込</span></div>
+              <span class="menu-badge badge-recommend">店主推薦</span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-card">
+          <div class="menu-emoji">🫗</div>
+          <div class="menu-info">
+            <div class="menu-name">カフェラテ</div>
+            <div class="menu-desc">深煎りエスプレッソとたっぷりのスチームミルク。ラテアートをそえてお届けします。</div>
+            <div class="menu-footer">
+              <div class="menu-price">¥750 <span>税込</span></div>
+              <span class="menu-badge badge-hot">HOT人気</span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-card">
+          <div class="menu-emoji">🧊</div>
+          <div class="menu-info">
+            <div class="menu-name">水出しアイスコーヒー</div>
+            <div class="menu-desc">8時間かけて冷水で抽出。雑味のないクリアな味わい。黒糖シロップをそえて。</div>
+            <div class="menu-footer">
+              <div class="menu-price">¥700 <span>税込</span></div>
+              <span class="menu-badge badge-new">NEW</span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-card">
+          <div class="menu-emoji">🌿</div>
+          <div class="menu-info">
+            <div class="menu-name">抹茶ラテ（宇治産）</div>
+            <div class="menu-desc">宇治の一番茶を石臼挽き。豆乳or牛乳からお選びください。甘さ控えめ、本格派。</div>
+            <div class="menu-footer">
+              <div class="menu-price">¥820 <span>税込</span></div>
+              <span class="menu-badge badge-hot">HOT人気</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-section-title">お茶・ソフトドリンク</div>
+      <div class="menu-grid">
+        <div class="menu-card">
+          <div class="menu-emoji">🍵</div>
+          <div class="menu-info">
+            <div class="menu-name">煎茶（静岡・山本茶園）</div>
+            <div class="menu-desc">二煎まで楽しめる急須仕立て。清涼感ある旨みと渋みのバランスが絶妙。</div>
+            <div class="menu-footer">
+              <div class="menu-price">¥600 <span>税込</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="menu-card">
+          <div class="menu-emoji">🌸</div>
+          <div class="menu-info">
+            <div class="menu-name">ほうじ茶ラテ</div>
+            <div class="menu-desc">深く焙じた香ばしさとミルクのまろやかさ。秋冬定番が年中お楽しみいただけます。</div>
+            <div class="menu-footer">
+              <div class="menu-price">¥780 <span>税込</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="menu-card highlight">
+          <div class="menu-emoji">🍋</div>
+          <div class="menu-info">
+            <div class="menu-name">瀬戸内レモンスカッシュ</div>
+            <div class="menu-desc">広島産レモンのはちみつ漬けを使用。炭酸でさっぱり、初夏の限定ドリンク。</div>
+            <div class="menu-footer">
+              <div class="menu-price">¥680 <span>税込</span></div>
+              <span class="menu-badge badge-limited">期間限定</span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-card">
+          <div class="menu-emoji">🍊</div>
+          <div class="menu-info">
+            <div class="menu-name">しょうがホットジンジャー</div>
+            <div class="menu-desc">国産しょうがをすりおろしたホットドリンク。はちみつと黒糖で優しい甘さ。体の芯から温まります。</div>
+            <div class="menu-footer">
+              <div class="menu-price">¥650 <span>税込</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- フード -->
+    <div class="tab-content" id="tab-food">
+      <div class="cat-header">
+        <span class="cat-icon">🍱</span>
+        <div>
+          <div class="cat-title">フードメニュー</div>
+          <div class="cat-count">全10品 — 地元の食材を使った和モダンな軽食</div>
+        </div>
+      </div>
+
+      <div class="menu-section-title">ランチセット（11:00〜14:00）</div>
+      <div class="menu-grid">
+        <div class="menu-card highlight">
+          <div class="menu-emoji">🍚</div>
+          <div class="menu-info">
+            <div class="menu-name">日替わり定食</div>
+            <div class="menu-desc">産地直送の旬野菜と地元農家の米を使用。主菜+副菜2品+みそ汁+小鉢のセット。ドリンク付き。</div>
+            <div class="menu-footer">
+              <div class="menu-price">¥1,100 <span>税込</span></div>
+              <span class="menu-badge badge-hot">人気No.1</span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-card">
+          <div class="menu-emoji">🥗</div>
+          <div class="menu-info">
+            <div class="menu-name">雑穀サラダボウル</div>
+            <div class="menu-desc">五穀米・キヌア・季節野菜・豆腐・温玉のヘルシーボウル。特製胡麻ドレッシングで。</div>
+            <div class="menu-footer">
+              <div class="menu-price">¥980 <span>税込</span></div>
+              <span class="menu-badge badge-new">NEW</span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-card">
+          <div class="menu-emoji">🍜</div>
+          <div class="menu-info">
+            <div class="menu-name">出汁茶漬け（焼鮭）</div>
+            <div class="menu-desc">かつおと昆布の合わせ出汁。北海道産焼鮭・梅干し・三つ葉・海苔をのせた贅沢茶漬け。</div>
+            <div class="menu-footer">
+              <div class="menu-price">¥880 <span>税込</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="menu-card">
+          <div class="menu-emoji">🥪</div>
+          <div class="menu-info">
+            <div class="menu-name">和風パニーニ</div>
+            <div class="menu-desc">有機全粒粉パンに和牛牛蒡きんぴらと味噌マヨのソースを挟んだ和洋折衷サンド。</div>
+            <div class="menu-footer">
+              <div class="menu-price">¥850 <span>税込</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-section-title">おやつ・軽食（終日）</div>
+      <div class="menu-grid">
+        <div class="menu-card">
+          <div class="menu-emoji">🥚</div>
+          <div class="menu-info">
+            <div class="menu-name">厚焼き卵トースト</div>
+            <div class="menu-desc">だし巻き卵と国産バターを使った自家製厚焼き卵。トーストにのせてとろりと溶かします。</div>
+            <div class="menu-footer">
+              <div class="menu-price">¥680 <span>税込</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="menu-card">
+          <div class="menu-emoji">🧀</div>
+          <div class="menu-info">
+            <div class="menu-name">チーズと味噌のひと口おにぎり</div>
+            <div class="menu-desc">白味噌とクリームチーズを混ぜた餡を中心に入れた和とろりおにぎり。3個セット。</div>
+            <div class="menu-footer">
+              <div class="menu-price">¥520 <span>税込</span></div>
+              <span class="menu-badge badge-recommend">店主推薦</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- スイーツ -->
+    <div class="tab-content" id="tab-sweets">
+      <div class="cat-header">
+        <span class="cat-icon">🍡</span>
+        <div>
+          <div class="cat-title">スイーツメニュー</div>
+          <div class="cat-count">全9品 — 和モダンスイーツ、毎日手作り</div>
+        </div>
+      </div>
+
+      <div class="menu-section-title">焼き菓子・ケーキ</div>
+      <div class="menu-grid">
+        <div class="menu-card highlight">
+          <div class="menu-emoji">🍰</div>
+          <div class="menu-info">
+            <div class="menu-name">抹茶のバスクチーズケーキ</div>
+            <div class="menu-desc">宇治抹茶を練り込んだとろりとしたバスクチーズ。表面の焦げと中のとろけるコントラストが絶品。</div>
+            <div class="menu-footer">
+              <div class="menu-price">¥680 <span>税込</span></div>
+              <span class="menu-badge badge-hot">売切必至</span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-card">
+          <div class="menu-emoji">🧁</div>
+          <div class="menu-info">
+            <div class="menu-name">きな粉のシフォンケーキ</div>
+            <div class="menu-desc">国産大豆のきな粉を使ったふわふわシフォン。黒糖クリームと一緒にどうぞ。</div>
+            <div class="menu-footer">
+              <div class="menu-price">¥580 <span>税込</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="menu-card">
+          <div class="menu-emoji">🍪</div>
+          <div class="menu-info">
+            <div class="menu-name">黒ごまクッキー 3枚</div>
+            <div class="menu-desc">国産黒ごまをたっぷり使ったサクサクのクッキー。白砂糖不使用、甜菜糖とはちみつで優しい甘さ。</div>
+            <div class="menu-footer">
+              <div class="menu-price">¥380 <span>税込</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="menu-card">
+          <div class="menu-emoji">🎂</div>
+          <div class="menu-info">
+            <div class="menu-name">桜餡のパウンドケーキ</div>
+            <div class="menu-desc">塩漬け桜の花を使った上品な桜餡。白こしあんを層にしたマーブルパウンド。春にかぎらず通年販売。</div>
+            <div class="menu-footer">
+              <div class="menu-price">¥550 <span>税込</span></div>
+              <span class="menu-badge badge-new">NEW</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-section-title">冷たいスイーツ</div>
+      <div class="menu-grid">
+        <div class="menu-card highlight">
+          <div class="menu-emoji">🍧</div>
+          <div class="menu-info">
+            <div class="menu-name">黒蜜わらびもちパフェ</div>
+            <div class="menu-desc">なめらかわらびもち・小豆・黒蜜アイス・抹茶ゼリーを重ねたこだわりパフェ。見た目も美しい。</div>
+            <div class="menu-footer">
+              <div class="menu-price">¥920 <span>税込</span></div>
+              <span class="menu-badge badge-recommend">店主推薦</span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-card">
+          <div class="menu-emoji">🍮</div>
+          <div class="menu-info">
+            <div class="menu-name">豆乳プリン</div>
+            <div class="menu-desc">国産大豆の豆乳を使ったとろとろプリン。黒蜜と大豆きな粉をかけてお召し上がりください。</div>
+            <div class="menu-footer">
+              <div class="menu-price">¥480 <span>税込</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <div class="f-logo">🌿 MORI CAFE</div>
+    <p>東京都世田谷区奥沢3-12-4 ｜ 営業時間 10:00〜20:00（火曜定休）<br>
+    TEL: 03-0000-0000 ｜ Instagram: @mori_cafe_tokyo</p>
+    <p style="margin-top:12px;font-size:11px;opacity:0.5;">このページはデザインデモです © 2026 Tomoya &amp; Co.</p>
+  </footer>
+
+  <script>
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + tab).classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

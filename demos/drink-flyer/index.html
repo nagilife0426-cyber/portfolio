@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>飲料水 チラシデザイン デモ</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a1628;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 36px;
+      color: #fff;
+    }
+    .page-header h1 { font-size: 14px; opacity: 0.5; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 6px; }
+    .page-header p { font-size: 12px; opacity: 0.35; }
+
+    .banner-wrap {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 380px));
+      gap: 28px;
+      max-width: 1200px;
+      justify-content: center;
+    }
+
+    .banner-card {
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,50,120,0.5);
+    }
+    .banner-label {
+      background: rgba(0,0,0,0.6);
+      color: rgba(255,255,255,0.7);
+      font-size: 10px;
+      letter-spacing: 1px;
+      padding: 7px 14px;
+      text-align: center;
+    }
+
+    /* ===== Ver.A: 縦型・爽快ブルー ===== */
+    .banner-a {
+      aspect-ratio: 9/16;
+      background: linear-gradient(170deg, #e0f7ff 0%, #b3e9ff 20%, #0ea5e9 55%, #0369a1 80%, #012a4a 100%);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 22px;
+    }
+
+    /* 水しぶきエフェクト */
+    .splash {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.15;
+      animation: splashAnim 6s ease-in-out infinite;
+    }
+    .splash-1 { width: 200px; height: 200px; background: radial-gradient(circle, #7dd3fc, transparent); top: -80px; left: -60px; animation-delay: 0s; }
+    .splash-2 { width: 150px; height: 150px; background: radial-gradient(circle, #bae6fd, transparent); top: 10%; right: -40px; animation-delay: -2s; }
+    .splash-3 { width: 180px; height: 180px; background: radial-gradient(circle, #38bdf8, transparent); bottom: 15%; left: -50px; animation-delay: -4s; }
+    @keyframes splashAnim {
+      0%, 100% { transform: scale(1) translate(0,0); opacity: 0.15; }
+      50% { transform: scale(1.2) translate(8px, -8px); opacity: 0.25; }
+    }
+
+    /* 水滴 */
+    .drops-wrap { position: absolute; inset: 0; pointer-events: none; }
+    .drop {
+      position: absolute;
+      width: 6px;
+      height: 10px;
+      background: rgba(255,255,255,0.4);
+      border-radius: 0 0 50% 50%;
+      animation: dropFall linear infinite;
+    }
+    .drop:nth-child(1) { left: 15%; animation-duration: 4s; animation-delay: 0s; }
+    .drop:nth-child(2) { left: 30%; animation-duration: 5s; animation-delay: -1s; }
+    .drop:nth-child(3) { left: 55%; animation-duration: 3.5s; animation-delay: -2s; }
+    .drop:nth-child(4) { left: 70%; animation-duration: 4.5s; animation-delay: -0.5s; }
+    .drop:nth-child(5) { left: 85%; animation-duration: 3s; animation-delay: -3s; }
+    @keyframes dropFall {
+      0% { top: -5%; opacity: 0; }
+      10% { opacity: 0.4; }
+      90% { opacity: 0.2; }
+      100% { top: 105%; opacity: 0; }
+    }
+
+    .a-inner { position: relative; z-index: 3; text-align: center; width: 100%; }
+
+    .summer-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #fff 0%, #e0f7ff 100%);
+      color: #0369a1;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-bottom: 18px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 12px rgba(0,100,200,0.3);
+    }
+
+    .drink-icon {
+      font-size: clamp(80px, 15vw, 120px);
+      margin-bottom: 14px;
+      filter: drop-shadow(0 0 24px rgba(100,220,255,0.7));
+      animation: floatDrink 4s ease-in-out infinite;
+    }
+    @keyframes floatDrink {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .a-product-name {
+      font-size: clamp(26px, 5vw, 42px);
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 2px 16px rgba(0,80,180,0.5);
+      line-height: 1.15;
+      margin-bottom: 6px;
+    }
+    .a-tagline {
+      font-size: clamp(11px, 2vw, 15px);
+      color: rgba(200,240,255,0.9);
+      letter-spacing: 2px;
+      margin-bottom: 22px;
+    }
+
+    .feature-chips {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 22px;
+    }
+    .chip {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: #fff;
+      font-size: 11px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      backdrop-filter: blur(4px);
+      font-weight: 600;
+    }
+
+    .a-cta {
+      background: #fff;
+      color: #0369a1;
+      font-weight: 900;
+      font-size: clamp(13px, 2.5vw, 17px);
+      padding: 12px 28px;
+      border-radius: 40px;
+      letter-spacing: 1px;
+      box-shadow: 0 8px 24px rgba(0,100,200,0.4);
+      display: inline-block;
+    }
+
+    /* ===== Ver.B: 横型・清涼イベントチラシ ===== */
+    .banner-b {
+      aspect-ratio: 1;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 40%, #bae6fd 70%, #0ea5e9 100%);
+      position: relative;
+      overflow: hidden;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+    .banner-b::after {
+      content: '';
+      position: absolute;
+      bottom: -30%;
+      right: -10%;
+      width: 65%;
+      aspect-ratio: 1;
+      background: radial-gradient(circle, rgba(14,165,233,0.3) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .b-season {
+      font-size: 11px;
+      font-weight: 700;
+      color: #0369a1;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .b-headline {
+      font-size: clamp(22px, 5vw, 36px);
+      font-weight: 900;
+      color: #0c4a6e;
+      line-height: 1.2;
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 2;
+    }
+    .b-headline em { color: #0ea5e9; font-style: normal; }
+    .b-copy {
+      font-size: clamp(11px, 2vw, 13px);
+      color: #0369a1;
+      line-height: 1.7;
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .b-icons-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 2;
+    }
+    .b-icon-item {
+      background: rgba(255,255,255,0.8);
+      border-radius: 12px;
+      padding: 10px 14px;
+      text-align: center;
+      flex: 1;
+      backdrop-filter: blur(4px);
+      box-shadow: 0 4px 12px rgba(0,100,200,0.15);
+    }
+    .b-icon-item .ico { font-size: 26px; margin-bottom: 4px; }
+    .b-icon-item .lbl { font-size: 10px; font-weight: 700; color: #0369a1; }
+
+    .b-cta-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: auto;
+      position: relative;
+      z-index: 2;
+    }
+    .b-cta {
+      background: linear-gradient(135deg, #0ea5e9, #0369a1);
+      color: #fff;
+      font-weight: 900;
+      font-size: clamp(12px, 2.5vw, 15px);
+      padding: 11px 20px;
+      border-radius: 30px;
+      letter-spacing: 1px;
+      box-shadow: 0 6px 16px rgba(0,100,200,0.4);
+    }
+    .b-price {
+      font-size: clamp(14px, 3vw, 20px);
+      font-weight: 900;
+      color: #0c4a6e;
+    }
+    .b-price small { font-size: 0.6em; font-weight: 400; }
+
+    /* ===== Ver.C: 縦型・爽やかホワイト ===== */
+    .banner-c {
+      aspect-ratio: 4/5;
+      background: #fff;
+      position: relative;
+      overflow: hidden;
+      padding: 28px 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .banner-c::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 50%;
+      background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 60%, transparent 100%);
+    }
+    .banner-c::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #38bdf8, #0ea5e9, #0369a1);
+    }
+
+    .c-tag {
+      position: relative;
+      z-index: 2;
+      font-size: 10px;
+      font-weight: 800;
+      color: #0369a1;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      padding: 4px 14px;
+      border: 1.5px solid #bae6fd;
+      border-radius: 20px;
+    }
+    .c-drink-icon {
+      font-size: clamp(70px, 13vw, 100px);
+      position: relative;
+      z-index: 2;
+      margin-bottom: 16px;
+      filter: drop-shadow(0 8px 16px rgba(0,100,200,0.3));
+    }
+    .c-name {
+      font-size: clamp(20px, 4.5vw, 30px);
+      font-weight: 900;
+      color: #0c4a6e;
+      text-align: center;
+      line-height: 1.3;
+      position: relative;
+      z-index: 2;
+      margin-bottom: 12px;
+    }
+    .c-desc {
+      font-size: clamp(10px, 2vw, 13px);
+      color: #0369a1;
+      text-align: center;
+      line-height: 1.7;
+      position: relative;
+      z-index: 2;
+      margin-bottom: 20px;
+    }
+    .c-bar {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+      color: #fff;
+      font-size: clamp(12px, 2.5vw, 16px);
+      font-weight: 700;
+      text-align: center;
+      padding: 12px;
+      border-radius: 10px;
+      letter-spacing: 1px;
+      margin-top: auto;
+    }
+
+    .credit {
+      text-align: center;
+      color: rgba(255,255,255,0.25);
+      font-size: 11px;
+      margin-top: 36px;
+      letter-spacing: 1px;
+    }
+    .credit a { color: rgba(100,180,255,0.5); }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <h1>Portfolio Demo · Drink Flyer Design</h1>
+    <p>飲料水チラシ 3パターン / 制作: なぎ</p>
+  </div>
+
+  <div class="banner-wrap">
+
+    <!-- Ver.A: 縦型・爽快ブルー -->
+    <div class="banner-card">
+      <div class="banner-label">Ver.A – 縦型 (1080×1920) ・ 爽快ブルー系</div>
+      <div class="banner-a">
+        <div class="splash splash-1"></div>
+        <div class="splash splash-2"></div>
+        <div class="splash splash-3"></div>
+        <div class="drops-wrap">
+          <div class="drop"></div><div class="drop"></div><div class="drop"></div>
+          <div class="drop"></div><div class="drop"></div>
+        </div>
+        <div class="a-inner">
+          <div class="summer-badge">✦ Summer 2026 ✦</div>
+          <div class="drink-icon">💧</div>
+          <div class="a-product-name">Pure Water<br>Clear Blue</div>
+          <div class="a-tagline">一口で、涼しさが広がる。</div>
+          <div class="feature-chips">
+            <span class="chip">🧊 天然水</span>
+            <span class="chip">💎 無添加</span>
+            <span class="chip">🌿 ミネラル豊富</span>
+          </div>
+          <span class="a-cta">コンビニで発売中 →</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ver.B: 正方形・清涼イベントチラシ -->
+    <div class="banner-card">
+      <div class="banner-label">Ver.B – 正方形 (1080×1080) ・ イベントチラシ系</div>
+      <div class="banner-b">
+        <div class="b-season">🌊 Summer Refresh Collection</div>
+        <div class="b-headline">この夏、<br><em>もっと透き通った</em><br>一口を。</div>
+        <div class="b-copy">
+          暑い季節にこそ飲みたい、<br>
+          天然ミネラルたっぷりの清涼ドリンク。<br>
+          毎日のリフレッシュに。
+        </div>
+        <div class="b-icons-row">
+          <div class="b-icon-item"><div class="ico">💧</div><div class="lbl">天然水</div></div>
+          <div class="b-icon-item"><div class="ico">🧊</div><div class="lbl">冷たい</div></div>
+          <div class="b-icon-item"><div class="ico">🌿</div><div class="lbl">無添加</div></div>
+        </div>
+        <div class="b-cta-row">
+          <span class="b-cta">今すぐチェック →</span>
+          <span class="b-price">¥120<small>/本</small></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ver.C: 縦型・清潔感ホワイト -->
+    <div class="banner-card">
+      <div class="banner-label">Ver.C – 4:5 (1080×1350) ・ ホワイト清潔感</div>
+      <div class="banner-c">
+        <div class="c-tag">New Collection</div>
+        <div class="c-drink-icon">🥤</div>
+        <div class="c-name">夏の清涼<br>ドリンク フェア</div>
+        <div class="c-desc">
+          みずみずしく透き通る爽やかさ。<br>
+          水しぶきのような清涼感を<br>
+          毎日の生活に届けます。
+        </div>
+        <div class="c-bar">🧊 期間限定 全国コンビニで発売中！</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="credit">
+    制作デモ by <span style="color:rgba(255,255,255,0.5)">なぎ</span> ·
+    <a href="https://nagilife0426-cyber.github.io/portfolio/">ポートフォリオを見る</a>
+  </div>
+
+</body>
+</html>

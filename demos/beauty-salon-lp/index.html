@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LUXE SKIN SALON | 上質なエステで素肌から輝く</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink: #e8b4c8;
+      --pink-deep: #d48fa9;
+      --purple: #c084fc;
+      --purple-deep: #a855f7;
+      --white: #ffffff;
+      --off-white: #fdf8fa;
+      --text: #2d1b2e;
+      --text-mid: #6b4c6b;
+      --text-light: #9e7a9e;
+    }
+
+    body {
+      font-family: 'Hiragino Mincho ProN', 'Hiragino Kaku Gothic ProN', 'Yu Mincho', Georgia, serif;
+      color: var(--text);
+      background: var(--off-white);
+      line-height: 1.7;
+    }
+
+    /* Credit */
+    .credit-bar {
+      background: #1a0a1e;
+      color: rgba(255,255,255,0.6);
+      text-align: center;
+      font-size: 11px;
+      padding: 6px 16px;
+      font-family: 'Hiragino Kaku Gothic ProN', sans-serif;
+      letter-spacing: 0.05em;
+    }
+    .credit-bar a { color: var(--pink); text-decoration: none; }
+
+    /* Nav */
+    .nav {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(232,180,200,0.3);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 0 24px;
+    }
+    .nav-inner {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+    .nav-logo {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+    }
+    .nav-logo span { color: var(--purple-deep); }
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--text-mid);
+      text-decoration: none;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--purple-deep); }
+    .nav-cta {
+      background: linear-gradient(135deg, var(--pink), var(--purple));
+      color: white !important;
+      padding: 8px 20px;
+      border-radius: 24px;
+      font-size: 13px !important;
+    }
+
+    /* Hero */
+    .hero {
+      position: relative;
+      min-height: 90vh;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #f9e8f0 0%, #f0d6f5 30%, #e0c8f8 60%, #d4b0f5 100%);
+      z-index: 0;
+    }
+    .hero-circles {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      overflow: hidden;
+    }
+    .hero-circles span {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.15;
+    }
+    .hero-circles span:nth-child(1) {
+      width: 600px; height: 600px;
+      background: var(--purple);
+      top: -200px; right: -100px;
+    }
+    .hero-circles span:nth-child(2) {
+      width: 400px; height: 400px;
+      background: var(--pink);
+      bottom: -150px; left: -100px;
+    }
+    .hero-circles span:nth-child(3) {
+      width: 200px; height: 200px;
+      background: var(--purple-deep);
+      top: 40%; left: 10%;
+    }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 80px 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+      width: 100%;
+    }
+    .hero-text { }
+    .hero-eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.2em;
+      color: var(--purple-deep);
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      font-family: 'Hiragino Kaku Gothic ProN', sans-serif;
+    }
+    .hero-title {
+      font-size: clamp(32px, 5vw, 52px);
+      font-weight: 400;
+      line-height: 1.35;
+      color: var(--text);
+      margin-bottom: 24px;
+    }
+    .hero-title .highlight {
+      background: linear-gradient(135deg, var(--pink-deep), var(--purple-deep));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 700;
+    }
+    .hero-desc {
+      font-size: 15px;
+      color: var(--text-mid);
+      margin-bottom: 36px;
+      line-height: 1.9;
+    }
+    .hero-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, var(--pink-deep), var(--purple));
+      color: white;
+      padding: 16px 36px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      transition: transform 0.3s, box-shadow 0.3s;
+      box-shadow: 0 8px 30px rgba(192,132,252,0.4);
+      animation: pulse-glow 2.5s ease-in-out infinite;
+    }
+    .hero-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 40px rgba(192,132,252,0.55);
+    }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 8px 30px rgba(192,132,252,0.4); }
+      50% { box-shadow: 0 8px 40px rgba(192,132,252,0.65); }
+    }
+    .hero-visual {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .hero-card {
+      background: rgba(255,255,255,0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.8);
+      border-radius: 20px;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .hero-card-icon { font-size: 32px; }
+    .hero-card-title { font-size: 14px; font-weight: 600; color: var(--text); }
+    .hero-card-sub { font-size: 12px; color: var(--text-light); }
+
+    /* Section common */
+    .section { padding: 80px 24px; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .section-label {
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--purple-deep);
+      font-family: 'Hiragino Kaku Gothic ProN', sans-serif;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(24px, 4vw, 38px);
+      font-weight: 400;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+    .section-sub {
+      font-size: 14px;
+      color: var(--text-light);
+      margin-bottom: 48px;
+    }
+
+    /* Courses */
+    .courses-bg { background: white; }
+    .courses-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .course-card {
+      border-radius: 20px;
+      overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .course-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 50px rgba(192,132,252,0.2);
+    }
+    .course-thumb {
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 64px;
+    }
+    .course-card:nth-child(1) .course-thumb { background: linear-gradient(135deg, #fce4ec, #f8bbd0); }
+    .course-card:nth-child(2) .course-thumb { background: linear-gradient(135deg, #f3e5f5, #e1bee7); }
+    .course-card:nth-child(3) .course-thumb { background: linear-gradient(135deg, #e8eaf6, #c5cae9); }
+    .course-body {
+      background: var(--off-white);
+      border: 1px solid rgba(232,180,200,0.3);
+      border-top: none;
+      padding: 24px;
+    }
+    .course-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--pink), var(--purple));
+      color: white;
+      font-size: 10px;
+      font-family: 'Hiragino Kaku Gothic ProN', sans-serif;
+      letter-spacing: 0.15em;
+      padding: 4px 10px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+    .course-name { font-size: 18px; font-weight: 600; margin-bottom: 10px; }
+    .course-desc { font-size: 13px; color: var(--text-light); line-height: 1.8; margin-bottom: 16px; }
+    .course-duration {
+      font-size: 12px;
+      color: var(--text-mid);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Pricing */
+    .pricing-section { background: linear-gradient(135deg, #faf0f5, #f5e8fc); }
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .price-card {
+      background: white;
+      border-radius: 20px;
+      padding: 32px 28px;
+      text-align: center;
+      border: 2px solid transparent;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .price-card:hover { border-color: var(--purple); transform: translateY(-4px); }
+    .price-card.featured {
+      background: linear-gradient(135deg, var(--pink-deep), var(--purple));
+      color: white;
+      border: none;
+      transform: scale(1.03);
+      box-shadow: 0 20px 50px rgba(192,132,252,0.35);
+    }
+    .price-label {
+      font-size: 12px;
+      letter-spacing: 0.15em;
+      font-family: 'Hiragino Kaku Gothic ProN', sans-serif;
+      margin-bottom: 8px;
+      color: var(--text-light);
+    }
+    .price-card.featured .price-label { color: rgba(255,255,255,0.8); }
+    .price-name { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+    .price-amount {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--purple-deep);
+      margin-bottom: 4px;
+    }
+    .price-card.featured .price-amount { color: white; }
+    .price-unit { font-size: 13px; color: var(--text-light); margin-bottom: 24px; }
+    .price-card.featured .price-unit { color: rgba(255,255,255,0.75); }
+    .price-features { list-style: none; text-align: left; }
+    .price-features li {
+      font-size: 13px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-mid);
+    }
+    .price-card.featured .price-features li {
+      border-color: rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.9);
+    }
+    .price-features li::before { content: "✓"; color: var(--purple); font-weight: 700; }
+    .price-card.featured .price-features li::before { color: white; }
+    .popular-badge {
+      display: inline-block;
+      background: white;
+      color: var(--purple-deep);
+      font-size: 10px;
+      font-family: 'Hiragino Kaku Gothic ProN', sans-serif;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+    }
+
+    /* Testimonials */
+    .testimonials-section { background: white; }
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .testi-card {
+      background: var(--off-white);
+      border-radius: 20px;
+      padding: 28px 24px;
+      border: 1px solid rgba(232,180,200,0.3);
+    }
+    .testi-stars { font-size: 16px; margin-bottom: 14px; color: #fbbf24; }
+    .testi-text {
+      font-size: 14px;
+      color: var(--text-mid);
+      line-height: 1.8;
+      margin-bottom: 20px;
+    }
+    .testi-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .testi-avatar {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .testi-card:nth-child(1) .testi-avatar { background: linear-gradient(135deg, #fce4ec, #f8bbd0); }
+    .testi-card:nth-child(2) .testi-avatar { background: linear-gradient(135deg, #f3e5f5, #e1bee7); }
+    .testi-card:nth-child(3) .testi-avatar { background: linear-gradient(135deg, #e8eaf6, #c5cae9); }
+    .testi-name { font-size: 14px; font-weight: 600; }
+    .testi-sub { font-size: 12px; color: var(--text-light); }
+
+    /* CTA */
+    .cta-section {
+      background: linear-gradient(135deg, var(--pink-deep), var(--purple-deep));
+      padding: 80px 24px;
+      text-align: center;
+    }
+    .cta-section h2 {
+      font-size: clamp(24px, 4vw, 38px);
+      color: white;
+      font-weight: 400;
+      margin-bottom: 16px;
+    }
+    .cta-section p { color: rgba(255,255,255,0.8); margin-bottom: 36px; font-size: 15px; }
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: white;
+      color: var(--purple-deep);
+      padding: 18px 44px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      transition: transform 0.3s, box-shadow 0.3s;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+      animation: pulse-glow2 2.5s ease-in-out infinite;
+    }
+    .cta-btn:hover { transform: translateY(-4px); }
+    @keyframes pulse-glow2 {
+      0%, 100% { box-shadow: 0 8px 30px rgba(0,0,0,0.2); }
+      50% { box-shadow: 0 8px 50px rgba(0,0,0,0.35); }
+    }
+
+    /* Footer */
+    footer {
+      background: var(--text);
+      color: rgba(255,255,255,0.6);
+      padding: 40px 24px;
+      text-align: center;
+    }
+    footer .logo { font-size: 20px; color: var(--pink); margin-bottom: 12px; letter-spacing: 0.15em; }
+    footer p { font-size: 13px; font-family: 'Hiragino Kaku Gothic ProN', sans-serif; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero-content { grid-template-columns: 1fr; }
+      .hero-visual { display: none; }
+      .courses-grid, .pricing-grid, .testimonials-grid { grid-template-columns: 1fr; }
+      .price-card.featured { transform: none; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="credit-bar">
+    🎨 デザインサンプル - <a href="../../index.html">Tomoya &amp; Co. 制作</a>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">LUXE <span>SKIN</span> SALON</a>
+      <ul class="nav-links">
+        <li><a href="#courses">コース</a></li>
+        <li><a href="#pricing">料金</a></li>
+        <li><a href="#reviews">お客様の声</a></li>
+        <li><a href="#booking" class="nav-cta">ご予約</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero" id="top">
+    <div class="hero-bg"></div>
+    <div class="hero-circles">
+      <span></span><span></span><span></span>
+    </div>
+    <div class="hero-content">
+      <div class="hero-text">
+        <p class="hero-eyebrow">Premium Beauty Salon</p>
+        <h1 class="hero-title">
+          素肌から輝く、<br>
+          <span class="highlight">あなたへ</span>。
+        </h1>
+        <p class="hero-desc">
+          最高級のケアと最先端の技術で、<br>
+          あなたの美しさを内側から引き出します。<br>
+          一人ひとりの肌状態に合わせた、特別なひとときを。
+        </p>
+        <a href="#booking" class="hero-btn">
+          ✨ 無料カウンセリングを予約する
+        </a>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-card">
+          <span class="hero-card-icon">🌸</span>
+          <div>
+            <div class="hero-card-title">フェイシャルエステ</div>
+            <div class="hero-card-sub">毛穴・くすみ・シミを集中ケア</div>
+          </div>
+        </div>
+        <div class="hero-card">
+          <span class="hero-card-icon">💆</span>
+          <div>
+            <div class="hero-card-title">ボディトリートメント</div>
+            <div class="hero-card-sub">全身のデトックス&引き締め</div>
+          </div>
+        </div>
+        <div class="hero-card">
+          <span class="hero-card-icon">✨</span>
+          <div>
+            <div class="hero-card-title">ホワイトニングケア</div>
+            <div class="hero-card-sub">透明感のある素肌へ導く</div>
+          </div>
+        </div>
+        <div class="hero-card" style="background:linear-gradient(135deg,rgba(232,180,200,0.3),rgba(192,132,252,0.2));border:1px solid rgba(192,132,252,0.3)">
+          <span class="hero-card-icon">⭐</span>
+          <div>
+            <div class="hero-card-title">総合評価 4.9 / 5.0</div>
+            <div class="hero-card-sub">累計 1,200名以上のお客様に選ばれています</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Courses -->
+  <section class="section courses-bg" id="courses">
+    <div class="container">
+      <p class="section-label">Treatment Course</p>
+      <h2 class="section-title">選ばれるコース</h2>
+      <p class="section-sub">お肌の悩みに合わせて、3つのコースをご用意しています。</p>
+      <div class="courses-grid">
+        <div class="course-card">
+          <div class="course-thumb">🌸</div>
+          <div class="course-body">
+            <span class="course-badge">FACIAL</span>
+            <h3 class="course-name">プレミアムフェイシャル</h3>
+            <p class="course-desc">毛穴の汚れを徹底クレンジングしたのち、美容液を超音波で浸透させます。くすみ・ハリ不足・乾燥肌に効果的。</p>
+            <div class="course-duration">⏱ 90分 / ¥14,800〜</div>
+          </div>
+        </div>
+        <div class="course-card">
+          <div class="course-thumb">💆</div>
+          <div class="course-body">
+            <span class="course-badge">BODY</span>
+            <h3 class="course-name">ボディスカルプトリウム</h3>
+            <p class="course-desc">全身のリンパマッサージとキャビテーション機器を組み合わせたスペシャルコース。むくみ・セルライト・ラインアップに。</p>
+            <div class="course-duration">⏱ 120分 / ¥18,800〜</div>
+          </div>
+        </div>
+        <div class="course-card">
+          <div class="course-thumb">✨</div>
+          <div class="course-body">
+            <span class="course-badge">WHITENING</span>
+            <h3 class="course-name">透明感ホワイトニング</h3>
+            <p class="course-desc">シミ・色素沈着・日焼けによる黒ずみを集中ケア。美白成分をイオン導入で届け、理想の透き通るような肌へ。</p>
+            <div class="course-duration">⏱ 75分 / ¥12,800〜</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="section pricing-section" id="pricing">
+    <div class="container">
+      <p class="section-label">Price Menu</p>
+      <h2 class="section-title">料金表</h2>
+      <p class="section-sub">初回トライアルから定期コースまで、続けやすいプランをご用意しています。</p>
+      <div class="pricing-grid">
+        <div class="price-card">
+          <div class="price-label">TRIAL</div>
+          <h3 class="price-name">トライアル</h3>
+          <div class="price-amount">¥4,980</div>
+          <div class="price-unit">初回限定 / 1回</div>
+          <ul class="price-features">
+            <li>カウンセリング込み（30分）</li>
+            <li>お好きなコース1つ選択</li>
+            <li>アフターケアアドバイス</li>
+            <li>次回特典クーポン付き</li>
+          </ul>
+        </div>
+        <div class="price-card featured">
+          <span class="popular-badge">人気 No.1</span>
+          <div class="price-label">REGULAR</div>
+          <h3 class="price-name">月1回コース</h3>
+          <div class="price-amount">¥9,800</div>
+          <div class="price-unit">月額 / 自動更新</div>
+          <ul class="price-features">
+            <li>月1回・好きなコース選択可</li>
+            <li>当日追加メニュー15%OFF</li>
+            <li>ホームケア商品10%OFF</li>
+            <li>優先予約枠</li>
+            <li>LINE相談し放題</li>
+          </ul>
+        </div>
+        <div class="price-card">
+          <div class="price-label">PREMIUM</div>
+          <h3 class="price-name">月2回プレミアム</h3>
+          <div class="price-amount">¥16,800</div>
+          <div class="price-unit">月額 / 自動更新</div>
+          <ul class="price-features">
+            <li>月2回・全コース選択可</li>
+            <li>追加メニュー20%OFF</li>
+            <li>ホームケア商品20%OFF</li>
+            <li>専任スタッフ固定</li>
+            <li>スキンケア診断レポート付き</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section class="section testimonials-section" id="reviews">
+    <div class="container">
+      <p class="section-label">Voice of Clients</p>
+      <h2 class="section-title">お客様の声</h2>
+      <p class="section-sub">本物の変化を感じていただいたお客様からのコメント。</p>
+      <div class="testimonials-grid">
+        <div class="testi-card">
+          <div class="testi-stars">★★★★★</div>
+          <p class="testi-text">「長年悩んでいたくすみが3回のケアで見違えるように明るくなりました。スタッフの方も丁寧で、肌の状態を毎回細かく確認してくれるので安心してお任せできます。」</p>
+          <div class="testi-author">
+            <div class="testi-avatar">🌸</div>
+            <div>
+              <div class="testi-name">M.K. さま</div>
+              <div class="testi-sub">30代 / フェイシャルコース</div>
+            </div>
+          </div>
+        </div>
+        <div class="testi-card">
+          <div class="testi-stars">★★★★★</div>
+          <p class="testi-text">「産後のむくみと体型ケアで通い始めました。ボディコースを3ヶ月続けたところ、脚のラインがスッキリして洋服のサイズが変わりました！通って本当に良かったです。」</p>
+          <div class="testi-author">
+            <div class="testi-avatar">💆</div>
+            <div>
+              <div class="testi-name">Y.T. さま</div>
+              <div class="testi-sub">30代 / ボディコース</div>
+            </div>
+          </div>
+        </div>
+        <div class="testi-card">
+          <div class="testi-stars">★★★★☆</div>
+          <p class="testi-text">「ホワイトニングコースを試してみたら、気になっていた頬のシミが薄くなってきました。スタッフさんの説明がわかりやすく、ホームケアのアドバイスも的確です。」</p>
+          <div class="testi-author">
+            <div class="testi-avatar">✨</div>
+            <div>
+              <div class="testi-name">A.N. さま</div>
+              <div class="testi-sub">40代 / ホワイトニングコース</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section" id="booking">
+    <div class="container">
+      <h2>あなたの素肌を、もっと輝かせましょう。</h2>
+      <p>まずは無料のカウンセリングから。お気軽にご予約ください。</p>
+      <a href="#" class="cta-btn">
+        📅 今すぐ無料カウンセリングを予約する →
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <div class="logo">LUXE SKIN SALON</div>
+    <p>〒150-0001 東京都渋谷区神宮前1-2-3 シャンテビル 5F<br>
+    営業時間: 10:00〜20:00（火曜定休）｜ TEL: 03-0000-0000</p>
+    <p style="margin-top:16px;font-size:11px;">© 2026 LUXE SKIN SALON. All rights reserved. | このページはデモです</p>
+  </footer>
+
+</body>
+</html>

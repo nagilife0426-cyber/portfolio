@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECバナー制作サンプル集 | Tomoya & Co.</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a22;
+      --surface2: #22222e;
+      --border: rgba(255,255,255,0.08);
+      --text: #f0f0f5;
+      --text-mid: #a0a0b5;
+      --text-light: #606080;
+      --accent: #7c6dfa;
+      --accent2: #a78bfa;
+    }
+
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* Credit */
+    .credit-bar {
+      background: var(--accent);
+      color: rgba(255,255,255,0.85);
+      text-align: center;
+      font-size: 11px;
+      padding: 6px 16px;
+      letter-spacing: 0.05em;
+    }
+    .credit-bar a { color: white; text-decoration: none; font-weight: 600; }
+
+    /* Header */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+    }
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+    .header-logo { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: 0.05em; }
+    .header-logo span { color: var(--accent2); }
+    .header-tag {
+      background: rgba(124,109,250,0.15);
+      border: 1px solid rgba(124,109,250,0.3);
+      color: var(--accent2);
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    /* Hero */
+    .page-hero {
+      background: linear-gradient(135deg, #0f0f13 0%, #1a1525 50%, #0f1520 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 64px 32px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .page-hero::before {
+      content: '';
+      position: absolute;
+      top: -200px; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(124,109,250,0.15) 0%, transparent 70%);
+    }
+    .hero-label {
+      display: inline-block;
+      background: rgba(124,109,250,0.15);
+      border: 1px solid rgba(124,109,250,0.35);
+      color: var(--accent2);
+      font-size: 12px;
+      padding: 6px 16px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+      letter-spacing: 0.1em;
+      position: relative;
+    }
+    .page-hero h1 {
+      font-size: clamp(28px, 5vw, 48px);
+      font-weight: 700;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .page-hero h1 span {
+      background: linear-gradient(135deg, var(--accent2), #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .page-hero p { font-size: 16px; color: var(--text-mid); max-width: 600px; margin: 0 auto; position: relative; }
+
+    /* Main */
+    main { max-width: 1100px; margin: 0 auto; padding: 64px 32px; }
+
+    /* Section title */
+    .sec-title {
+      font-size: 13px;
+      letter-spacing: 0.2em;
+      color: var(--text-light);
+      text-transform: uppercase;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .sec-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* Banner showcase */
+    .banner-section { margin-bottom: 64px; }
+
+    .banner-intro {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 24px 28px;
+      margin-bottom: 32px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .banner-intro-icon { font-size: 40px; flex-shrink: 0; }
+    .banner-intro h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .banner-intro p { font-size: 13px; color: var(--text-mid); }
+    .banner-intro-tags { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .intro-tag {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 10px;
+      background: var(--surface2);
+      color: var(--text-mid);
+      border: 1px solid var(--border);
+    }
+
+    .banners-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    /* ============================================================
+       Banner 1: コスメ — ミニマル・白背景
+    ============================================================ */
+    .banner-wrapper {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .banner-label {
+      background: var(--surface2);
+      padding: 10px 16px;
+      font-size: 12px;
+      color: var(--text-light);
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .banner-label-size { font-size: 11px; color: var(--text-light); opacity: 0.6; }
+
+    /* Cosme banner */
+    .banner-cosme {
+      background: #ffffff;
+      padding: 36px 32px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: center;
+      min-height: 200px;
+    }
+    .cosme-left { }
+    .cosme-brand {
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      color: #9ca3af;
+      text-transform: uppercase;
+      font-family: Georgia, serif;
+      margin-bottom: 8px;
+    }
+    .cosme-name { font-size: 22px; font-weight: 300; color: #1a1a1a; letter-spacing: 0.05em; line-height: 1.3; margin-bottom: 12px; font-family: Georgia, serif; }
+    .cosme-desc { font-size: 11px; color: #6b7280; line-height: 1.7; margin-bottom: 16px; }
+    .cosme-price { font-size: 22px; font-weight: 700; color: #1a1a1a; }
+    .cosme-price span { font-size: 12px; font-weight: 400; color: #9ca3af; margin-left: 4px; }
+    .cosme-right {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .cosme-product {
+      width: 110px; height: 110px;
+      background: linear-gradient(145deg, #f9f0ff, #fce7f3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 56px;
+      box-shadow: 0 8px 30px rgba(200,150,200,0.25);
+    }
+    .cosme-btn {
+      background: #1a1a1a;
+      color: white;
+      font-size: 11px;
+      padding: 8px 20px;
+      border-radius: 20px;
+      letter-spacing: 0.1em;
+      border: none;
+      cursor: default;
+    }
+
+    /* Food banner */
+    .banner-food {
+      background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 30%, #dc2626 70%, #ef4444 100%);
+      padding: 28px 28px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 20px;
+      align-items: center;
+      min-height: 200px;
+      position: relative;
+      overflow: hidden;
+    }
+    .banner-food::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+    }
+    .banner-food::after {
+      content: '';
+      position: absolute;
+      bottom: -40px; left: 30%;
+      width: 150px; height: 150px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.1);
+    }
+    .food-eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: rgba(255,200,200,0.9);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .food-name { font-size: 24px; font-weight: 900; color: white; line-height: 1.2; margin-bottom: 10px; }
+    .food-desc { font-size: 11px; color: rgba(255,220,220,0.85); line-height: 1.6; margin-bottom: 14px; }
+    .food-badge-row { display: flex; gap: 8px; align-items: center; }
+    .food-badge {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+    .food-price-badge {
+      background: #fbbf24;
+      color: #7c2d12;
+      font-size: 15px;
+      font-weight: 900;
+      padding: 6px 14px;
+      border-radius: 6px;
+    }
+    .food-img-area {
+      font-size: 72px;
+      line-height: 1;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Apparel banner */
+    .banner-apparel {
+      background: #0a0a0a;
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 200px;
+      position: relative;
+      overflow: hidden;
+    }
+    .apparel-lines {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 39px,
+          rgba(255,255,255,0.03) 39px,
+          rgba(255,255,255,0.03) 40px
+        );
+    }
+    .apparel-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      position: relative;
+      z-index: 1;
+    }
+    .apparel-brand { font-size: 13px; letter-spacing: 0.35em; color: rgba(255,255,255,0.4); text-transform: uppercase; }
+    .apparel-season { font-size: 11px; color: rgba(255,255,255,0.3); letter-spacing: 0.15em; }
+    .apparel-middle {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    .apparel-emoji { font-size: 64px; filter: grayscale(0.3); }
+    .apparel-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      position: relative;
+      z-index: 1;
+    }
+    .apparel-name { font-size: 22px; font-weight: 800; color: white; letter-spacing: 0.05em; line-height: 1.2; }
+    .apparel-name span { display: block; font-size: 12px; font-weight: 300; color: rgba(255,255,255,0.5); letter-spacing: 0.2em; margin-bottom: 4px; }
+    .apparel-price-col { text-align: right; }
+    .apparel-strike { font-size: 12px; color: rgba(255,255,255,0.3); text-decoration: line-through; }
+    .apparel-price { font-size: 20px; font-weight: 700; color: white; }
+    .apparel-off { font-size: 11px; color: #f59e0b; }
+
+    /* Event banner */
+    .banner-event {
+      background: linear-gradient(135deg, #1e0a4e 0%, #2d1b69 30%, #4c1d95 60%, #6d28d9 100%);
+      padding: 28px;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .event-stars {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.5) 0%, transparent 100%),
+                  radial-gradient(1px 1px at 60% 15%, rgba(255,255,255,0.4) 0%, transparent 100%),
+                  radial-gradient(1px 1px at 80% 60%, rgba(255,255,255,0.35) 0%, transparent 100%),
+                  radial-gradient(1px 1px at 10% 70%, rgba(255,255,255,0.3) 0%, transparent 100%),
+                  radial-gradient(1px 1px at 45% 80%, rgba(255,255,255,0.45) 0%, transparent 100%),
+                  radial-gradient(2px 2px at 75% 35%, rgba(255,200,100,0.7) 0%, transparent 100%),
+                  radial-gradient(2px 2px at 25% 55%, rgba(150,200,255,0.7) 0%, transparent 100%);
+    }
+    .event-inner { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; }
+    .event-label { font-size: 10px; letter-spacing: 0.25em; color: #c4b5fd; text-transform: uppercase; margin-bottom: 6px; }
+    .event-title { font-size: 20px; font-weight: 900; color: white; margin-bottom: 8px; line-height: 1.25; }
+    .event-title span { color: #fbbf24; }
+    .event-date { font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 12px; }
+    .event-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+    .event-badge {
+      font-size: 10px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .eb1 { background: #fbbf24; color: #1a1a1a; }
+    .eb2 { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.2); }
+    .event-right { text-align: center; }
+    .event-emoji { font-size: 56px; display: block; }
+    .event-sub { font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 6px; }
+
+    /* Service section */
+    .service-section {
+      background: var(--surface);
+      border-radius: 20px;
+      padding: 48px 40px;
+      border: 1px solid var(--border);
+      margin-bottom: 64px;
+      text-align: center;
+    }
+    .service-section h2 { font-size: 26px; font-weight: 700; margin-bottom: 12px; }
+    .service-section h2 span { color: var(--accent2); }
+    .service-section p { font-size: 15px; color: var(--text-mid); max-width: 560px; margin: 0 auto 36px; }
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      text-align: left;
+    }
+    .service-card {
+      background: var(--surface2);
+      border-radius: 12px;
+      padding: 24px 20px;
+      border: 1px solid var(--border);
+    }
+    .service-icon { font-size: 28px; margin-bottom: 12px; }
+    .service-name { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .service-desc { font-size: 13px; color: var(--text-mid); line-height: 1.7; }
+    .service-price { font-size: 13px; color: var(--accent2); margin-top: 10px; font-weight: 600; }
+
+    /* CTA */
+    .cta-box {
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      border-radius: 20px;
+      padding: 48px 40px;
+      text-align: center;
+    }
+    .cta-box h2 { font-size: 24px; font-weight: 700; margin-bottom: 12px; }
+    .cta-box p { font-size: 14px; color: rgba(255,255,255,0.8); margin-bottom: 28px; }
+    .cta-box a {
+      display: inline-block;
+      background: white;
+      color: var(--accent);
+      padding: 14px 36px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 15px;
+      transition: transform 0.2s;
+    }
+    .cta-box a:hover { transform: translateY(-2px); }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px 32px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-light);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .banners-row { grid-template-columns: 1fr; }
+      .banner-cosme { grid-template-columns: 1fr; text-align: center; }
+      .cosme-right { align-items: center; }
+      .service-grid { grid-template-columns: 1fr; }
+      .banner-intro { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="credit-bar">
+    🎨 デザインサンプル - <a href="../../index.html">Tomoya &amp; Co. 制作</a>
+  </div>
+
+  <header>
+    <div class="header-inner">
+      <div class="header-logo">EC <span>Banner</span> Showcase</div>
+      <span class="header-tag">AI活用デザイン制作サンプル</span>
+    </div>
+  </header>
+
+  <div class="page-hero">
+    <span class="hero-label">✦ Design Portfolio</span>
+    <h1>商品バナー・広告画像<br><span>制作サンプル集</span></h1>
+    <p>EC・SNS広告・ショッピングモールに対応したバナーデザイン。このようなバナーを制作・自動生成できます。</p>
+  </div>
+
+  <main>
+
+    <!-- Banner 1: コスメ -->
+    <div class="banner-section">
+      <p class="sec-title">01 — コスメ・美容商品</p>
+      <div class="banner-intro">
+        <span class="banner-intro-icon">💄</span>
+        <div>
+          <h2>ミニマル・ホワイトバック</h2>
+          <p>高級感・清潔感を重視したコスメ・スキンケア商品向け。白背景で商品を際立たせるシンプルデザイン。</p>
+          <div class="banner-intro-tags">
+            <span class="intro-tag">Amazon商品画像</span>
+            <span class="intro-tag">楽天メイン画像</span>
+            <span class="intro-tag">Instagram正方形</span>
+            <span class="intro-tag">公式サイトバナー</span>
+          </div>
+        </div>
+      </div>
+      <div class="banners-row">
+        <div class="banner-wrapper">
+          <div class="banner-label">
+            <span>コスメバナー — 横長 (800×400)</span>
+            <span class="banner-label-size">ミニマル / ホワイト</span>
+          </div>
+          <div class="banner-cosme">
+            <div class="cosme-left">
+              <div class="cosme-brand">Luxe Beauty</div>
+              <div class="cosme-name">ヒアルロン酸<br>美容液</div>
+              <div class="cosme-desc">高濃度ヒアルロン酸配合。<br>ひと塗りで深い潤いが続く。<br>医薬部外品・全肌質対応。</div>
+              <div class="cosme-price">¥4,980 <span>税込</span></div>
+            </div>
+            <div class="cosme-right">
+              <div class="cosme-product">💧</div>
+              <button class="cosme-btn">今すぐ購入</button>
+            </div>
+          </div>
+        </div>
+        <div class="banner-wrapper">
+          <div class="banner-label">
+            <span>コスメバナー — 正方形 (600×600)</span>
+            <span class="banner-label-size">セール / アピール</span>
+          </div>
+          <div class="banner-cosme" style="display:flex;flex-direction:column;align-items:center;text-align:center;background:linear-gradient(135deg,#fff9fb,#f9f0ff);gap:16px;">
+            <div style="font-size:10px;letter-spacing:0.3em;color:#c084fc;text-transform:uppercase;font-family:Georgia,serif;">Limited Offer</div>
+            <div style="font-size:72px;">🌸</div>
+            <div style="font-size:20px;font-weight:300;color:#3a0050;letter-spacing:0.05em;font-family:Georgia,serif;">桜の美白セラム</div>
+            <div style="background:linear-gradient(135deg,#e8b4c8,#c084fc);color:white;font-size:13px;font-weight:700;padding:8px 24px;border-radius:24px;">初回 50% OFF → ¥2,480</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Banner 2: 食品 -->
+    <div class="banner-section">
+      <p class="sec-title">02 — 食品・グルメ商品</p>
+      <div class="banner-intro">
+        <span class="banner-intro-icon">🍱</span>
+        <div>
+          <h2>鮮やかレッド・インパクト系</h2>
+          <p>食欲を刺激する赤系の鮮やかな配色。食品・グルメ・飲料商品の訴求に最適なダイナミックデザイン。</p>
+          <div class="banner-intro-tags">
+            <span class="intro-tag">食品EC</span>
+            <span class="intro-tag">デリバリー広告</span>
+            <span class="intro-tag">SNS投稿用</span>
+            <span class="intro-tag">メルマガヘッダー</span>
+          </div>
+        </div>
+      </div>
+      <div class="banners-row">
+        <div class="banner-wrapper">
+          <div class="banner-label">
+            <span>フードバナー — 横長 (800×400)</span>
+            <span class="banner-label-size">鮮やか / レッド</span>
+          </div>
+          <div class="banner-food">
+            <div>
+              <div class="food-eyebrow">New Release</div>
+              <div class="food-name">職人仕込み<br>本格醤油ラーメン</div>
+              <div class="food-desc">豚骨×魚介の旨みが溶け合う<br>こだわりのWスープ。</div>
+              <div class="food-badge-row">
+                <span class="food-badge">送料無料</span>
+                <span class="food-badge">10食セット</span>
+                <span class="food-price-badge">¥3,980</span>
+              </div>
+            </div>
+            <div class="food-img-area">🍜</div>
+          </div>
+        </div>
+        <div class="banner-wrapper">
+          <div class="banner-label">
+            <span>フードバナー — 正方形 (600×600)</span>
+            <span class="banner-label-size">季節限定 / 訴求強め</span>
+          </div>
+          <div class="banner-food" style="display:flex;flex-direction:column;align-items:center;text-align:center;background:linear-gradient(135deg,#431407,#9a3412,#ea580c);">
+            <div style="font-size:11px;letter-spacing:0.2em;color:rgba(255,200,150,0.9);text-transform:uppercase;margin-bottom:8px;position:relative;">Summer Special</div>
+            <div style="font-size:64px;margin-bottom:12px;position:relative;">🍦</div>
+            <div style="font-size:20px;font-weight:900;color:white;margin-bottom:8px;position:relative;">マンゴーかき氷<br>スペシャル</div>
+            <div style="position:relative;display:flex;gap:8px;align-items:center;">
+              <span style="background:#fbbf24;color:#7c2d12;font-size:14px;font-weight:900;padding:6px 16px;border-radius:6px;">6/1〜8/31 限定</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Banner 3: アパレル -->
+    <div class="banner-section">
+      <p class="sec-title">03 — アパレル・ファッション</p>
+      <div class="banner-intro">
+        <span class="banner-intro-icon">👗</span>
+        <div>
+          <h2>シック・ブラック系</h2>
+          <p>洗練されたブランドイメージを演出する黒ベースのデザイン。アパレル・ジュエリー・高級品に最適。</p>
+          <div class="banner-intro-tags">
+            <span class="intro-tag">Instagramストーリー</span>
+            <span class="intro-tag">ファッションEC</span>
+            <span class="intro-tag">YouTube広告</span>
+            <span class="intro-tag">ブランドバナー</span>
+          </div>
+        </div>
+      </div>
+      <div class="banners-row">
+        <div class="banner-wrapper">
+          <div class="banner-label">
+            <span>アパレルバナー — 横長 (800×400)</span>
+            <span class="banner-label-size">シック / ブラック</span>
+          </div>
+          <div class="banner-apparel">
+            <div class="apparel-lines"></div>
+            <div class="apparel-top">
+              <span class="apparel-brand">M O R I &nbsp; S T Y L E</span>
+              <span class="apparel-season">2026 SS Collection</span>
+            </div>
+            <div class="apparel-middle">
+              <div class="apparel-emoji">👔</div>
+            </div>
+            <div class="apparel-bottom">
+              <div class="apparel-name">
+                <span>Premium Line</span>
+                オーガニックコットン<br>テーラードジャケット
+              </div>
+              <div class="apparel-price-col">
+                <div class="apparel-strike">¥29,800</div>
+                <div class="apparel-price">¥19,800</div>
+                <div class="apparel-off">▼ 34% OFF</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="banner-wrapper">
+          <div class="banner-label">
+            <span>アパレルバナー — 縦長 (400×600)</span>
+            <span class="banner-label-size">ストーリー / インスタ</span>
+          </div>
+          <div class="banner-apparel" style="min-height:280px;">
+            <div class="apparel-lines"></div>
+            <div class="apparel-top">
+              <span class="apparel-brand">M O R I &nbsp; S T Y L E</span>
+            </div>
+            <div class="apparel-middle" style="padding:20px 0;">
+              <div style="font-size:72px;">👗</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:8px;letter-spacing:0.2em;">NEW ARRIVAL</div>
+            </div>
+            <div class="apparel-bottom">
+              <div class="apparel-name" style="font-size:18px;">
+                <span>Limited Edition</span>
+                シルクブレンド<br>ドレープスカート
+              </div>
+              <div class="apparel-price-col">
+                <div class="apparel-price" style="font-size:17px;">¥24,800</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Banner 4: イベント -->
+    <div class="banner-section">
+      <p class="sec-title">04 — イベント・告知・セール</p>
+      <div class="banner-intro">
+        <span class="banner-intro-icon">🎉</span>
+        <div>
+          <h2>ポップ・カラフル系</h2>
+          <p>イベント・セール・キャンペーンを盛り上げるカラフルで目を引くデザイン。SNSでの拡散に最適。</p>
+          <div class="banner-intro-tags">
+            <span class="intro-tag">Twitterヘッダー</span>
+            <span class="intro-tag">LINE配信</span>
+            <span class="intro-tag">セール告知</span>
+            <span class="intro-tag">キャンペーンバナー</span>
+          </div>
+        </div>
+      </div>
+      <div class="banners-row">
+        <div class="banner-wrapper">
+          <div class="banner-label">
+            <span>イベントバナー — 横長 (800×400)</span>
+            <span class="banner-label-size">ポップ / パープル</span>
+          </div>
+          <div class="banner-event">
+            <div class="event-stars"></div>
+            <div class="event-inner">
+              <div>
+                <div class="event-label">✦ Special Campaign</div>
+                <div class="event-title">夏の大感謝<span>セール</span><br>2026 開催！</div>
+                <div class="event-date">📅 2026年7月1日（火）〜7月31日（木）</div>
+                <div class="event-badges">
+                  <span class="event-badge eb1">最大70%OFF</span>
+                  <span class="event-badge eb2">送料無料</span>
+                  <span class="event-badge eb2">ポイント3倍</span>
+                </div>
+              </div>
+              <div class="event-right">
+                <span class="event-emoji">🎊</span>
+                <div class="event-sub">期間限定</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="banner-wrapper">
+          <div class="banner-label">
+            <span>イベントバナー — 正方形 (600×600)</span>
+            <span class="banner-label-size">SNS投稿 / ポップ</span>
+          </div>
+          <div class="banner-event" style="align-items:center;text-align:center;background:linear-gradient(135deg,#0f4c75,#1b6ca8,#0891b2);">
+            <div class="event-stars"></div>
+            <div style="position:relative;z-index:1;width:100%;">
+              <div style="font-size:10px;letter-spacing:0.25em;color:#93c5fd;text-transform:uppercase;margin-bottom:12px;">🌊 Summer Fair 2026</div>
+              <div style="font-size:60px;margin-bottom:12px;">🏖️</div>
+              <div style="font-size:22px;font-weight:900;color:white;margin-bottom:8px;line-height:1.3;">海の日<br><span style="color:#fbbf24;">特別クーポン</span>配布中</div>
+              <div style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:white;font-size:18px;font-weight:900;padding:10px 24px;border-radius:8px;display:inline-block;letter-spacing:0.2em;">SUMMER30</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:8px;">＊対象商品3,000円以上で30%OFF</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service info -->
+    <div class="service-section">
+      <h2>このような<span>バナーを制作</span>できます</h2>
+      <p>AI生成 + デザイン手直しで、高品質なバナーを短時間・低コストで量産します。EC出品・SNS広告・メルマガに対応。</p>
+      <div class="service-grid">
+        <div class="service-card">
+          <div class="service-icon">⚡</div>
+          <div class="service-name">スピード制作</div>
+          <div class="service-desc">1バナーあたり最短30分〜。商品情報を送っていただければ、AIと組み合わせて高速制作します。</div>
+          <div class="service-price">¥1,500〜 / 枚</div>
+        </div>
+        <div class="service-card">
+          <div class="service-icon">📐</div>
+          <div class="service-name">複数サイズ対応</div>
+          <div class="service-desc">横長・正方形・縦長など複数サイズに展開可能。Amazon・楽天・Instagram・LINE広告など各媒体の推奨サイズで納品。</div>
+          <div class="service-price">セット割あり</div>
+        </div>
+        <div class="service-card">
+          <div class="service-icon">🔄</div>
+          <div class="service-name">A/Bテスト対応</div>
+          <div class="service-desc">同一商品で色違い・コピー違い・レイアウト違いのバリエーションを複数制作。広告効果の最大化を支援します。</div>
+          <div class="service-price">追加¥800〜 / 枚</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-box">
+      <h2>バナー制作、お気軽にご相談ください</h2>
+      <p>商品ジャンル・サイズ・希望テイストをお伝えいただければ、見積もりをお出しします。</p>
+      <a href="../../index.html#contact">ポートフォリオトップへ →</a>
+    </div>
+
+  </main>
+
+  <footer>
+    <p>© 2026 Tomoya &amp; Co. | このページはデザインデモです</p>
+  </footer>
+
+</body>
+</html>

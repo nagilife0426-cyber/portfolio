@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI生成LP制作デモ | なぎ 業務自動化エンジニア</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --bg-card: #161b22;
+      --bg-card2: #1c2128;
+      --accent: #00d4ff;
+      --accent2: #7c3aed;
+      --accent3: #10b981;
+      --text: #f0f6ff;
+      --text-muted: #8b949e;
+      --border: #30363d;
+      --border-light: #21262d;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: system-ui, -apple-system, 'Hiragino Kaku Gothic ProN', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    /* ===== BACK BUTTON ===== */
+    .back-fixed {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 9999;
+      padding: 7px 14px;
+      background: rgba(13,17,23,0.9);
+      color: var(--accent);
+      border-radius: 20px;
+      font-size: 12px;
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+      backdrop-filter: blur(4px);
+      border: 1px solid var(--border);
+      text-decoration: none;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .back-fixed:hover {
+      background: var(--bg-card);
+      border-color: var(--accent);
+    }
+
+    /* ===== HEADER ===== */
+    .page-header {
+      padding: 80px 24px 48px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .page-label {
+      font-size: 12px;
+      font-family: 'Courier New', monospace;
+      color: var(--accent);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .page-title {
+      font-size: clamp(28px, 5vw, 44px);
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+    .page-title span {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .page-desc {
+      color: var(--text-muted);
+      font-size: 16px;
+      max-width: 600px;
+    }
+
+    /* ===== TABS ===== */
+    .tabs-wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    .tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 40px;
+    }
+    .tab-btn {
+      padding: 10px 20px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all 0.2s;
+      border-radius: 4px 4px 0 0;
+    }
+    .tab-btn:hover { color: var(--text); background: var(--bg-card); }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      background: var(--bg-card);
+    }
+
+    /* ===== TAB PANELS ===== */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ===== DEMO PANEL ===== */
+    .demo-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 680px) {
+      .demo-layout { grid-template-columns: 1fr; }
+    }
+
+    .input-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+    }
+    .input-card h3 {
+      font-size: 13px;
+      font-family: 'Courier New', monospace;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+
+    .form-group { margin-bottom: 18px; }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .form-textarea { resize: vertical; min-height: 80px; }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--accent);
+    }
+    .form-select option { background: var(--bg-card); }
+
+    .chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .chip {
+      padding: 5px 12px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      background: transparent;
+      font-family: inherit;
+    }
+    .chip:hover, .chip.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(0,212,255,0.06);
+    }
+
+    .btn-generate {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, var(--accent), #0099cc);
+      color: #0d1117;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.25s;
+      margin-top: 8px;
+    }
+    .btn-generate:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(0,212,255,0.3);
+    }
+    .btn-generate:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-visual {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, var(--accent2), #5b21b6);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.25s;
+      margin-top: 10px;
+    }
+    .btn-visual:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(124,58,237,0.35);
+    }
+    .btn-visual:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ===== OUTPUT AREA ===== */
+    .output-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      min-height: 400px;
+    }
+    .output-card h3 {
+      font-size: 13px;
+      font-family: 'Courier New', monospace;
+      color: var(--accent2);
+      letter-spacing: 0.08em;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+
+    .output-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 300px;
+      color: var(--text-muted);
+      text-align: center;
+      gap: 16px;
+    }
+    .output-placeholder .icon {
+      font-size: 48px;
+      opacity: 0.3;
+    }
+
+    /* LP Structure Output */
+    .lp-structure { display: none; }
+    .lp-section-item {
+      background: var(--bg);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      animation: fadeSlideIn 0.4s ease forwards;
+      opacity: 0;
+    }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .lp-section-num {
+      min-width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent), #0099cc);
+      color: #0d1117;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      font-family: 'Courier New', monospace;
+    }
+    .lp-section-info {}
+    .lp-section-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+    .lp-section-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* AI Loading animation */
+    .ai-thinking {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      color: var(--accent);
+      font-size: 13px;
+      font-family: 'Courier New', monospace;
+      padding: 12px 0;
+    }
+    .ai-thinking.show { display: flex; }
+    .dots span {
+      display: inline-block;
+      width: 6px; height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: dotBounce 1.4s infinite ease-in-out;
+      margin: 0 2px;
+    }
+    .dots span:nth-child(1) { animation-delay: 0s; }
+    .dots span:nth-child(2) { animation-delay: 0.2s; }
+    .dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotBounce {
+      0%, 80%, 100% { transform: scale(0.7); opacity: 0.5; }
+      40% { transform: scale(1.2); opacity: 1; }
+    }
+
+    /* LP Mockup */
+    .lp-mockup-wrap { display: none; margin-top: 20px; }
+    .lp-mockup-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: 'Courier New', monospace;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .lp-mockup {
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      font-size: 0;
+    }
+
+    /* LP sections CSS mockup */
+    .mock-hero {
+      background: linear-gradient(135deg, #1a0533, #0d1117, #001a33);
+      padding: 32px 20px;
+      text-align: center;
+      font-size: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .mock-hero::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: radial-gradient(circle at 60% 40%, rgba(0,212,255,0.08) 0%, transparent 60%),
+                  radial-gradient(circle at 30% 70%, rgba(124,58,237,0.06) 0%, transparent 50%);
+    }
+    .mock-hero-eyebrow {
+      display: block;
+      width: 80px; height: 8px;
+      background: rgba(0,212,255,0.5);
+      border-radius: 4px;
+      margin: 0 auto 10px;
+    }
+    .mock-hero-title {
+      display: block;
+      width: 70%; height: 20px;
+      background: rgba(240,246,255,0.9);
+      border-radius: 4px;
+      margin: 0 auto 8px;
+    }
+    .mock-hero-sub {
+      display: block;
+      width: 50%; height: 10px;
+      background: rgba(240,246,255,0.4);
+      border-radius: 4px;
+      margin: 0 auto 16px;
+    }
+    .mock-hero-btn {
+      display: inline-block;
+      width: 120px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), #0099cc);
+      border-radius: 18px;
+    }
+
+    .mock-features {
+      background: var(--bg-card2);
+      padding: 20px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    .mock-feat-card {
+      flex: 1;
+      max-width: 80px;
+      background: var(--bg-card);
+      border-radius: 8px;
+      padding: 10px 8px;
+      text-align: center;
+    }
+    .mock-feat-icon {
+      width: 20px; height: 20px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 6px;
+      margin: 0 auto 6px;
+    }
+    .mock-feat-line1 {
+      width: 90%; height: 6px;
+      background: rgba(240,246,255,0.6);
+      border-radius: 3px;
+      margin: 0 auto 4px;
+    }
+    .mock-feat-line2 {
+      width: 60%; height: 5px;
+      background: rgba(240,246,255,0.25);
+      border-radius: 3px;
+      margin: 0 auto;
+    }
+
+    .mock-social {
+      background: #0d1117;
+      padding: 16px 20px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+    }
+    .mock-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent2), #5b21b6);
+      flex-shrink: 0;
+    }
+    .mock-review-lines {
+      flex: 1;
+      max-width: 200px;
+    }
+    .mock-review-line {
+      height: 7px;
+      background: rgba(240,246,255,0.4);
+      border-radius: 3px;
+      margin-bottom: 5px;
+    }
+    .mock-stars {
+      color: #f59e0b;
+      font-size: 10px;
+      letter-spacing: 1px;
+    }
+
+    .mock-cta {
+      background: linear-gradient(135deg, var(--accent2), #1a0533);
+      padding: 20px;
+      text-align: center;
+    }
+    .mock-cta-title {
+      display: block;
+      width: 55%; height: 14px;
+      background: rgba(255,255,255,0.9);
+      border-radius: 4px;
+      margin: 0 auto 10px;
+    }
+    .mock-cta-btn {
+      display: inline-block;
+      width: 140px; height: 40px;
+      background: linear-gradient(135deg, var(--accent), #0099cc);
+      border-radius: 20px;
+    }
+
+    .mock-faq {
+      background: var(--bg-card);
+      padding: 16px 20px;
+    }
+    .mock-faq-item {
+      background: var(--bg);
+      border-radius: 6px;
+      height: 24px;
+      margin-bottom: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+    .mock-faq-item::after {
+      content: '';
+      position: absolute;
+      top: 50%; right: 12px;
+      transform: translateY(-50%);
+      width: 10px; height: 10px;
+      background: rgba(0,212,255,0.4);
+      border-radius: 50%;
+    }
+
+    /* ===== CODE TAB ===== */
+    .code-section { margin-bottom: 32px; }
+    .code-section h4 {
+      font-size: 13px;
+      font-family: 'Courier New', monospace;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .code-section h4::before {
+      content: '//';
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+    .code-block {
+      background: #010409;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .code-block-header {
+      padding: 10px 16px;
+      background: var(--bg-card2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .code-lang {
+      font-size: 11px;
+      font-family: 'Courier New', monospace;
+      color: var(--text-muted);
+    }
+    .code-copy-btn {
+      padding: 4px 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-family: 'Courier New', monospace;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .code-copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+    pre {
+      padding: 20px;
+      overflow-x: auto;
+      font-family: 'Courier New', Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #c9d1d9;
+      margin: 0;
+    }
+    .kw { color: #ff7b72; }
+    .fn { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .cm { color: #8b949e; }
+    .num { color: #79c0ff; }
+    .op { color: #ff7b72; }
+    .var { color: #ffa657; }
+
+    /* ===== USE CASES TAB ===== */
+    .usecase-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .usecase-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px;
+      transition: all 0.25s;
+    }
+    .usecase-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .usecase-icon { font-size: 28px; margin-bottom: 12px; }
+    .usecase-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .usecase-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .usecase-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+    }
+    .usecase-tag {
+      padding: 3px 8px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'Courier New', monospace;
+    }
+    .usecase-result {
+      margin-top: 14px;
+      padding: 10px 12px;
+      background: rgba(16,185,129,0.07);
+      border-left: 3px solid var(--accent3);
+      border-radius: 0 6px 6px 0;
+      font-size: 12px;
+      color: var(--accent3);
+    }
+
+    /* ===== FOOTER SPACER ===== */
+    .footer-spacer { height: 80px; }
+
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+  <a href="../../index.html" class="back-fixed">← ポートフォリオに戻る</a>
+
+  <!-- ===== HEADER ===== -->
+  <header class="page-header">
+    <p class="page-label">// Demo #11 — AI生成LP制作</p>
+    <h1 class="page-title">AI で作る<br><span>LP デザイン</span></h1>
+    <p class="page-desc">業種・ターゲット・訴求ポイントを入力するだけ。ChatGPT + Genspark を使ったLP制作ワークフローをインタラクティブに体験できます。</p>
+  </header>
+
+  <!-- ===== TABS ===== -->
+  <div class="tabs-wrap">
+    <div class="tabs" role="tablist">
+      <button class="tab-btn active" data-tab="demo" role="tab" aria-selected="true">デモ</button>
+      <button class="tab-btn" data-tab="code" role="tab" aria-selected="false">コード</button>
+      <button class="tab-btn" data-tab="usecase" role="tab" aria-selected="false">活用例</button>
+    </div>
+
+    <!-- ========== DEMO PANEL ========== -->
+    <div class="tab-panel active" id="panel-demo">
+      <div class="demo-layout">
+
+        <!-- Input -->
+        <div class="input-card">
+          <h3>// LP情報を入力</h3>
+
+          <div class="form-group">
+            <label class="form-label" for="industry">業種・ビジネスタイプ</label>
+            <select class="form-select" id="industry">
+              <option value="">選択してください</option>
+              <option value="tax">税理士・士業</option>
+              <option value="salon">エステ・サロン</option>
+              <option value="ec">EC・ネットショップ</option>
+              <option value="recruit">採用・求人</option>
+              <option value="seminar">セミナー・スクール</option>
+              <option value="clinic">クリニック・医療</option>
+              <option value="realestate">不動産</option>
+              <option value="restaurant">飲食店</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="target">ターゲット</label>
+            <input class="form-input" id="target" type="text" placeholder="例: 30代独身の会社員">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="appeal">訴求ポイント（メインメッセージ）</label>
+            <textarea class="form-textarea" id="appeal" placeholder="例: 初回無料相談・実績100件以上・即日対応"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">トーン</label>
+            <div class="chip-group" id="tone-group">
+              <button class="chip active" data-tone="pro">プロフェッショナル</button>
+              <button class="chip" data-tone="friendly">フレンドリー</button>
+              <button class="chip" data-tone="luxury">高級感</button>
+              <button class="chip" data-tone="casual">カジュアル</button>
+            </div>
+          </div>
+
+          <button class="btn-generate" id="btn-generate">
+            ✦ LP構成案を生成
+          </button>
+
+          <button class="btn-visual" id="btn-visual" disabled>
+            ◈ ビジュアルを生成
+          </button>
+        </div>
+
+        <!-- Output -->
+        <div class="output-card">
+          <h3>// AI生成結果</h3>
+
+          <div class="output-placeholder" id="output-placeholder">
+            <span class="icon">🎨</span>
+            <p style="color: var(--text-muted); font-size: 14px;">
+              左のフォームを入力して<br>「LP構成案を生成」を押してください
+            </p>
+          </div>
+
+          <div class="ai-thinking" id="ai-thinking">
+            <span>AI生成中</span>
+            <span class="dots">
+              <span></span><span></span><span></span>
+            </span>
+          </div>
+
+          <div class="lp-structure" id="lp-structure"></div>
+
+          <div class="lp-mockup-wrap" id="lp-mockup-wrap">
+            <p class="lp-mockup-label">// CSSモックアップ — LP ビジュアルイメージ</p>
+            <div class="lp-mockup" id="lp-mockup"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========== CODE PANEL ========== -->
+    <div class="tab-panel" id="panel-code">
+
+      <div class="code-section">
+        <h4>ChatGPT API でLP構成案を生成（Python）</h4>
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-lang">python</span>
+            <button class="code-copy-btn" data-code="python-lp">コピー</button>
+          </div>
+          <pre id="code-python-lp"><span class="kw">import</span> openai
+<span class="kw">import</span> json
+
+client = openai.OpenAI(api_key=<span class="str">"YOUR_API_KEY"</span>)
+
+<span class="kw">def</span> <span class="fn">generate_lp_structure</span>(industry: <span class="var">str</span>, target: <span class="var">str</span>, appeal: <span class="var">str</span>) <span class="op">-></span> <span class="var">dict</span>:
+    <span class="str">"""ChatGPT APIでLP構成案を生成する"""</span>
+
+    prompt = <span class="str">f"""
+あなたはLP（ランディングページ）設計の専門家です。
+以下の情報を元に、最適なLP構成案をJSON形式で返してください。
+
+業種: {industry}
+ターゲット: {target}
+訴求ポイント: {appeal}
+
+以下のJSONフォーマットで返してください:
+{{
+  "sections": [
+    {{
+      "name": "セクション名",
+      "purpose": "目的",
+      "content_hint": "盛り込むべき内容のヒント"
+    }}
+  ],
+  "hero_copy": "ヒーローキャッチコピー案",
+  "cta_text": "CTAボタンテキスト"
+}}
+"""</span>
+
+    response = client.chat.completions.create(
+        model=<span class="str">"gpt-4o-mini"</span>,
+        messages=[
+            {<span class="str">"role"</span>: <span class="str">"system"</span>, <span class="str">"content"</span>: <span class="str">"LP設計の専門家として回答してください。"</span>},
+            {<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: prompt}
+        ],
+        response_format={<span class="str">"type"</span>: <span class="str">"json_object"</span>}
+    )
+
+    <span class="kw">return</span> json.loads(response.choices[<span class="num">0</span>].message.content)
+
+<span class="cm"># 実行例</span>
+result = <span class="fn">generate_lp_structure</span>(
+    industry=<span class="str">"税理士事務所"</span>,
+    target=<span class="str">"確定申告に悩む個人事業主"</span>,
+    appeal=<span class="str">"初回無料相談・オンライン対応・当日対応可"</span>
+)
+<span class="kw">print</span>(json.dumps(result, ensure_ascii=<span class="kw">False</span>, indent=<span class="num">2</span>))</pre>
+        </div>
+      </div>
+
+      <div class="code-section">
+        <h4>Genspark API でビジュアル生成（Python）</h4>
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-lang">python</span>
+            <button class="code-copy-btn" data-code="python-genspark">コピー</button>
+          </div>
+          <pre id="code-python-genspark"><span class="kw">import</span> requests
+<span class="kw">import</span> base64
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+<span class="kw">def</span> <span class="fn">generate_lp_visual</span>(
+    industry: <span class="var">str</span>,
+    tone: <span class="var">str</span>,
+    output_path: <span class="var">str</span> = <span class="str">"lp_visual.png"</span>
+) <span class="op">-></span> <span class="var">str</span>:
+    <span class="str">"""Genspark APIでLP用ビジュアルを生成する"""</span>
+
+    <span class="cm"># GensparkのImage Generation API (v1)</span>
+    url = <span class="str">"https://api.genspark.ai/v1/images/generate"</span>
+    headers = {
+        <span class="str">"Authorization"</span>: <span class="str">f"Bearer YOUR_GENSPARK_API_KEY"</span>,
+        <span class="str">"Content-Type"</span>: <span class="str">"application/json"</span>
+    }
+
+    <span class="cm"># プロンプトを業種・トーンに合わせて構築</span>
+    prompt = <span class="str">f"""
+Professional landing page hero image for {industry}.
+Style: {tone}, modern, minimalist.
+High quality, web-ready, 16:9 ratio.
+No text overlays. Clean background.
+"""</span>
+
+    payload = {
+        <span class="str">"prompt"</span>: prompt,
+        <span class="str">"size"</span>: <span class="str">"1792x1024"</span>,
+        <span class="str">"quality"</span>: <span class="str">"hd"</span>,
+        <span class="str">"n"</span>: <span class="num">1</span>
+    }
+
+    response = requests.post(url, headers=headers, json=payload)
+    response.raise_for_status()
+
+    data = response.json()
+    image_url = data[<span class="str">"data"</span>][<span class="num">0</span>][<span class="str">"url"</span>]
+
+    <span class="cm"># 画像をローカルに保存</span>
+    img_response = requests.get(image_url)
+    Path(output_path).write_bytes(img_response.content)
+    <span class="kw">print</span>(<span class="str">f"ビジュアル保存完了: {output_path}"</span>)
+    <span class="kw">return</span> output_path
+
+<span class="cm"># GASでスプレッドシートからバッチ処理する場合は</span>
+<span class="cm"># Apps Script の UrlFetchApp.fetch() を使用</span></pre>
+        </div>
+      </div>
+
+      <div class="code-section">
+        <h4>GAS版（スプレッドシート連携）</h4>
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-lang">javascript — Google Apps Script</span>
+            <button class="code-copy-btn" data-code="gas-lp">コピー</button>
+          </div>
+          <pre id="code-gas-lp"><span class="cm">// スプレッドシートのA列に業種、B列にターゲット、C列に訴求を入力</span>
+<span class="cm">// 実行するとD列にLP構成案JSONが書き込まれる</span>
+
+<span class="kw">function</span> <span class="fn">generateLPStructures</span>() {
+  <span class="kw">const</span> <span class="var">ss</span> = SpreadsheetApp.<span class="fn">getActiveSpreadsheet</span>();
+  <span class="kw">const</span> <span class="var">sheet</span> = <span class="var">ss</span>.<span class="fn">getActiveSheet</span>();
+  <span class="kw">const</span> <span class="var">data</span> = <span class="var">sheet</span>.<span class="fn">getDataRange</span>().<span class="fn">getValues</span>();
+  <span class="kw">const</span> <span class="var">apiKey</span> = PropertiesService.<span class="fn">getScriptProperties</span>().<span class="fn">getProperty</span>(<span class="str">'OPENAI_API_KEY'</span>);
+
+  <span class="kw">for</span> (<span class="kw">let</span> <span class="var">i</span> = <span class="num">1</span>; <span class="var">i</span> < <span class="var">data</span>.length; <span class="var">i</span>++) {
+    <span class="kw">const</span> [<span class="var">industry</span>, <span class="var">target</span>, <span class="var">appeal</span>] = <span class="var">data</span>[<span class="var">i</span>];
+    <span class="kw">if</span> (!<span class="var">industry</span>) <span class="kw">continue</span>;
+
+    <span class="kw">const</span> <span class="var">prompt</span> = <span class="str">`業種:${industry} ターゲット:${target} 訴求:${appeal}
+のLP構成案をJSON形式で生成してください。`</span>;
+
+    <span class="kw">const</span> <span class="var">response</span> = UrlFetchApp.<span class="fn">fetch</span>(<span class="str">'https://api.openai.com/v1/chat/completions'</span>, {
+      method: <span class="str">'post'</span>,
+      contentType: <span class="str">'application/json'</span>,
+      headers: { Authorization: <span class="str">`Bearer ${<span class="var">apiKey</span>}`</span> },
+      payload: JSON.<span class="fn">stringify</span>({
+        model: <span class="str">'gpt-4o-mini'</span>,
+        messages: [{ role: <span class="str">'user'</span>, content: <span class="var">prompt</span> }],
+        response_format: { type: <span class="str">'json_object'</span> }
+      })
+    });
+
+    <span class="kw">const</span> <span class="var">result</span> = JSON.<span class="fn">parse</span>(<span class="var">response</span>.<span class="fn">getContentText</span>());
+    <span class="var">sheet</span>.<span class="fn">getRange</span>(<span class="var">i</span> + <span class="num">1</span>, <span class="num">4</span>).<span class="fn">setValue</span>(<span class="var">result</span>.choices[<span class="num">0</span>].message.content);
+    Utilities.<span class="fn">sleep</span>(<span class="num">1000</span>); <span class="cm">// レート制限対策</span>
+  }
+  SpreadsheetApp.<span class="fn">getUi</span>().<span class="fn">alert</span>(<span class="str">'LP構成案の生成が完了しました'</span>);
+}</pre>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ========== USE CASE PANEL ========== -->
+    <div class="tab-panel" id="panel-usecase">
+      <div class="usecase-grid">
+
+        <div class="usecase-card">
+          <div class="usecase-icon">⚖️</div>
+          <div class="usecase-title">士業LP（税理士・社労士）</div>
+          <div class="usecase-desc">確定申告・労務管理など専門サービスの集客LP。信頼感・実績・無料相談導線を最適化。</div>
+          <div class="usecase-tags">
+            <span class="usecase-tag">士業</span>
+            <span class="usecase-tag">SEO対策済み</span>
+            <span class="usecase-tag">CTR最適化</span>
+          </div>
+          <div class="usecase-result">制作時間: 約2日 → 約30分に短縮</div>
+        </div>
+
+        <div class="usecase-card">
+          <div class="usecase-icon">🛒</div>
+          <div class="usecase-title">EC商品ページ</div>
+          <div class="usecase-desc">商品特徴を入力するだけで魅力的な商品LP構成を自動生成。商品ごとに量産可能。</div>
+          <div class="usecase-tags">
+            <span class="usecase-tag">EC</span>
+            <span class="usecase-tag">商品LP</span>
+            <span class="usecase-tag">量産対応</span>
+          </div>
+          <div class="usecase-result">月50商品のLP → バッチで自動生成</div>
+        </div>
+
+        <div class="usecase-card">
+          <div class="usecase-icon">👥</div>
+          <div class="usecase-title">採用LP</div>
+          <div class="usecase-desc">求める人材像・仕事内容・社風をAIが整理してLP構成に落とし込む。採用担当の工数を削減。</div>
+          <div class="usecase-tags">
+            <span class="usecase-tag">採用</span>
+            <span class="usecase-tag">HR</span>
+            <span class="usecase-tag">求人</span>
+          </div>
+          <div class="usecase-result">求人票からLP構成を即生成</div>
+        </div>
+
+        <div class="usecase-card">
+          <div class="usecase-icon">📚</div>
+          <div class="usecase-title">セミナー・スクールLP</div>
+          <div class="usecase-desc">開催内容・対象者・得られる成果を元にセミナー集客LPを自動構成。申込フォーム付き。</div>
+          <div class="usecase-tags">
+            <span class="usecase-tag">教育</span>
+            <span class="usecase-tag">セミナー</span>
+            <span class="usecase-tag">集客</span>
+          </div>
+          <div class="usecase-result">毎回の開催ごとに数分で制作</div>
+        </div>
+
+        <div class="usecase-card">
+          <div class="usecase-icon">🏥</div>
+          <div class="usecase-title">クリニック・医療LP</div>
+          <div class="usecase-desc">専門診療・予約導線・先生紹介など、医療系LPに必要な構成をAIが提案。薬機法注意事項付き。</div>
+          <div class="usecase-tags">
+            <span class="usecase-tag">医療</span>
+            <span class="usecase-tag">クリニック</span>
+            <span class="usecase-tag">規制対応</span>
+          </div>
+          <div class="usecase-result">コンプライアンス考慮済みの構成</div>
+        </div>
+
+        <div class="usecase-card">
+          <div class="usecase-icon">🏠</div>
+          <div class="usecase-title">不動産・物件LP</div>
+          <div class="usecase-desc">物件情報・周辺環境・購入メリットを入力→物件紹介LPをAIで構成。内見予約CTAまで完備。</div>
+          <div class="usecase-tags">
+            <span class="usecase-tag">不動産</span>
+            <span class="usecase-tag">物件紹介</span>
+            <span class="usecase-tag">予約導線</span>
+          </div>
+          <div class="usecase-result">物件ごとに個別LP即生成</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer-spacer"></div>
+
+  <script>
+    // ===== TAB SWITCHING =====
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tabId = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        document.getElementById('panel-' + tabId).classList.add('active');
+      });
+    });
+
+    // ===== TONE CHIPS =====
+    let selectedTone = 'pro';
+    document.querySelectorAll('#tone-group .chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('#tone-group .chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        selectedTone = chip.dataset.tone;
+      });
+    });
+
+    // ===== LP STRUCTURE DATA =====
+    const lpStructures = {
+      tax: [
+        { name: 'ファーストビュー（Hero）', desc: 'キャッチコピー・無料相談CTA・信頼バッジ' },
+        { name: '課題提起', desc: 'ターゲットが抱える税務の悩みを列挙・共感' },
+        { name: '解決策の提示', desc: '事務所のサービス概要・差別化ポイント3点' },
+        { name: '実績・数字', desc: '相談件数・解決事例・メディア掲載' },
+        { name: 'サービス詳細', desc: '対応業務一覧・料金目安・オプション' },
+        { name: 'お客様の声', desc: '3〜5件の具体的な声・★評価付き' },
+        { name: 'よくある質問', desc: '5〜8件のFAQ・不安を事前解消' },
+        { name: 'CTA（相談申込）', desc: '無料相談フォーム・電話番号・LINE誘導' },
+      ],
+      salon: [
+        { name: 'ファーストビュー（Hero）', desc: '雰囲気写真・限定割引バナー・予約ボタン' },
+        { name: 'コンセプト', desc: 'サロンの世界観・こだわりポイント' },
+        { name: 'メニュー一覧', desc: 'コース別料金・所要時間・おすすめポイント' },
+        { name: 'ビフォーアフター', desc: '施術前後の変化・写真付き実例' },
+        { name: 'スタッフ紹介', desc: '担当スタッフのプロフィール・資格・得意施術' },
+        { name: 'お客様の声', desc: 'Google口コミ連携・Instagram投稿埋め込み' },
+        { name: 'アクセス・予約', desc: 'Googleマップ・予約フォーム・電話予約' },
+      ],
+      ec: [
+        { name: 'ファーストビュー（Hero）', desc: '商品ビジュアル・キャッチコピー・購入CTA' },
+        { name: '商品の特徴', desc: '3大特徴をアイコン付きで訴求' },
+        { name: '成分・仕様詳細', desc: '素材・製造背景・品質保証' },
+        { name: '使い方', desc: '使用方法ステップ・Before/After' },
+        { name: 'レビュー', desc: '購入者レビュー・★平均・Q&A' },
+        { name: '購入フロー', desc: '数量選択・定期購入・送料明示' },
+        { name: 'CTA（購入）', desc: '最終購入ボタン・安心保証・返品ポリシー' },
+      ],
+      recruit: [
+        { name: 'ファーストビュー（Hero）', desc: '職場写真・キャッチコピー・応募CTA' },
+        { name: '会社紹介', desc: 'ミッション・ビジョン・事業概要' },
+        { name: '仕事内容', desc: 'ポジション詳細・1日の流れ' },
+        { name: '働く環境', desc: '社内風景・福利厚生・制度' },
+        { name: '社員インタビュー', desc: '現場の声・キャリアパス事例' },
+        { name: '募集要項', desc: '応募条件・待遇・選考フロー' },
+        { name: 'エントリーフォーム', desc: '応募フォーム・書類提出方法' },
+      ],
+      seminar: [
+        { name: 'ファーストビュー（Hero）', desc: 'セミナータイトル・開催日時・早割CTA' },
+        { name: '参加でこうなれる', desc: '受講後のBeforeAfter・3つのゴール' },
+        { name: 'こんな方に', desc: 'ターゲット像・参加者の悩み共感' },
+        { name: 'カリキュラム', desc: '各時間帯のコンテンツ詳細' },
+        { name: '講師プロフィール', desc: '実績・著書・メディア掲載' },
+        { name: '参加者の声', desc: '過去参加者レビュー・数値成果' },
+        { name: '料金・申込', desc: '料金プラン・早割期限・申込フォーム' },
+      ],
+      clinic: [
+        { name: 'ファーストビュー（Hero）', desc: 'クリニック外観・専門診療・初診予約CTA' },
+        { name: '診療案内', desc: '専門診療一覧・対応疾患' },
+        { name: '院長・スタッフ紹介', desc: '経歴・専門領域・資格' },
+        { name: '診療実績', desc: '治療件数・患者満足度・設備紹介' },
+        { name: 'アクセス・料金', desc: '地図・料金目安・保険適用有無' },
+        { name: '予約フォーム', desc: 'オンライン予約・電話・問合せ' },
+      ],
+      realestate: [
+        { name: 'ファーストビュー（Hero）', desc: '物件外観・価格・内見予約CTA' },
+        { name: '物件概要', desc: '間取り・広さ・築年数・設備' },
+        { name: '立地・周辺環境', desc: '駅徒歩・学校・生活施設' },
+        { name: '室内写真', desc: 'ギャラリー・360度ビュー' },
+        { name: '料金・諸費用', desc: '価格・ローンシミュレーション・諸費用' },
+        { name: '内見・お問合せ', desc: '内見予約フォーム・担当者紹介' },
+      ],
+      restaurant: [
+        { name: 'ファーストビュー（Hero）', desc: '料理写真・コンセプト・予約CTA' },
+        { name: 'こだわり', desc: '食材・調理法・シェフのこだわり3点' },
+        { name: 'メニュー', desc: '料理カテゴリ別・価格・アレルギー情報' },
+        { name: '店内・雰囲気', desc: 'ギャラリー・座席数・貸切対応' },
+        { name: '口コミ', desc: 'Googleマップ口コミ・食べログ評価' },
+        { name: '予約・アクセス', desc: '予約フォーム・電話・駐車場情報' },
+      ],
+    };
+
+    const heroColors = {
+      tax: ['#1a3a5c', '#2456a0', '#c9a84c'],
+      salon: ['#2d1b3a', '#6d3d8e', '#f0a0c0'],
+      ec: ['#1a3320', '#2e7d48', '#ffcc00'],
+      recruit: ['#0d2233', '#1a5276', '#e67e22'],
+      seminar: ['#1a1a3a', '#4a3a9a', '#00d4ff'],
+      clinic: ['#0d2233', '#0a4a7c', '#00c9b0'],
+      realestate: ['#1a2a1a', '#2d5c3a', '#d4af37'],
+      restaurant: ['#2a1a0d', '#7c3c1a', '#ff8c42'],
+    };
+
+    let structureGenerated = false;
+
+    // ===== GENERATE LP STRUCTURE =====
+    document.getElementById('btn-generate').addEventListener('click', () => {
+      const industry = document.getElementById('industry').value;
+      if (!industry) {
+        document.getElementById('industry').focus();
+        document.getElementById('industry').style.borderColor = '#ff7b72';
+        setTimeout(() => { document.getElementById('industry').style.borderColor = ''; }, 2000);
+        return;
+      }
+
+      const placeholder = document.getElementById('output-placeholder');
+      const thinking = document.getElementById('ai-thinking');
+      const structure = document.getElementById('lp-structure');
+      const mockupWrap = document.getElementById('lp-mockup-wrap');
+      const btnVisual = document.getElementById('btn-visual');
+
+      placeholder.style.display = 'none';
+      thinking.classList.add('show');
+      structure.style.display = 'none';
+      mockupWrap.style.display = 'none';
+      structureGenerated = false;
+      btnVisual.disabled = true;
+
+      setTimeout(() => {
+        thinking.classList.remove('show');
+        structure.style.display = 'block';
+        structure.innerHTML = '';
+
+        const sections = lpStructures[industry] || lpStructures['tax'];
+        sections.forEach((sec, i) => {
+          const el = document.createElement('div');
+          el.className = 'lp-section-item';
+          el.style.animationDelay = (i * 0.08) + 's';
+          el.innerHTML = `
+            <div class="lp-section-num">${String(i + 1).padStart(2, '0')}</div>
+            <div class="lp-section-info">
+              <div class="lp-section-name">${sec.name}</div>
+              <div class="lp-section-desc">${sec.desc}</div>
+            </div>
+          `;
+          structure.appendChild(el);
+        });
+
+        structureGenerated = true;
+        btnVisual.disabled = false;
+      }, 1800);
+    });
+
+    // ===== GENERATE VISUAL =====
+    document.getElementById('btn-visual').addEventListener('click', () => {
+      if (!structureGenerated) return;
+
+      const industry = document.getElementById('industry').value;
+      const thinking = document.getElementById('ai-thinking');
+      const mockupWrap = document.getElementById('lp-mockup-wrap');
+      const mockup = document.getElementById('lp-mockup');
+
+      thinking.classList.add('show');
+      mockupWrap.style.display = 'none';
+
+      setTimeout(() => {
+        thinking.classList.remove('show');
+
+        const colors = heroColors[industry] || heroColors['tax'];
+        const [c1, c2, c3] = colors;
+
+        mockup.innerHTML = `
+          <div class="mock-hero" style="background: linear-gradient(135deg, ${c1}, #0d1117, ${c2 + '33'});">
+            <span class="mock-hero-eyebrow"></span>
+            <span class="mock-hero-title"></span>
+            <span class="mock-hero-sub"></span>
+            <span class="mock-hero-btn" style="background: linear-gradient(135deg, ${c3}, ${c2});"></span>
+          </div>
+          <div class="mock-features" style="background: #12171e;">
+            <div class="mock-feat-card">
+              <div class="mock-feat-icon" style="background: linear-gradient(135deg, ${c3}, ${c2});"></div>
+              <div class="mock-feat-line1"></div>
+              <div class="mock-feat-line2"></div>
+            </div>
+            <div class="mock-feat-card">
+              <div class="mock-feat-icon" style="background: linear-gradient(135deg, ${c2}, ${c1});"></div>
+              <div class="mock-feat-line1"></div>
+              <div class="mock-feat-line2"></div>
+            </div>
+            <div class="mock-feat-card">
+              <div class="mock-feat-icon" style="background: linear-gradient(135deg, ${c1}, ${c3});"></div>
+              <div class="mock-feat-line1"></div>
+              <div class="mock-feat-line2"></div>
+            </div>
+          </div>
+          <div class="mock-social">
+            <div class="mock-avatar" style="background: linear-gradient(135deg, ${c3}, ${c2});"></div>
+            <div class="mock-review-lines">
+              <div class="mock-review-line" style="width: 85%;"></div>
+              <div class="mock-review-line" style="width: 60%;"></div>
+              <div class="mock-stars">★★★★★</div>
+            </div>
+          </div>
+          <div class="mock-faq">
+            <div class="mock-faq-item"></div>
+            <div class="mock-faq-item"></div>
+            <div class="mock-faq-item"></div>
+          </div>
+          <div class="mock-cta" style="background: linear-gradient(135deg, ${c1}, ${c2 + '44'});">
+            <span class="mock-cta-title" style="background: rgba(255,255,255,0.9);"></span>
+            <span class="mock-cta-btn" style="background: linear-gradient(135deg, ${c3}, ${c2});"></span>
+          </div>
+        `;
+
+        mockupWrap.style.display = 'block';
+      }, 2200);
+    });
+
+    // ===== CODE COPY =====
+    document.querySelectorAll('.code-copy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const codeId = 'code-' + btn.dataset.code;
+        const codeEl = document.getElementById(codeId);
+        const text = codeEl ? codeEl.innerText : '';
+        navigator.clipboard.writeText(text).then(() => {
+          btn.textContent = 'コピー済み ✓';
+          btn.style.color = '#10b981';
+          btn.style.borderColor = '#10b981';
+          setTimeout(() => {
+            btn.textContent = 'コピー';
+            btn.style.color = '';
+            btn.style.borderColor = '';
+          }, 2000);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

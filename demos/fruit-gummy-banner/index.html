@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>フルーツグミ Instagram バナー デモ</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #1a0a2e;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 40px 20px;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 32px;
+      color: #fff;
+    }
+    .page-header h1 { font-size: 15px; opacity: 0.6; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+    .page-header p { font-size: 12px; opacity: 0.4; }
+
+    /* ===== Instagram縦バナー (1080×1920 → 表示は405×720) ===== */
+    .banner-wrap {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 32px;
+      max-width: 1100px;
+      width: 100%;
+    }
+
+    .banner-card {
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .banner-label {
+      background: #111;
+      color: #fff;
+      font-size: 11px;
+      letter-spacing: 1px;
+      padding: 8px 16px;
+      opacity: 0.8;
+      text-align: center;
+    }
+
+    /* ===== バナー ver.A ===== */
+    .banner-a {
+      aspect-ratio: 9/16;
+      background: linear-gradient(160deg, #ff6b35 0%, #ff3d7f 35%, #c9184a 65%, #590d22 100%);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 24px;
+    }
+    .banner-a::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 30% 40%, rgba(255,200,50,0.25) 0%, transparent 60%),
+                  radial-gradient(circle at 80% 70%, rgba(255,100,150,0.3) 0%, transparent 50%);
+    }
+
+    /* Fruit particles */
+    .fruit-particle {
+      position: absolute;
+      font-size: clamp(24px, 4vw, 48px);
+      opacity: 0.15;
+      animation: floatFruit 8s ease-in-out infinite;
+    }
+    .fruit-particle:nth-child(1) { top: 5%; left: 8%; animation-delay: 0s; font-size: 40px; }
+    .fruit-particle:nth-child(2) { top: 15%; right: 10%; animation-delay: -2s; font-size: 32px; }
+    .fruit-particle:nth-child(3) { bottom: 20%; left: 5%; animation-delay: -4s; font-size: 36px; }
+    .fruit-particle:nth-child(4) { bottom: 10%; right: 8%; animation-delay: -1s; font-size: 28px; }
+    .fruit-particle:nth-child(5) { top: 45%; left: 2%; animation-delay: -3s; font-size: 24px; }
+    @keyframes floatFruit {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-12px) rotate(10deg); }
+    }
+
+    .banner-a-inner { position: relative; z-index: 2; text-align: center; width: 100%; }
+
+    /* NEW badge */
+    .new-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #ffd700, #ffaa00);
+      color: #1a0a00;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 12px rgba(255,200,0,0.5);
+    }
+
+    /* Product visual */
+    .product-visual {
+      width: 70%;
+      max-width: 220px;
+      aspect-ratio: 1;
+      margin: 0 auto 20px;
+      background: radial-gradient(circle at 40% 35%, rgba(255,220,80,0.9) 0%, rgba(255,120,40,0.8) 40%, rgba(200,40,80,0.9) 80%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(60px, 12vw, 100px);
+      box-shadow: 0 0 60px rgba(255,150,0,0.6), inset 0 -10px 30px rgba(0,0,0,0.3);
+      animation: gummyPulse 3s ease-in-out infinite;
+      position: relative;
+    }
+    .product-visual::after {
+      content: '';
+      position: absolute;
+      top: 8%;
+      left: 15%;
+      width: 35%;
+      height: 25%;
+      background: rgba(255,255,255,0.4);
+      border-radius: 50%;
+      filter: blur(6px);
+    }
+    @keyframes gummyPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 60px rgba(255,150,0,0.6), inset 0 -10px 30px rgba(0,0,0,0.3); }
+      50% { transform: scale(1.04); box-shadow: 0 0 80px rgba(255,200,0,0.8), inset 0 -10px 30px rgba(0,0,0,0.3); }
+    }
+
+    .product-name {
+      font-size: clamp(22px, 4vw, 36px);
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+    .product-sub {
+      font-size: clamp(12px, 2vw, 16px);
+      color: rgba(255,240,200,0.9);
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+    }
+
+    /* Shizru tagline */
+    .shizru-line {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .tag-chip {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #fff;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      backdrop-filter: blur(4px);
+    }
+
+    .cta-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      color: #1a0a00;
+      font-weight: 900;
+      font-size: clamp(13px, 2.5vw, 17px);
+      padding: 12px 28px;
+      border-radius: 40px;
+      letter-spacing: 1px;
+      box-shadow: 0 8px 24px rgba(255,150,0,0.5);
+      text-decoration: none;
+    }
+
+    /* ===== バナー ver.B ===== */
+    .banner-b {
+      aspect-ratio: 9/16;
+      background: linear-gradient(135deg, #fff9e6 0%, #ffe4b3 30%, #ffb347 70%, #ff6b6b 100%);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 28px 22px;
+    }
+    .banner-b::before {
+      content: '';
+      position: absolute;
+      top: -40%;
+      right: -20%;
+      width: 80%;
+      aspect-ratio: 1;
+      background: radial-gradient(circle, rgba(255,100,50,0.2) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .b-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 2;
+    }
+    .b-brand { font-size: 12px; font-weight: 700; color: #8b3a1a; letter-spacing: 2px; }
+    .b-new { background: #ff3d7f; color: #fff; font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 12px; letter-spacing: 1px; }
+
+    .b-headline {
+      font-size: clamp(26px, 5vw, 42px);
+      font-weight: 900;
+      color: #3d0c00;
+      line-height: 1.15;
+      position: relative;
+      z-index: 2;
+      margin-bottom: 8px;
+    }
+    .b-headline em { color: #ff3d7f; font-style: normal; }
+
+    .b-sub-text {
+      font-size: clamp(11px, 2vw, 14px);
+      color: #7a3520;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 2;
+      line-height: 1.6;
+    }
+
+    .b-fruit-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 2;
+    }
+    .b-fruit-item {
+      background: rgba(255,255,255,0.7);
+      border-radius: 12px;
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 8px;
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255,150,100,0.3);
+    }
+    .b-fruit-item .icon { font-size: clamp(22px, 4vw, 32px); }
+    .b-fruit-item .name { font-size: 10px; font-weight: 700; color: #8b3a1a; }
+
+    .b-cta {
+      background: linear-gradient(135deg, #ff3d7f, #ff6b35);
+      color: #fff;
+      font-size: clamp(13px, 2.5vw, 16px);
+      font-weight: 900;
+      text-align: center;
+      padding: 14px;
+      border-radius: 14px;
+      box-shadow: 0 8px 20px rgba(255,60,100,0.4);
+      letter-spacing: 1px;
+      position: relative;
+      z-index: 2;
+      margin-top: auto;
+    }
+
+    /* ===== バナー ver.C (正方形) ===== */
+    .banner-c {
+      aspect-ratio: 1;
+      background: #0d0010;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .banner-c::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 80%, rgba(255,50,120,0.4) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(255,140,0,0.3) 0%, transparent 50%);
+    }
+
+    .c-title {
+      font-size: clamp(14px, 2.5vw, 20px);
+      color: rgba(255,200,150,0.8);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 2;
+    }
+    .c-gumi {
+      font-size: clamp(70px, 13vw, 110px);
+      position: relative;
+      z-index: 2;
+      filter: drop-shadow(0 0 20px rgba(255,100,50,0.8));
+      animation: gummyPulse 3s ease-in-out infinite;
+      margin-bottom: 16px;
+    }
+    .c-name {
+      font-size: clamp(20px, 4vw, 32px);
+      font-weight: 900;
+      color: #fff;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+      line-height: 1.2;
+      text-shadow: 0 0 20px rgba(255,100,50,0.6);
+      margin-bottom: 20px;
+    }
+    .c-price-row {
+      display: flex;
+      gap: 12px;
+      position: relative;
+      z-index: 2;
+    }
+    .c-price-chip {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,200,100,0.4);
+      color: #ffd700;
+      font-size: clamp(11px, 2vw, 14px);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-weight: 700;
+    }
+
+    /* ===== Credit ===== */
+    .credit {
+      text-align: center;
+      color: rgba(255,255,255,0.3);
+      font-size: 11px;
+      margin-top: 32px;
+      letter-spacing: 1px;
+    }
+    .credit span { color: rgba(255,255,255,0.6); }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <h1>Portfolio Demo · Fruit Gummy Banner</h1>
+    <p>Instagram投稿バナー 3パターン / 制作: なぎ</p>
+  </div>
+
+  <div class="banner-wrap">
+
+    <!-- ver.A: 縦型・ビビッドグラデーション -->
+    <div class="banner-card">
+      <div class="banner-label">Ver.A – 縦型 (1080×1920) ・ ビビッド系</div>
+      <div class="banner-a">
+        <div class="fruit-particle">🍊</div>
+        <div class="fruit-particle">🍓</div>
+        <div class="fruit-particle">🍇</div>
+        <div class="fruit-particle">🍑</div>
+        <div class="fruit-particle">🥭</div>
+        <div class="banner-a-inner">
+          <div class="new-badge">✦ NEW ✦</div>
+          <div class="product-visual">🍬</div>
+          <div class="product-name">フルーツグミ<br>Premium</div>
+          <div class="product-sub">JUICY FRUIT GUMMY</div>
+          <div class="shizru-line">
+            <span class="tag-chip">🍊 みかん</span>
+            <span class="tag-chip">🍓 いちご</span>
+            <span class="tag-chip">🍇 ぶどう</span>
+          </div>
+          <a class="cta-btn">今すぐチェック →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ver.B: 縦型・ポップ＆キュート -->
+    <div class="banner-card">
+      <div class="banner-label">Ver.B – 縦型 (1080×1920) ・ ポップ系</div>
+      <div class="banner-b">
+        <div class="b-header">
+          <span class="b-brand">FRUIT GUMMY</span>
+          <span class="b-new">NEW</span>
+        </div>
+        <div class="b-headline">果実まるごと、<br><em>とろける</em>美味しさ。</div>
+        <div class="b-sub-text">
+          旬のフルーツから生まれた、<br>
+          ジューシーなご褒美グミ。<br>
+          新フレーバー 全6種 登場！
+        </div>
+        <div class="b-fruit-grid">
+          <div class="b-fruit-item"><span class="icon">🍊</span><span class="name">みかん</span></div>
+          <div class="b-fruit-item"><span class="icon">🍓</span><span class="name">いちご</span></div>
+          <div class="b-fruit-item"><span class="icon">🍇</span><span class="name">ぶどう</span></div>
+          <div class="b-fruit-item"><span class="icon">🥭</span><span class="name">マンゴー</span></div>
+          <div class="b-fruit-item"><span class="icon">🍑</span><span class="name">もも</span></div>
+          <div class="b-fruit-item"><span class="icon">🍋</span><span class="name">れもん</span></div>
+        </div>
+        <div class="b-cta">🛒 コンビニ・スーパーで発売中！</div>
+      </div>
+    </div>
+
+    <!-- ver.C: 正方形・プレミアム暗色 -->
+    <div class="banner-card">
+      <div class="banner-label">Ver.C – 正方形 (1080×1080) ・ プレミアム系</div>
+      <div class="banner-c">
+        <div class="c-title">New Arrival</div>
+        <div class="c-gumi">🍬</div>
+        <div class="c-name">Premium<br>Fruit Gummy</div>
+        <div class="c-price-row">
+          <span class="c-price-chip">全6フレーバー</span>
+          <span class="c-price-chip">数量限定</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="credit">
+    制作デモ by <span>なぎ</span> · <a href="https://nagilife0426-cyber.github.io/portfolio/" style="color:rgba(255,200,100,0.6);">ポートフォリオを見る</a>
+  </div>
+
+</body>
+</html>
