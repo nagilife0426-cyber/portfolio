@@ -3,560 +3,1059 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>デモ07: 日報自動生成バッチ | Python</title>
+  <title>週次業務レポート 自動生成ツール | なぎ</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     body {
       background: #0d1117;
       color: #e6edf3;
-      font-family: 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif;
+      font-family: system-ui, -apple-system, sans-serif;
       min-height: 100vh;
     }
-
     a { color: #00d4ff; text-decoration: none; }
     a:hover { text-decoration: underline; }
 
-    .back-link {
-      display: inline-flex;
+    /* NAV */
+    nav {
+      display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 6px;
-      padding: 12px 20px;
-      color: #8b949e;
-      font-size: 14px;
-      transition: color 0.2s;
-    }
-    .back-link:hover { color: #00d4ff; text-decoration: none; }
-
-    .hero {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 20px 24px 48px;
-    }
-
-    .badge {
-      display: inline-block;
-      background: rgba(0, 212, 255, 0.1);
-      border: 1px solid rgba(0, 212, 255, 0.3);
-      color: #00d4ff;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 4px 12px;
-      border-radius: 20px;
-      letter-spacing: 0.05em;
-      margin-bottom: 16px;
-    }
-
-    h1 {
-      font-size: clamp(24px, 5vw, 40px);
-      font-weight: 700;
-      line-height: 1.3;
-      margin-bottom: 16px;
-    }
-    h1 span { color: #00d4ff; }
-
-    .subtitle {
-      font-size: 16px;
-      color: #8b949e;
-      line-height: 1.7;
-      max-width: 640px;
-    }
-
-    /* DEMO SECTION */
-    .demo-section {
-      background: #161b22;
-      border-top: 1px solid #30363d;
-      border-bottom: 1px solid #30363d;
-      padding: 48px 24px;
-    }
-
-    .demo-inner {
-      max-width: 900px;
-      margin: 0 auto;
-    }
-
-    .section-label {
-      font-size: 12px;
-      font-weight: 700;
-      color: #00d4ff;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-bottom: 24px;
-    }
-
-    .demo-layout {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      align-items: start;
-    }
-
-    @media (max-width: 680px) {
-      .demo-layout { grid-template-columns: 1fr; }
-    }
-
-    .demo-panel {
+      padding: 16px 32px;
+      border-bottom: 1px solid #21262d;
+      position: sticky;
+      top: 0;
       background: #0d1117;
+      z-index: 100;
+    }
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      color: #00d4ff;
+      font-family: 'Courier New', monospace;
+      letter-spacing: -0.5px;
+    }
+    .back-btn {
+      padding: 8px 16px;
       border: 1px solid #30363d;
       border-radius: 8px;
-      overflow: hidden;
+      color: #8b949e;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .back-btn:hover { border-color: #00d4ff; color: #00d4ff; text-decoration: none; }
+
+    /* HEADER */
+    header {
+      text-align: center;
+      padding: 48px 24px 32px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .tag {
+      display: inline-block;
+      background: rgba(0,212,255,0.1);
+      color: #00d4ff;
+      border: 1px solid rgba(0,212,255,0.3);
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    header h1 {
+      font-size: clamp(24px, 4vw, 36px);
+      font-weight: 800;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #e6edf3, #00d4ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .problem {
+      background: rgba(248,81,73,0.1);
+      border: 1px solid rgba(248,81,73,0.3);
+      border-radius: 8px;
+      padding: 10px 18px;
+      margin: 8px auto;
+      max-width: 680px;
+      font-size: 14px;
+      color: #ffa0a0;
+    }
+    .solution {
+      background: rgba(46,160,67,0.1);
+      border: 1px solid rgba(46,160,67,0.3);
+      border-radius: 8px;
+      padding: 10px 18px;
+      margin: 8px auto;
+      max-width: 680px;
+      font-size: 14px;
+      color: #7ee787;
     }
 
-    .panel-header {
-      background: #161b22;
-      padding: 10px 16px;
-      font-size: 12px;
+    /* TABS */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 0 24px;
+      border-bottom: 1px solid #21262d;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .tab {
+      padding: 12px 20px;
+      background: none;
+      border: none;
       color: #8b949e;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all 0.2s;
+    }
+    .tab:hover { color: #e6edf3; }
+    .tab.active { color: #00d4ff; border-bottom-color: #00d4ff; }
+
+    /* TAB CONTENT */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* DEMO LAYOUT */
+    .demo-wrapper {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 768px) {
+      .demo-wrapper { grid-template-columns: 1fr; }
+    }
+
+    /* INPUT PANEL */
+    .input-panel {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 16px 20px;
       border-bottom: 1px solid #30363d;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 600;
     }
-
-    .dot { width: 10px; height: 10px; border-radius: 50%; }
-    .dot-red { background: #ff5f57; }
-    .dot-yellow { background: #febc2e; }
-    .dot-green { background: #28c840; }
-
-    .panel-body { padding: 16px; }
-
-    /* Task Table */
-    .task-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
+    .panel-header .icon { font-size: 18px; }
+    .input-tabs {
+      display: flex;
+      border-bottom: 1px solid #21262d;
+      background: #0d1117;
     }
-    .task-table th {
+    .input-tab {
+      flex: 1;
+      padding: 10px 8px;
+      background: none;
+      border: none;
+      color: #8b949e;
+      font-size: 12px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .input-tab.active { color: #00d4ff; border-bottom-color: #00d4ff; background: rgba(0,212,255,0.05); }
+    .input-tab-content { display: none; padding: 16px; }
+    .input-tab-content.active { display: block; }
+
+    /* SALES TABLE */
+    .sales-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .sales-table th {
       text-align: left;
       padding: 8px 10px;
       color: #8b949e;
-      font-weight: 600;
-      border-bottom: 1px solid #30363d;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    .task-table td {
-      padding: 8px 10px;
       border-bottom: 1px solid #21262d;
-      vertical-align: top;
+      font-weight: 500;
     }
-    .task-table tr:last-child td { border-bottom: none; }
-
-    .status-done {
-      display: inline-block;
-      background: rgba(35, 197, 94, 0.15);
-      border: 1px solid rgba(35, 197, 94, 0.4);
-      color: #23c55e;
-      font-size: 10px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 20px;
-    }
-    .status-wip {
-      display: inline-block;
-      background: rgba(251, 191, 36, 0.15);
-      border: 1px solid rgba(251, 191, 36, 0.4);
-      color: #fbbf24;
-      font-size: 10px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 20px;
-    }
-
-    .generate-btn {
-      display: block;
-      width: 100%;
-      margin-top: 16px;
-      padding: 12px;
-      background: linear-gradient(135deg, #00d4ff, #0099cc);
-      border: none;
-      border-radius: 6px;
-      color: #0d1117;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
-      letter-spacing: 0.03em;
-    }
-    .generate-btn:hover { opacity: 0.85; }
-    .generate-btn:active { transform: scale(0.98); }
-
-    .report-output {
-      font-family: 'Courier New', monospace;
-      font-size: 12.5px;
-      line-height: 1.7;
-      color: #e6edf3;
-      white-space: pre-wrap;
-      min-height: 280px;
-      padding: 4px 0;
-    }
-
-    .report-placeholder {
-      color: #484f58;
-      font-style: italic;
-      font-size: 13px;
-      padding: 40px 0;
-      text-align: center;
-    }
-
-    .copy-btn {
-      display: block;
-      width: 100%;
-      margin-top: 12px;
-      padding: 8px;
-      background: transparent;
+    .sales-table td { padding: 8px 10px; border-bottom: 1px solid #161b22; }
+    .sales-table input[type="number"] {
+      background: #0d1117;
       border: 1px solid #30363d;
+      border-radius: 4px;
+      color: #e6edf3;
+      padding: 4px 8px;
+      width: 100%;
+      font-size: 13px;
+    }
+    .sales-table input[type="number"]:focus { outline: none; border-color: #00d4ff; }
+
+    /* TASK TABLE */
+    .task-list { display: flex; flex-direction: column; gap: 8px; }
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: #0d1117;
+      border-radius: 6px;
+      border: 1px solid #21262d;
+      font-size: 13px;
+    }
+    .task-item input[type="checkbox"] { accent-color: #00d4ff; width: 16px; height: 16px; cursor: pointer; }
+    .task-item.done label { text-decoration: line-through; color: #8b949e; }
+    .task-add-btn {
+      margin-top: 8px;
+      padding: 6px 12px;
+      background: none;
+      border: 1px dashed #30363d;
       border-radius: 6px;
       color: #8b949e;
-      font-size: 13px;
+      font-size: 12px;
       cursor: pointer;
+      width: 100%;
       transition: all 0.2s;
     }
-    .copy-btn:hover { border-color: #00d4ff; color: #00d4ff; }
-    .copy-btn.copied { border-color: #23c55e; color: #23c55e; }
+    .task-add-btn:hover { border-color: #00d4ff; color: #00d4ff; }
 
-    /* CODE SECTION */
-    .code-section {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 48px 24px;
+    /* ISSUE TABLE */
+    .issue-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .issue-table th { padding: 8px; color: #8b949e; text-align: left; border-bottom: 1px solid #21262d; }
+    .issue-table td { padding: 8px; border-bottom: 1px solid #161b22; vertical-align: top; }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
     }
+    .badge-open { background: rgba(248,81,73,0.15); color: #f85149; }
+    .badge-resolved { background: rgba(46,160,67,0.15); color: #3fb950; }
 
-    .code-block {
+    /* GENERATE BUTTON */
+    .generate-btn {
+      display: block;
+      width: calc(100% - 32px);
+      margin: 16px;
+      padding: 14px;
+      background: linear-gradient(135deg, #00d4ff, #0099bb);
+      border: none;
+      border-radius: 8px;
+      color: #0d1117;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+    }
+    .generate-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,212,255,0.3); }
+    .generate-btn:active { transform: translateY(0); }
+
+    /* LOADING */
+    .loading-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(13,17,23,0.85);
+      border-radius: 12px;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      z-index: 10;
+    }
+    .loading-overlay.show { display: flex; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid #21262d;
+      border-top-color: #00d4ff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: #8b949e; font-size: 14px; }
+
+    /* OUTPUT PANEL */
+    .output-panel {
       background: #161b22;
       border: 1px solid #30363d;
-      border-radius: 8px;
+      border-radius: 12px;
       overflow: hidden;
+      position: relative;
     }
-
-    .code-header {
-      background: #1c2128;
-      padding: 10px 16px;
-      font-size: 12px;
+    .output-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 400px;
       color: #8b949e;
-      border-bottom: 1px solid #30363d;
+      gap: 12px;
+    }
+    .output-empty .empty-icon { font-size: 48px; opacity: 0.3; }
+    .report-content { display: none; }
+    .report-content.show { display: block; }
+
+    /* REPORT STYLES */
+    .report-inner {
+      padding: 20px;
+      background: #fff;
+      color: #333;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .report-title-bar {
+      background: #1a3a5c;
+      color: white;
+      padding: 14px 20px;
+      margin: -20px -20px 16px -20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-
-    pre {
-      padding: 20px;
-      overflow-x: auto;
-      font-size: 13.5px;
-      line-height: 1.65;
+    .report-title-bar h2 { font-size: 16px; margin: 0; }
+    .report-title-bar .report-date { font-size: 12px; opacity: 0.8; }
+    .report-section { margin-bottom: 18px; }
+    .report-section-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #1a3a5c;
+      border-bottom: 2px solid #1a3a5c;
+      padding-bottom: 4px;
+      margin-bottom: 10px;
+      letter-spacing: 0.5px;
     }
+    .kpi-row { display: flex; gap: 12px; margin-bottom: 12px; }
+    .kpi-card {
+      flex: 1;
+      background: #f8f9fa;
+      border-radius: 6px;
+      padding: 10px;
+      text-align: center;
+      border-left: 3px solid #1a3a5c;
+    }
+    .kpi-label { font-size: 10px; color: #666; margin-bottom: 4px; }
+    .kpi-value { font-size: 18px; font-weight: 700; color: #1a3a5c; }
+    .kpi-sub { font-size: 10px; color: #999; margin-top: 2px; }
+    .kpi-good { border-left-color: #2ea043; }
+    .kpi-good .kpi-value { color: #2ea043; }
+    .kpi-warn { border-left-color: #e3a008; }
+    .kpi-warn .kpi-value { color: #e3a008; }
+    .kpi-bad { border-left-color: #f85149; }
+    .kpi-bad .kpi-value { color: #f85149; }
 
-    code { font-family: 'Fira Code', 'Courier New', monospace; }
+    canvas#salesChart { width: 100%; max-height: 120px; }
 
-    /* Syntax highlight */
-    .kw { color: #ff7b72; }
-    .fn { color: #d2a8ff; }
-    .st { color: #a5d6ff; }
-    .cm { color: #8b949e; font-style: italic; }
-    .nm { color: #ffa657; }
-    .bi { color: #79c0ff; }
+    .progress-bar-wrap {
+      background: #e9ecef;
+      border-radius: 10px;
+      height: 18px;
+      overflow: hidden;
+      margin: 6px 0;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #1a3a5c, #2196f3);
+      border-radius: 10px;
+      transition: width 0.8s ease;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      color: white;
+    }
+    .issue-item {
+      background: #fff5f5;
+      border: 1px solid #fecaca;
+      border-radius: 4px;
+      padding: 6px 10px;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+    .suggestion-box {
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 12px;
+    }
+    .suggestion-box ul { padding-left: 16px; margin-top: 4px; }
+    .stamp-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .stamp-box {
+      flex: 1;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 8px;
+      text-align: center;
+      font-size: 11px;
+      color: #666;
+    }
+    .stamp-label { margin-bottom: 20px; }
 
-    /* BENEFITS SECTION */
-    .benefits-section {
-      background: #161b22;
+    /* ACTION BUTTONS */
+    .action-row {
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px;
       border-top: 1px solid #30363d;
-      padding: 48px 24px;
+      background: #0d1117;
     }
+    .action-btn {
+      flex: 1;
+      padding: 8px 12px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #e6edf3;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .action-btn:hover { background: #30363d; border-color: #00d4ff; color: #00d4ff; }
 
-    .benefits-inner {
+    /* CODE TAB */
+    .code-wrapper {
       max-width: 900px;
       margin: 0 auto;
+      padding: 24px;
     }
-
-    .benefits-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-top: 24px;
-    }
-
-    .benefit-card {
-      background: #0d1117;
+    pre {
+      background: #161b22;
       border: 1px solid #30363d;
-      border-radius: 8px;
+      border-radius: 10px;
+      padding: 24px;
+      overflow-x: auto;
+      line-height: 1.7;
+      font-size: 13px;
+    }
+    code { font-family: 'SFMono-Regular', Consolas, monospace; color: #e6edf3; }
+    .kw { color: #ff7b72; }
+    .fn { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .cm { color: #8b949e; font-style: italic; }
+    .num { color: #79c0ff; }
+
+    /* USECASES TAB */
+    .usecases-wrapper {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .usecase-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
       padding: 20px;
       transition: border-color 0.2s;
     }
-    .benefit-card:hover { border-color: rgba(0, 212, 255, 0.4); }
-
-    .benefit-icon {
-      font-size: 28px;
-      margin-bottom: 12px;
+    .usecase-card:hover { border-color: #00d4ff; }
+    .usecase-icon { font-size: 32px; margin-bottom: 12px; }
+    .usecase-card h3 { font-size: 16px; margin-bottom: 8px; color: #00d4ff; }
+    .usecase-card p { font-size: 13px; color: #8b949e; line-height: 1.6; }
+    .usecase-card .merit {
+      margin-top: 12px;
+      padding: 8px 12px;
+      background: rgba(46,160,67,0.1);
+      border-radius: 6px;
+      font-size: 12px;
+      color: #7ee787;
     }
 
-    .benefit-title {
-      font-size: 14px;
+    /* FOOTER */
+    footer {
+      margin-top: 48px;
+      border-top: 1px solid #21262d;
+      padding: 40px 24px;
+      text-align: center;
+    }
+    .cta {
+      max-width: 560px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, rgba(0,212,255,0.08), rgba(0,212,255,0.03));
+      border: 1px solid rgba(0,212,255,0.25);
+      border-radius: 16px;
+      padding: 32px;
+    }
+    .cta h3 { font-size: 18px; margin-bottom: 8px; }
+    .cta p { font-size: 13px; color: #8b949e; margin-bottom: 20px; }
+    .cta a {
+      display: inline-block;
+      background: linear-gradient(135deg, #00d4ff, #0099bb);
+      color: #0d1117;
       font-weight: 700;
-      margin-bottom: 8px;
-      color: #e6edf3;
+      padding: 12px 28px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all 0.2s;
     }
+    .cta a:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,212,255,0.3); }
 
-    .benefit-desc {
-      font-size: 13px;
-      color: #8b949e;
-      line-height: 1.6;
-    }
-
-    h2 {
-      font-size: 22px;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-
-    .section-sub {
-      color: #8b949e;
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #2ea043;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
       font-size: 14px;
-      margin-bottom: 0;
+      font-weight: 600;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 999;
     }
+    .toast.show { transform: translateY(0); opacity: 1; }
   </style>
 </head>
 <body>
 
-  <a href="../../index.html" class="back-link">
-    &larr; ポートフォリオに戻る
-  </a>
+<nav>
+  <a href="/portfolio/" class="logo">&lt;nagi /&gt;</a>
+  <a href="/portfolio/" class="back-btn">← ポートフォリオに戻る</a>
+</nav>
 
-  <div class="hero">
-    <div class="badge">DEMO 07 &nbsp;&bull;&nbsp; Python / Automation</div>
-    <h1>日報自動生成<span>バッチ</span></h1>
-    <p class="subtitle">Excelのタスクデータを読み込み、整形済みの日報テキストを1クリックで生成。
-    毎日の日報作成にかかる工数を<strong style="color:#e6edf3;">約10分 → 0秒</strong>に削減します。</p>
-  </div>
+<header>
+  <div class="tag">Python Automation</div>
+  <h1>週次業務レポート 自動生成ツール</h1>
+  <p class="problem">❌ 課題: 週報をExcelから手動でまとめてメールで送るのに毎週金曜2時間かかる</p>
+  <p class="solution">✅ 解決: Pythonスクリプトが自動集計・メール送信 → 週報作業ゼロに</p>
+</header>
 
-  <!-- DEMO -->
-  <div class="demo-section">
-    <div class="demo-inner">
-      <div class="section-label">Interactive Demo</div>
-      <div class="demo-layout">
+<div class="tabs">
+  <button class="tab active" onclick="showTab('demo', this)">🎬 デモ</button>
+  <button class="tab" onclick="showTab('code', this)">＜/＞ コード</button>
+  <button class="tab" onclick="showTab('usecases', this)">💼 活用例</button>
+</div>
 
-        <!-- Left: Input Table -->
-        <div>
-          <div class="demo-panel">
-            <div class="panel-header">
-              <div class="dot dot-red"></div>
-              <div class="dot dot-yellow"></div>
-              <div class="dot dot-green"></div>
-              <span style="margin-left:6px;">tasks.xlsx &mdash; タスクシート</span>
-            </div>
-            <div class="panel-body">
-              <table class="task-table" id="taskTable">
-                <thead>
-                  <tr>
-                    <th>タスク名</th>
-                    <th>担当者</th>
-                    <th style="text-align:right;">h</th>
-                    <th>状態</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>LP修正対応</td>
-                    <td>田中</td>
-                    <td style="text-align:right;">2.0</td>
-                    <td><span class="status-done">完了</span></td>
-                  </tr>
-                  <tr>
-                    <td>EC在庫確認バッチ作成</td>
-                    <td>田中</td>
-                    <td style="text-align:right;">3.5</td>
-                    <td><span class="status-done">完了</span></td>
-                  </tr>
-                  <tr>
-                    <td>月次レポート集計</td>
-                    <td>田中</td>
-                    <td style="text-align:right;">1.5</td>
-                    <td><span class="status-done">完了</span></td>
-                  </tr>
-                  <tr>
-                    <td>新機能仕様確認</td>
-                    <td>田中</td>
-                    <td style="text-align:right;">2.0</td>
-                    <td><span class="status-wip">対応中</span></td>
-                  </tr>
-                  <tr>
-                    <td>テスト環境セットアップ</td>
-                    <td>田中</td>
-                    <td style="text-align:right;">1.0</td>
-                    <td><span class="status-wip">対応中</span></td>
-                  </tr>
-                </tbody>
-              </table>
-              <button class="generate-btn" onclick="generateReport()">日報を生成する</button>
-            </div>
+<!-- DEMO TAB -->
+<div id="demo" class="tab-content active">
+  <div class="demo-wrapper">
+    <!-- INPUT PANEL -->
+    <div class="input-panel" style="position:relative;">
+      <div class="panel-header">
+        <span class="icon">📥</span>
+        <span>入力データ</span>
+        <span style="margin-left:auto;font-size:12px;color:#8b949e;">今週（月〜金）</span>
+      </div>
+      <div class="input-tabs">
+        <button class="input-tab active" onclick="showInputTab('sales', this)">📊 売上</button>
+        <button class="input-tab" onclick="showInputTab('tasks', this)">👥 タスク</button>
+        <button class="input-tab" onclick="showInputTab('issues', this)">🐛 課題</button>
+      </div>
+
+      <!-- 売上データ -->
+      <div id="sales" class="input-tab-content active">
+        <table class="sales-table">
+          <thead>
+            <tr>
+              <th>曜日</th>
+              <th>売上（円）</th>
+              <th>目標（円）</th>
+            </tr>
+          </thead>
+          <tbody id="salesBody">
+            <tr><td>月曜日</td><td><input type="number" id="s0" value="185000"></td><td><input type="number" id="t0" value="200000"></td></tr>
+            <tr><td>火曜日</td><td><input type="number" id="s1" value="223000"></td><td><input type="number" id="t1" value="200000"></td></tr>
+            <tr><td>水曜日</td><td><input type="number" id="s2" value="168000"></td><td><input type="number" id="t2" value="200000"></td></tr>
+            <tr><td>木曜日</td><td><input type="number" id="s3" value="241000"></td><td><input type="number" id="t3" value="200000"></td></tr>
+            <tr><td>金曜日</td><td><input type="number" id="s4" value="195000"></td><td><input type="number" id="t4" value="200000"></td></tr>
+          </tbody>
+        </table>
+        <div style="padding:12px 0;font-size:12px;color:#8b949e;text-align:right;">
+          先週実績: <span style="color:#e6edf3;">¥965,000</span>
+        </div>
+      </div>
+
+      <!-- タスクデータ -->
+      <div id="tasks" class="input-tab-content">
+        <div class="task-list" id="taskList">
+          <div class="task-item done">
+            <input type="checkbox" checked onchange="toggleTask(this)">
+            <label>新機能仕様書の作成</label>
+          </div>
+          <div class="task-item done">
+            <input type="checkbox" checked onchange="toggleTask(this)">
+            <label>クライアントA 定例MTG</label>
+          </div>
+          <div class="task-item done">
+            <input type="checkbox" checked onchange="toggleTask(this)">
+            <label>Q2売上レポート集計</label>
+          </div>
+          <div class="task-item">
+            <input type="checkbox" onchange="toggleTask(this)">
+            <label>採用面接 候補者3名</label>
+          </div>
+          <div class="task-item done">
+            <input type="checkbox" checked onchange="toggleTask(this)">
+            <label>本番環境デプロイ対応</label>
+          </div>
+          <div class="task-item">
+            <input type="checkbox" onchange="toggleTask(this)">
+            <label>経費精算の提出</label>
+          </div>
+          <div class="task-item done">
+            <input type="checkbox" checked onchange="toggleTask(this)">
+            <label>社内勉強会スライド準備</label>
           </div>
         </div>
+        <button class="task-add-btn" onclick="addTask()">+ タスクを追加</button>
+      </div>
 
-        <!-- Right: Output -->
-        <div>
-          <div class="demo-panel" style="height:100%;">
-            <div class="panel-header">
-              <div class="dot dot-red"></div>
-              <div class="dot dot-yellow"></div>
-              <div class="dot dot-green"></div>
-              <span style="margin-left:6px;">生成された日報テキスト</span>
-            </div>
-            <div class="panel-body">
-              <div id="reportOutput">
-                <div class="report-placeholder">「日報を生成する」ボタンを押すと<br>日報テキストが自動生成されます</div>
-              </div>
-              <button class="copy-btn" id="copyBtn" onclick="copyReport()" style="display:none;">クリップボードにコピー</button>
-            </div>
-          </div>
+      <!-- 課題データ -->
+      <div id="issues" class="input-tab-content">
+        <table class="issue-table">
+          <thead>
+            <tr>
+              <th>発生日</th>
+              <th>内容</th>
+              <th>状態</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>5/1</td>
+              <td>API応答遅延（max 3s）</td>
+              <td><span class="badge badge-open">進行中</span></td>
+            </tr>
+            <tr>
+              <td>4/28</td>
+              <td>決済フロー一時エラー</td>
+              <td><span class="badge badge-resolved">解決済</span></td>
+            </tr>
+            <tr>
+              <td>4/30</td>
+              <td>CSVエクスポート文字化け</td>
+              <td><span class="badge badge-open">進行中</span></td>
+            </tr>
+            <tr>
+              <td>4/27</td>
+              <td>メール通知未送信（5件）</td>
+              <td><span class="badge badge-resolved">解決済</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">レポートを生成中...</div>
+      </div>
+
+      <button class="generate-btn" onclick="generateReport()">📄 週報を生成する</button>
+    </div>
+
+    <!-- OUTPUT PANEL -->
+    <div class="output-panel">
+      <div class="panel-header">
+        <span class="icon">📄</span>
+        <span>週次レポート（プレビュー）</span>
+        <span id="reportStatus" style="margin-left:auto;font-size:12px;color:#8b949e;"></span>
+      </div>
+
+      <div class="output-empty" id="outputEmpty">
+        <div class="empty-icon">📊</div>
+        <div style="font-size:15px;font-weight:600;">レポート未生成</div>
+        <div style="font-size:13px;">左の「週報を生成する」ボタンを押してください</div>
+      </div>
+
+      <div class="report-content" id="reportContent">
+        <div style="max-height:540px;overflow-y:auto;">
+          <div class="report-inner" id="reportInner"></div>
         </div>
+      </div>
+
+      <div class="action-row" id="actionRow" style="display:none;">
+        <button class="action-btn" onclick="copyToClipboard()">📋 クリップボードにコピー</button>
+        <button class="action-btn" onclick="generateEmail()">📧 メール本文を生成</button>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- CODE -->
-  <div class="code-section">
-    <div class="section-label">Actual Code</div>
-    <h2>実装コード</h2>
-    <p class="section-sub" style="margin-bottom:24px;">本番環境では以下のPythonスクリプトをcronやタスクスケジューラで自動実行します。</p>
-    <div class="code-block">
-      <div class="code-header">
-        <span>daily_report.py</span>
-        <span style="color:#484f58;">Python 3.10+</span>
-      </div>
-      <pre><code><span class="kw">import</span> pandas <span class="kw">as</span> pd
-<span class="kw">from</span> datetime <span class="kw">import</span> date
+<!-- CODE TAB -->
+<div id="code" class="tab-content">
+  <div class="code-wrapper">
+    <div style="margin-bottom:16px;">
+      <h3 style="font-size:18px;margin-bottom:8px;">実装コード（Python）</h3>
+      <p style="color:#8b949e;font-size:14px;">openpyxlでExcelを読み込み、smtplibでメール送信。crontabで毎週金曜17時に自動実行。</p>
+    </div>
+    <pre><code><span class="kw">import</span> datetime
+<span class="kw">from</span> openpyxl <span class="kw">import</span> load_workbook
+<span class="kw">import</span> smtplib
+<span class="kw">from</span> email.mime.text <span class="kw">import</span> MIMEText
 
-<span class="kw">def</span> <span class="fn">generate_daily_report</span>(excel_path):
-    df = pd.<span class="fn">read_excel</span>(excel_path, sheet_name=<span class="st">'タスク'</span>)
-    today = date.<span class="fn">today</span>().<span class="fn">strftime</span>(<span class="st">'%Y年%m月%d日'</span>)
+<span class="kw">def</span> <span class="fn">generate_weekly_report</span>():
+    <span class="str">"""毎週金曜17時に自動実行される週次レポート生成スクリプト"""</span>
+    wb = load_workbook(<span class="str">'sales_data.xlsx'</span>)
+    ws = wb.active
 
-    completed = df[df[<span class="st">'ステータス'</span>] == <span class="st">'完了'</span>]
-    total_hours = completed[<span class="st">'所要時間(h)'</span>].<span class="fn">sum</span>()
+    <span class="cm"># 今週のデータを取得</span>
+    today = datetime.date.today()
+    week_start = today - datetime.timedelta(days=today.weekday())
 
-    report = <span class="st">f"""
-【日報】{today}
+    weekly_sales = []
+    <span class="kw">for</span> row <span class="kw">in</span> ws.iter_rows(min_row=<span class="num">2</span>, values_only=<span class="kw">True</span>):
+        date, product, amount, rep = row
+        <span class="kw">if</span> date <span class="kw">and</span> week_start &lt;= date.date() &lt;= today:
+            weekly_sales.append({<span class="str">'date'</span>: date, <span class="str">'amount'</span>: amount})
 
-■ 本日の完了タスク（{len(completed)}件）
+    <span class="cm"># 集計</span>
+    total = <span class="fn">sum</span>(r[<span class="str">'amount'</span>] <span class="kw">for</span> r <span class="kw">in</span> weekly_sales)
+    target = <span class="num">1_000_000</span>  <span class="cm"># 週次目標</span>
+    achievement_rate = total / target * <span class="num">100</span>
+
+    <span class="cm"># レポート生成</span>
+    report = <span class="fn">f</span><span class="str">"""
+【週次レポート】{week_start} 〜 {today}
+
+■ 売上サマリー
+- 週間売上: ¥{total:,}
+- 目標達成率: {achievement_rate:.1f}%
+- 件数: {len(weekly_sales)}件
 """</span>
-    <span class="kw">for</span> _, row <span class="kw">in</span> completed.<span class="fn">iterrows</span>():
-        report += <span class="st">f"・{row['タスク名']}（{row['所要時間(h)']}h）\n"</span>
 
-    report += <span class="st">f"""
-■ 合計作業時間: {total_hours}h
-■ 進捗率: {len(completed)}/{len(df)}件完了
-"""</span>
-    <span class="kw">return</span> report
+    <span class="cm"># メール送信</span>
+    <span class="fn">send_report_email</span>(report, recipients=[<span class="str">'manager@company.com'</span>])
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"週次レポート送信完了: {datetime.datetime.now()}"</span>)
 
-<span class="bi">print</span>(<span class="fn">generate_daily_report</span>(<span class="st">'tasks.xlsx'</span>))</code></pre>
+<span class="kw">def</span> <span class="fn">send_report_email</span>(content, recipients):
+    msg = MIMEText(content, <span class="str">'plain'</span>, <span class="str">'utf-8'</span>)
+    msg[<span class="str">'Subject'</span>] = <span class="fn">f</span><span class="str">'【自動】週次レポート {datetime.date.today()}'</span>
+    msg[<span class="str">'From'</span>] = <span class="str">'noreply@company.com'</span>
+    msg[<span class="str">'To'</span>] = <span class="str">', '</span>.join(recipients)
+
+    <span class="kw">with</span> smtplib.SMTP(<span class="str">'smtp.gmail.com'</span>, <span class="num">587</span>) <span class="kw">as</span> server:
+        server.starttls()
+        server.login(<span class="str">'your_email@gmail.com'</span>, <span class="str">'app_password'</span>)
+        server.send_message(msg)
+
+<span class="cm"># schedule設定（crontab: 0 17 * * 5 python3 weekly_report.py）</span>
+<span class="kw">if</span> __name__ == <span class="str">'__main__'</span>:
+    <span class="fn">generate_weekly_report</span>()</code></pre>
+
+    <div style="margin-top:16px;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px;font-size:13px;color:#8b949e;">
+      <strong style="color:#00d4ff;">使用ライブラリ</strong><br>
+      <code style="color:#e6edf3;">pip install openpyxl schedule</code><br><br>
+      <strong style="color:#00d4ff;">crontab 設定例（毎週金曜17:00自動実行）</strong><br>
+      <code style="color:#e6edf3;">0 17 * * 5 /usr/bin/python3 /home/user/weekly_report.py</code>
     </div>
   </div>
+</div>
 
-  <!-- BENEFITS -->
-  <div class="benefits-section">
-    <div class="benefits-inner">
-      <div class="section-label">Solutions</div>
-      <h2>このスクリプトで解決できること</h2>
-      <p class="section-sub">繰り返し作業をゼロにして、本来の業務に集中できる環境を作ります。</p>
-      <div class="benefits-grid">
-        <div class="benefit-card">
-          <div class="benefit-icon">&#9200;</div>
-          <div class="benefit-title">毎日10分の節約</div>
-          <div class="benefit-desc">日報を手動で書く時間を完全に自動化。年間で約40時間の工数削減。</div>
-        </div>
-        <div class="benefit-card">
-          <div class="benefit-icon">&#128203;</div>
-          <div class="benefit-title">記入ミス・漏れをゼロに</div>
-          <div class="benefit-desc">Excelのデータを直接参照するため、手動転記によるミスが発生しません。</div>
-        </div>
-        <div class="benefit-card">
-          <div class="benefit-icon">&#128200;</div>
-          <div class="benefit-title">進捗の可視化</div>
-          <div class="benefit-desc">完了率・合計工数を自動計算。チーム全体の生産性をリアルタイムで把握できます。</div>
-        </div>
-        <div class="benefit-card">
-          <div class="benefit-icon">&#128336;</div>
-          <div class="benefit-title">cron連携で全自動化</div>
-          <div class="benefit-desc">スケジューラと組み合わせれば退勤時刻に自動でメール送信まで完結します。</div>
-        </div>
-      </div>
+<!-- USECASES TAB -->
+<div id="usecases" class="tab-content">
+  <div class="usecases-wrapper">
+    <div class="usecase-card">
+      <div class="usecase-icon">💼</div>
+      <h3>営業チームの週次実績共有</h3>
+      <p>担当者別・商品別の売上集計を自動化。月曜朝に全員のメールへ届く週次KPIレポートを実現します。</p>
+      <div class="merit">✓ 週2時間 → 0時間に削減</div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-icon">🛒</div>
+      <h3>ECサイト週次売上報告</h3>
+      <p>受注数・売上・返品率・カート離脱率をまとめ、前週比グラフ付きレポートを社長・担当者に自動送信。</p>
+      <div class="merit">✓ データの見落とし防止</div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-icon">🏭</div>
+      <h3>製造業の生産量・稼働率レポート</h3>
+      <p>ライン別生産数・不良率・設備稼働率を自動集計。現場と本社の情報共有ラグをゼロにします。</p>
+      <div class="merit">✓ リアルタイム品質監視</div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-icon">📊</div>
+      <h3>プロジェクト進捗週報</h3>
+      <p>タスク完了率・工数消化率・課題件数を自動集計し、PMO向けの週次ステータスレポートを生成。</p>
+      <div class="merit">✓ 属人化した報告業務を標準化</div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-icon">🏥</div>
+      <h3>医療・介護の週次報告</h3>
+      <p>患者数・稼働率・スタッフ出勤状況を集計。施設管理者向けの週次業務報告を自動化します。</p>
+      <div class="merit">✓ 月報・年報への展開も容易</div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-icon">📢</div>
+      <h3>マーケティング効果測定</h3>
+      <p>Google Analytics / 広告データをCSV取得して集計。媒体別ROI・CVR・CPA週次レポートを自動生成。</p>
+      <div class="merit">✓ 週1の手動レポート業務を削減</div>
     </div>
   </div>
+</div>
 
-  <script>
-    let reportText = '';
+<footer>
+  <div class="cta">
+    <h3>このような自動化、クラウドワークスでご依頼いただけます</h3>
+    <p>週次レポート生成・メール自動送信・Excelデータ集計など、Pythonで業務を自動化します。</p>
+    <a href="https://crowdworks.jp/public/employees/6119556" target="_blank" rel="noopener noreferrer">クラウドワークスで依頼する →</a>
+  </div>
+</footer>
 
-    function generateReport() {
-      const btn = document.querySelector('.generate-btn');
-      btn.textContent = '生成中...';
-      btn.disabled = true;
+<div class="toast" id="toast"></div>
 
-      setTimeout(() => {
-        const today = new Date();
-        const dateStr = `${today.getFullYear()}年${String(today.getMonth()+1).padStart(2,'0')}月${String(today.getDate()).padStart(2,'0')}日`;
+<script>
+  /* ---------- タブ切り替え ---------- */
+  function showTab(name, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(name).classList.add('active');
+    btn.classList.add('active');
+  }
 
-        const tasks = [
-          { name: 'LP修正対応', hours: 2.0, done: true },
-          { name: 'EC在庫確認バッチ作成', hours: 3.5, done: true },
-          { name: '月次レポート集計', hours: 1.5, done: true },
-          { name: '新機能仕様確認', hours: 2.0, done: false },
-          { name: 'テスト環境セットアップ', hours: 1.0, done: false },
-        ];
+  function showInputTab(name, btn) {
+    document.querySelectorAll('.input-tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.input-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(name).classList.add('active');
+    btn.classList.add('active');
+  }
 
-        const completed = tasks.filter(t => t.done);
-        const totalHours = completed.reduce((sum, t) => sum + t.hours, 0);
+  /* ---------- タスク操作 ---------- */
+  function toggleTask(cb) {
+    cb.closest('.task-item').classList.toggle('done', cb.checked);
+  }
 
-        let lines = [];
-        lines.push(`件名: 【日報】${dateStr} 田中`);
-        lines.push('');
-        lines.push('お疲れ様です、田中です。');
-        lines.push('本日の業務報告をお送りします。');
-        lines.push('');
-        lines.push(`■ 本日の完了タスク（${completed.length}件）`);
-        completed.forEach(t => {
-          lines.push(`  ・${t.name}（${t.hours}h）`);
-        });
-        lines.push('');
-        lines.push(`■ 合計作業時間: ${totalHours}h`);
-        lines.push(`■ 進捗率: ${completed.length}/${tasks.length}件完了`);
-        lines.push('');
-        lines.push('■ 特記事項');
-        lines.push('  ・EC在庫バッチは明日テスト環境での動作確認予定');
-        lines.push('  ・新機能仕様は明日AM中に確認完了予定');
-        lines.push('');
-        lines.push('以上、よろしくお願いいたします。');
+  function addTask() {
+    const name = prompt('タスク名を入力してください:');
+    if (!name) return;
+    const list = document.getElementById('taskList');
+    const div = document.createElement('div');
+    div.className = 'task-item';
+    div.innerHTML = `<input type="checkbox" onchange="toggleTask(this)"><label>${name}</label>`;
+    list.appendChild(div);
+  }
 
-        reportText = lines.join('\n');
+  /* ---------- レポート生成 ---------- */
+  function generateReport() {
+    const overlay = document.getElementById('loadingOverlay');
+    overlay.classList.add('show');
 
-        const output = document.getElementById('reportOutput');
-        output.innerHTML = `<div class="report-output">${escapeHtml(reportText)}</div>`;
+    setTimeout(() => {
+      overlay.classList.remove('show');
+      renderReport();
+    }, 600);
+  }
 
-        const copyBtn = document.getElementById('copyBtn');
-        copyBtn.style.display = 'block';
-        copyBtn.textContent = 'クリップボードにコピー';
-        copyBtn.classList.remove('copied');
-
-        btn.textContent = '再生成する';
-        btn.disabled = false;
-      }, 800);
+  function getSalesData() {
+    const days = ['月', '火', '水', '木', '金'];
+    const sales = [], targets = [];
+    for (let i = 0; i < 5; i++) {
+      sales.push(parseInt(document.getElementById('s' + i).value) || 0);
+      targets.push(parseInt(document.getElementById('t' + i).value) || 0);
     }
+    return { days, sales, targets };
+  }
 
-    function copyReport() {
-      if (!reportText) return;
-      navigator.clipboard.writeText(reportText).then(() => {
-        const btn = document.getElementById('copyBtn');
-        btn.textContent = 'コピーしました!';
-        btn.classList.add('copied');
-        setTimeout(() => {
-          btn.textContent = 'クリップボードにコピー';
-          btn.classList.remove('copied');
-        }, 2000);
+  function renderReport() {
+    const { days, sales, targets } = getSalesData();
+    const totalSales = sales.reduce((a, b) => a + b, 0);
+    const totalTarget = targets.reduce((a, b) => a + b, 0);
+    const achievement = totalTarget > 0 ? (totalSales / totalTarget * 100).toFixed(1) : 0;
+    const prevWeek = 965000;
+    const weekOnWeek = ((totalSales - prevWeek) / prevWeek * 100).toFixed(1);
+
+    const tasks = Array.from(document.querySelectorAll('.task-item'));
+    const doneTasks = tasks.filter(t => t.classList.contains('done')).length;
+    const totalTasks = tasks.length;
+    const completionRate = totalTasks > 0 ? Math.round(doneTasks / totalTasks * 100) : 0;
+
+    const incompleteTasks = tasks
+      .filter(t => !t.classList.contains('done'))
+      .map(t => t.querySelector('label').textContent);
+
+    const openIssues = Array.from(document.querySelectorAll('.badge-open'))
+      .map((el, i) => {
+        const row = el.closest('tr');
+        return row ? `${row.cells[0].textContent} - ${row.cells[1].textContent}` : '';
+      }).filter(Boolean);
+
+    const today = new Date();
+    const weekStart = new Date(today); weekStart.setDate(today.getDate() - today.getDay() + 1);
+    const fmt = d => `${d.getMonth()+1}/${d.getDate()}`;
+
+    const achieveClass = achievement >= 100 ? 'kpi-good' : achievement >= 80 ? 'kpi-warn' : 'kpi-bad';
+    const wowClass = weekOnWeek >= 0 ? 'kpi-good' : 'kpi-bad';
+
+    document.getElementById('reportInner').innerHTML = `
+      <div class="report-title-bar">
+        <h2>📊 週次業務レポート</h2>
+        <div class="report-date">${fmt(weekStart)} 〜 ${fmt(today)}&nbsp;&nbsp;自動生成</div>
+      </div>
+
+      <div class="report-section">
+        <div class="report-section-title">■ 売上サマリー</div>
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <div class="kpi-label">週間売上</div>
+            <div class="kpi-value">¥${totalSales.toLocaleString()}</div>
+            <div class="kpi-sub">目標 ¥${totalTarget.toLocaleString()}</div>
+          </div>
+          <div class="kpi-card ${achieveClass}">
+            <div class="kpi-label">目標達成率</div>
+            <div class="kpi-value">${achievement}%</div>
+            <div class="kpi-sub">${achievement >= 100 ? '目標達成' : '未達'}</div>
+          </div>
+          <div class="kpi-card ${wowClass}">
+            <div class="kpi-label">前週比</div>
+            <div class="kpi-value">${weekOnWeek >= 0 ? '+' : ''}${weekOnWeek}%</div>
+            <div class="kpi-sub">前週 ¥965,000</div>
+          </div>
+        </div>
+        <canvas id="salesChart" height="100"></canvas>
+      </div>
+
+      <div class="report-section">
+        <div class="report-section-title">■ タスク完了率</div>
+        <div style="font-size:12px;color:#666;margin-bottom:6px;">${doneTasks}件完了 / ${totalTasks}件中</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" style="width:${completionRate}%">${completionRate}%</div>
+        </div>
+        ${incompleteTasks.length > 0 ? `
+          <div style="margin-top:10px;font-size:12px;color:#666;">未完了タスク:</div>
+          <ul style="padding-left:16px;margin-top:4px;">
+            ${incompleteTasks.map(t => `<li style="font-size:12px;color:#e55;">${t}</li>`).join('')}
+          </ul>
+        ` : '<div style="font-size:12px;color:#2ea043;margin-top:6px;">✓ 全タスク完了</div>'}
+      </div>
+
+      ${openIssues.length > 0 ? `
+        <div class="report-section">
+          <div class="report-section-title">■ 未解決課題</div>
+          ${openIssues.map(i => `<div class="issue-item">🔴 ${i}</div>`).join('')}
+        </div>
+      ` : ''}
+
+      <div class="report-section">
+        <div class="report-section-title">■ 来週の注力事項（自動提案）</div>
+        <div class="suggestion-box">
+          ${achievement < 100 ? `<strong>売上目標未達（${achievement}%）のため、来週は重点商品への注力を推奨します。</strong>` : '<strong>今週は売上目標を達成しました。</strong>'}
+          <ul>
+            ${incompleteTasks.slice(0, 3).map(t => `<li>繰り越しタスク対応: 「${t}」</li>`).join('')}
+            ${openIssues.slice(0, 2).map(i => `<li>未解決課題の優先対応</li>`).join('')}
+            <li>週次振り返りMTGの実施（推奨: 月曜AM）</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="stamp-row">
+        <div class="stamp-box"><div class="stamp-label">申請者</div></div>
+        <div class="stamp-box"><div class="stamp-label">承認者</div></div>
+        <div class="stamp-box"><div class="stamp-label">経営者</div></div>
+      </div>
+    `;
+
+    document.getElementById('outputEmpty').style.display = 'none';
+    document.getElementById('reportContent').classList.add('show');
+    document.getElementById('actionRow').style.display = 'flex';
+    document.getElementById('reportStatus').textContent = '生成完了 ' + new Date().toLocaleTimeString('ja-JP');
+
+    // Canvas棒グラフ描画
+    requestAnimationFrame(() => {
+      const canvas = document.getElementById('salesChart');
+      if (!canvas) return;
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.offsetWidth || 400;
+      canvas.width = w * dpr;
+      canvas.height = 100 * dpr;
+      canvas.style.width = w + 'px';
+      canvas.style.height = '100px';
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      const maxVal = Math.max(...sales, ...targets) * 1.15;
+      const barW = (w / days.length) * 0.35;
+      const gap = (w / days.length) * 0.1;
+      const chartH = 80;
+      const offsetY = 5;
+
+      days.forEach((day, i) => {
+        const x = (w / days.length) * i + (w / days.length) / 2;
+        const sH = (sales[i] / maxVal) * chartH;
+        const tH = (targets[i] / maxVal) * chartH;
+
+        // 目標バー（薄いグレー）
+        ctx.fillStyle = '#e9ecef';
+        ctx.fillRect(x - barW - gap/2, offsetY + chartH - tH, barW, tH);
+
+        // 売上バー
+        ctx.fillStyle = sales[i] >= targets[i] ? '#1a7f4b' : '#1a3a5c';
+        ctx.fillRect(x + gap/2, offsetY + chartH - sH, barW, sH);
+
+        // 曜日ラベル
+        ctx.fillStyle = '#666';
+        ctx.font = `10px system-ui`;
+        ctx.textAlign = 'center';
+        ctx.fillText(day, x, offsetY + chartH + 14);
       });
-    }
+    });
+  }
 
-    function escapeHtml(str) {
-      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
-  </script>
+  /* ---------- クリップボードコピー ---------- */
+  function copyToClipboard() {
+    const { days, sales, targets } = getSalesData();
+    const totalSales = sales.reduce((a, b) => a + b, 0);
+    const totalTarget = targets.reduce((a, b) => a + b, 0);
+    const achievement = totalTarget > 0 ? (totalSales / totalTarget * 100).toFixed(1) : 0;
+    const tasks = Array.from(document.querySelectorAll('.task-item'));
+    const doneTasks = tasks.filter(t => t.classList.contains('done')).length;
+
+    const text = `【週次業務レポート】\n\n■ 売上サマリー\n週間売上: ¥${totalSales.toLocaleString()}\n目標達成率: ${achievement}%\n\n■ タスク完了率\n${doneTasks}/${tasks.length}件完了\n\n※ このレポートはPythonスクリプトにより自動生成されました。`;
+
+    navigator.clipboard.writeText(text).then(() => showToast('クリップボードにコピーしました！'));
+  }
+
+  /* ---------- メール本文生成 ---------- */
+  function generateEmail() {
+    const { sales } = getSalesData();
+    const total = sales.reduce((a, b) => a + b, 0);
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;';
+    modal.innerHTML = `
+      <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:24px;max-width:560px;width:100%;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <h3 style="font-size:16px;">📧 メール本文（コピー用）</h3>
+          <button onclick="this.closest('div[style]').remove()" style="background:none;border:none;color:#8b949e;font-size:20px;cursor:pointer;">×</button>
+        </div>
+        <textarea style="width:100%;height:220px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-size:12px;padding:12px;line-height:1.6;resize:none;">件名：【自動】週次業務レポート ${new Date().toLocaleDateString('ja-JP')}
+
+お疲れ様です。
+
+今週の業務レポートを自動生成しましたのでご確認ください。
+
+■ 週間売上: ¥${total.toLocaleString()}
+■ タスク完了: ${Array.from(document.querySelectorAll('.task-item.done')).length}件
+
+詳細は添付のレポートをご参照ください。
+
+※ このメールはPythonスクリプトにより自動送信されています。</textarea>
+        <button onclick="navigator.clipboard.writeText(this.previousElementSibling.value).then(()=>showToast('コピーしました！'))" style="margin-top:12px;padding:8px 16px;background:#00d4ff;color:#0d1117;border:none;border-radius:6px;font-weight:700;cursor:pointer;font-size:13px;">コピーする</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+</script>
 </body>
 </html>

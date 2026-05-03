@@ -3,938 +3,731 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>デモ10: 競合価格収集ダッシュボード | スクレイピング</title>
+  <title>Webスクレイピング 競合分析ダッシュボード | なぎ</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     body {
       background: #0d1117;
       color: #e6edf3;
-      font-family: 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif;
+      font-family: system-ui, -apple-system, sans-serif;
       min-height: 100vh;
     }
-
     a { color: #00d4ff; text-decoration: none; }
     a:hover { text-decoration: underline; }
 
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 12px 20px;
-      color: #8b949e;
-      font-size: 14px;
-      transition: color 0.2s;
-    }
-    .back-link:hover { color: #00d4ff; text-decoration: none; }
-
-    /* HERO */
-    .hero {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 20px 24px 48px;
-    }
-
-    .badge {
-      display: inline-block;
-      background: rgba(0, 212, 255, 0.1);
-      border: 1px solid rgba(0, 212, 255, 0.3);
-      color: #00d4ff;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 4px 12px;
-      border-radius: 20px;
-      letter-spacing: 0.05em;
-      margin-bottom: 16px;
-    }
-
-    h1 {
-      font-size: clamp(24px, 5vw, 40px);
-      font-weight: 700;
-      line-height: 1.3;
-      margin-bottom: 16px;
-    }
-    h1 span { color: #00d4ff; }
-
-    .subtitle {
-      font-size: 16px;
-      color: #8b949e;
-      line-height: 1.7;
-      max-width: 680px;
-    }
-
-    /* DEMO SECTION */
-    .demo-section {
-      background: #161b22;
-      border-top: 1px solid #30363d;
-      border-bottom: 1px solid #30363d;
-      padding: 48px 24px;
-    }
-
-    .demo-inner { max-width: 960px; margin: 0 auto; }
-
-    .section-label {
-      font-size: 12px;
-      font-weight: 700;
-      color: #00d4ff;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-bottom: 24px;
-    }
-
-    /* TARGET LIST */
-    .target-panel {
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      overflow: hidden;
-    }
-
-    .panel-header {
-      background: #161b22;
-      padding: 10px 16px;
-      font-size: 12px;
-      color: #8b949e;
-      border-bottom: 1px solid #30363d;
+    nav {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-    }
-
-    .dots { display: flex; gap: 5px; }
-    .dot { width: 10px; height: 10px; border-radius: 50%; }
-    .dot-red { background: #ff5f57; }
-    .dot-yellow { background: #febc2e; }
-    .dot-green { background: #28c840; }
-
-    .panel-body { padding: 16px; }
-
-    .target-list { list-style: none; margin-bottom: 12px; }
-
-    .target-item {
-      display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 8px 0;
+      padding: 16px 32px;
       border-bottom: 1px solid #21262d;
-      font-size: 13px;
+      position: sticky;
+      top: 0;
+      background: #0d1117;
+      z-index: 100;
     }
-    .target-item:last-child { border-bottom: none; }
+    .logo { font-size: 20px; font-weight: 700; color: #00d4ff; font-family: 'Courier New', monospace; }
+    .back-btn { padding: 8px 16px; border: 1px solid #30363d; border-radius: 8px; color: #8b949e; font-size: 14px; transition: all 0.2s; }
+    .back-btn:hover { border-color: #00d4ff; color: #00d4ff; text-decoration: none; }
 
-    .target-name { flex: 1; color: #e6edf3; }
-    .target-url { flex: 2; color: #484f58; font-family: monospace; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .target-remove { background: none; border: none; color: #484f58; cursor: pointer; font-size: 16px; padding: 0 4px; transition: color 0.2s; }
-    .target-remove:hover { color: #ff7b72; }
+    header { text-align: center; padding: 48px 24px 32px; max-width: 900px; margin: 0 auto; }
+    .tag { display: inline-block; background: rgba(0,212,255,0.1); color: #00d4ff; border: 1px solid rgba(0,212,255,0.3); padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px; }
+    header h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 800; margin-bottom: 16px; background: linear-gradient(135deg, #e6edf3, #00d4ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .problem { background: rgba(248,81,73,0.1); border: 1px solid rgba(248,81,73,0.3); border-radius: 8px; padding: 10px 18px; margin: 8px auto; max-width: 680px; font-size: 14px; color: #ffa0a0; }
+    .solution { background: rgba(46,160,67,0.1); border: 1px solid rgba(46,160,67,0.3); border-radius: 8px; padding: 10px 18px; margin: 8px auto; max-width: 680px; font-size: 14px; color: #7ee787; }
 
-    .add-row {
-      display: flex;
-      gap: 8px;
-    }
-
-    .add-input {
-      flex: 1;
-      background: #21262d;
-      border: 1px solid #30363d;
-      border-radius: 5px;
-      padding: 7px 10px;
-      color: #e6edf3;
-      font-size: 13px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .add-input:focus { border-color: #00d4ff; }
-    .add-input::placeholder { color: #484f58; }
-
-    .add-btn {
-      background: #21262d;
-      border: 1px solid #30363d;
-      border-radius: 5px;
-      color: #8b949e;
-      font-size: 13px;
-      padding: 7px 14px;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.2s;
-    }
-    .add-btn:hover { border-color: #00d4ff; color: #00d4ff; }
-
-    .run-btn {
-      width: 100%;
-      padding: 13px;
-      background: linear-gradient(135deg, #00d4ff, #0099cc);
-      border: none;
-      border-radius: 6px;
-      color: #0d1117;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
-      letter-spacing: 0.03em;
-    }
-    .run-btn:hover { opacity: 0.85; }
-    .run-btn:active { transform: scale(0.99); }
-    .run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    /* LOADING */
-    .loading-overlay {
-      display: none;
-      text-align: center;
-      padding: 40px 20px;
-    }
-    .loading-overlay.active { display: block; }
-
-    .loading-bar-wrap {
-      background: #21262d;
-      border-radius: 4px;
-      height: 6px;
-      overflow: hidden;
-      margin: 16px auto;
-      max-width: 360px;
-    }
-    .loading-bar {
-      height: 100%;
-      background: linear-gradient(90deg, #00d4ff, #0066ff);
-      border-radius: 4px;
-      width: 0%;
-      transition: width 0.3s ease;
-    }
-
-    .loading-status { font-size: 13px; color: #8b949e; }
+    .tabs { display: flex; gap: 4px; padding: 0 24px; border-bottom: 1px solid #21262d; max-width: 1200px; margin: 0 auto; }
+    .tab { padding: 12px 20px; background: none; border: none; color: #8b949e; cursor: pointer; font-size: 14px; font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; }
+    .tab:hover { color: #e6edf3; }
+    .tab.active { color: #00d4ff; border-bottom-color: #00d4ff; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 
     /* DASHBOARD */
-    .dashboard { display: none; }
-    .dashboard.active { display: block; }
+    .dashboard { max-width: 1200px; margin: 0 auto; padding: 24px; }
 
-    /* Summary Cards */
-    .summary-cards {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
+    /* KPI CARDS */
+    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    @media (max-width: 700px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+    .kpi-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      padding: 16px 18px;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .kpi-card.blue::before { background: #00d4ff; }
+    .kpi-card.green::before { background: #3fb950; }
+    .kpi-card.orange::before { background: #f0883e; }
+    .kpi-card.red::before { background: #f85149; }
+    .kpi-label { font-size: 12px; color: #8b949e; margin-bottom: 8px; }
+    .kpi-value { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+    .kpi-card.blue .kpi-value { color: #00d4ff; }
+    .kpi-card.green .kpi-value { color: #3fb950; }
+    .kpi-card.orange .kpi-value { color: #f0883e; }
+    .kpi-card.red .kpi-value { color: #f85149; }
+    .kpi-sub { font-size: 11px; color: #8b949e; }
+
+    /* FILTER BAR */
+    .filter-bar {
+      display: flex;
       gap: 12px;
       margin-bottom: 20px;
-    }
-
-    @media (max-width: 640px) { .summary-cards { grid-template-columns: 1fr; } }
-
-    .summary-card {
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      padding: 16px 20px;
-    }
-
-    .summary-card.highlight { border-color: rgba(0, 212, 255, 0.4); }
-
-    .summary-label { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
-    .summary-value { font-size: 22px; font-weight: 700; color: #e6edf3; }
-    .summary-value.cyan { color: #00d4ff; }
-    .summary-value.green { color: #23c55e; }
-    .summary-sub { font-size: 12px; color: #8b949e; margin-top: 4px; }
-
-    /* Price Table */
-    .price-table-wrap {
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 20px;
-    }
-
-    .price-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-
-    .price-table th {
-      background: #161b22;
-      padding: 10px 14px;
-      text-align: left;
-      color: #8b949e;
-      font-weight: 600;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      border-bottom: 1px solid #30363d;
-    }
-
-    .price-table td {
-      padding: 11px 14px;
-      border-bottom: 1px solid #21262d;
-    }
-    .price-table tr:last-child td { border-bottom: none; }
-
-    .price-cell { text-align: right; font-family: monospace; }
-    .price-cell.cheapest {
-      color: #23c55e;
-      font-weight: 700;
-      background: rgba(35, 197, 94, 0.07);
-    }
-    .price-cell.pricey { color: #8b949e; }
-
-    .cheapest-badge {
-      display: inline-block;
-      background: rgba(35, 197, 94, 0.15);
-      border: 1px solid rgba(35, 197, 94, 0.4);
-      color: #23c55e;
-      font-size: 10px;
-      padding: 2px 7px;
-      border-radius: 20px;
-      margin-left: 4px;
-    }
-
-    /* Chart */
-    .chart-panel {
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 16px;
-    }
-
-    .chart-header {
-      padding: 12px 16px;
-      border-bottom: 1px solid #30363d;
-      display: flex;
-      justify-content: space-between;
+      flex-wrap: wrap;
       align-items: center;
     }
-
-    .chart-title { font-size: 13px; font-weight: 600; color: #e6edf3; }
-
-    .chart-legend {
-      display: flex;
-      gap: 14px;
-      font-size: 11px;
-      color: #8b949e;
-    }
-
-    .legend-dot {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      margin-right: 5px;
-    }
-
-    .chart-body { padding: 16px; }
-
-    canvas { display: block; width: 100%; }
-
-    /* Product selector */
-    .product-tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-    }
-
-    .product-tab {
-      background: #21262d;
+    .filter-btn {
+      padding: 7px 14px;
+      background: #161b22;
       border: 1px solid #30363d;
-      border-radius: 5px;
+      border-radius: 20px;
       color: #8b949e;
-      font-size: 12px;
-      padding: 5px 12px;
+      font-size: 13px;
       cursor: pointer;
       transition: all 0.2s;
     }
-    .product-tab.active { border-color: #00d4ff; color: #00d4ff; background: rgba(0,212,255,0.08); }
-
-    /* Export */
+    .filter-btn.active, .filter-btn:hover { background: rgba(0,212,255,0.1); border-color: #00d4ff; color: #00d4ff; }
+    .sort-select {
+      margin-left: auto;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #e6edf3;
+      padding: 7px 12px;
+      font-size: 13px;
+      cursor: pointer;
+    }
     .export-btn {
-      background: transparent;
+      padding: 7px 14px;
+      background: none;
       border: 1px solid #30363d;
       border-radius: 6px;
       color: #8b949e;
       font-size: 13px;
-      padding: 8px 16px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
       transition: all 0.2s;
     }
-    .export-btn:hover { border-color: #23c55e; color: #23c55e; }
+    .export-btn:hover { border-color: #00d4ff; color: #00d4ff; }
 
-    /* CODE SECTION */
-    .code-section {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 48px 24px;
+    /* PRODUCT GRID */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
     }
-
-    .code-block {
+    .product-card {
       background: #161b22;
       border: 1px solid #30363d;
-      border-radius: 8px;
+      border-radius: 10px;
       overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .product-card:hover { border-color: #00d4ff; transform: translateY(-2px); }
+
+    .product-img {
+      width: 100%;
+      height: 120px;
+      background: #21262d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      position: relative;
+    }
+    .product-name-overlay {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.7));
+      padding: 8px;
+      font-size: 11px;
+      color: #e6edf3;
+      font-weight: 600;
+    }
+    .cheapest-badge {
+      position: absolute;
+      top: 8px; right: 8px;
+      background: #2ea043;
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 10px;
     }
 
-    .code-header {
-      background: #1c2128;
-      padding: 10px 16px;
+    .product-body { padding: 12px; }
+    .product-title { font-size: 13px; font-weight: 600; margin-bottom: 8px; line-height: 1.4; }
+
+    .price-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
       font-size: 12px;
-      color: #8b949e;
-      border-bottom: 1px solid #30363d;
+      border-bottom: 1px solid #21262d;
+    }
+    .price-row:last-of-type { border-bottom: none; }
+    .site-name { color: #8b949e; }
+    .price-val { font-weight: 600; }
+    .price-val.cheapest { color: #3fb950; }
+    .price-val.priciest { color: #f85149; }
+    .stock-ok { color: #3fb950; font-size: 11px; }
+    .stock-ng { color: #f85149; font-size: 11px; }
+
+    .product-footer {
+      padding: 8px 12px;
+      border-top: 1px solid #21262d;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
+    .stars { color: #f0883e; font-size: 13px; letter-spacing: 1px; }
+    .review-count { font-size: 11px; color: #8b949e; }
+    .trend-badge {
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .trend-up { background: rgba(248,81,73,0.15); color: #f85149; }
+    .trend-down { background: rgba(46,160,67,0.15); color: #3fb950; }
+    .trend-flat { background: rgba(139,148,158,0.15); color: #8b949e; }
+    .chart-btn {
+      padding: 4px 10px;
+      background: none;
+      border: 1px solid #30363d;
+      border-radius: 4px;
+      color: #8b949e;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .chart-btn:hover { border-color: #00d4ff; color: #00d4ff; }
 
-    pre { padding: 20px; overflow-x: auto; font-size: 13.5px; line-height: 1.65; }
-    code { font-family: 'Fira Code', 'Courier New', monospace; }
+    /* MODAL */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 640px;
+      width: 100%;
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .modal-title { font-size: 16px; font-weight: 600; }
+    .modal-close { background: none; border: none; color: #8b949e; font-size: 22px; cursor: pointer; line-height: 1; }
+    .modal-close:hover { color: #e6edf3; }
 
+    /* CODE */
+    .code-wrapper { max-width: 900px; margin: 0 auto; padding: 24px; }
+    pre { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 24px; overflow-x: auto; line-height: 1.7; font-size: 13px; }
+    code { font-family: 'SFMono-Regular', Consolas, monospace; color: #e6edf3; }
     .kw { color: #ff7b72; }
     .fn { color: #d2a8ff; }
-    .st { color: #a5d6ff; }
+    .str { color: #a5d6ff; }
     .cm { color: #8b949e; font-style: italic; }
-    .nm { color: #ffa657; }
-    .bi { color: #79c0ff; }
-    .cl { color: #ffa657; font-weight: bold; }
+    .num { color: #79c0ff; }
+    .dc { color: #ffa657; }
 
-    /* BENEFITS */
-    .benefits-section {
-      background: #161b22;
-      border-top: 1px solid #30363d;
-      padding: 48px 24px;
-    }
+    /* USECASES */
+    .usecases-wrapper { max-width: 900px; margin: 0 auto; padding: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    .usecase-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; transition: border-color 0.2s; }
+    .usecase-card:hover { border-color: #00d4ff; }
+    .usecase-icon { font-size: 32px; margin-bottom: 12px; }
+    .usecase-card h3 { font-size: 16px; margin-bottom: 8px; color: #00d4ff; }
+    .usecase-card p { font-size: 13px; color: #8b949e; line-height: 1.6; }
+    .usecase-card .merit { margin-top: 12px; padding: 8px 12px; background: rgba(46,160,67,0.1); border-radius: 6px; font-size: 12px; color: #7ee787; }
 
-    .benefits-inner { max-width: 960px; margin: 0 auto; }
+    footer { margin-top: 48px; border-top: 1px solid #21262d; padding: 40px 24px; text-align: center; }
+    .cta { max-width: 560px; margin: 0 auto; background: linear-gradient(135deg, rgba(0,212,255,0.08), rgba(0,212,255,0.03)); border: 1px solid rgba(0,212,255,0.25); border-radius: 16px; padding: 32px; }
+    .cta h3 { font-size: 18px; margin-bottom: 8px; }
+    .cta p { font-size: 13px; color: #8b949e; margin-bottom: 20px; }
+    .cta a { display: inline-block; background: linear-gradient(135deg, #00d4ff, #0099bb); color: #0d1117; font-weight: 700; padding: 12px 28px; border-radius: 8px; text-decoration: none; transition: all 0.2s; }
+    .cta a:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,212,255,0.3); }
 
-    .benefits-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-top: 24px;
-    }
-
-    .benefit-card {
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      padding: 20px;
-      transition: border-color 0.2s;
-    }
-    .benefit-card:hover { border-color: rgba(0, 212, 255, 0.4); }
-
-    .benefit-icon { font-size: 28px; margin-bottom: 12px; }
-    .benefit-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
-    .benefit-desc { font-size: 13px; color: #8b949e; line-height: 1.6; }
-
-    h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
-
-    .flex-between { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    .toast { position: fixed; bottom: 24px; right: 24px; background: #2ea043; color: white; padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; transform: translateY(80px); opacity: 0; transition: all 0.3s; z-index: 999; }
+    .toast.show { transform: translateY(0); opacity: 1; }
   </style>
 </head>
 <body>
 
-  <a href="../../index.html" class="back-link">&larr; ポートフォリオに戻る</a>
+<nav>
+  <a href="/portfolio/" class="logo">&lt;nagi /&gt;</a>
+  <a href="/portfolio/" class="back-btn">← ポートフォリオに戻る</a>
+</nav>
 
-  <div class="hero">
-    <div class="badge">DEMO 10 &nbsp;&bull;&nbsp; Python / Scraping / Dashboard</div>
-    <h1>競合価格収集<span>ダッシュボード</span></h1>
-    <p class="subtitle">複数ECサイトの価格をスクレイピングで自動収集し、最安値・価格推移をリアルタイムで可視化。
-    価格調査にかかる工数を<strong style="color:#e6edf3;">週2時間 → 0分</strong>に削減します。</p>
-  </div>
+<header>
+  <div class="tag">Python Scraping</div>
+  <h1>Webスクレイピング 競合分析ダッシュボード</h1>
+  <p class="problem">❌ 課題: 競合他社の商品情報・価格を毎日手動でExcelに転記している</p>
+  <p class="solution">✅ 解決: Pythonが自動収集 → ダッシュボードで一目で把握</p>
+</header>
 
-  <!-- DEMO -->
-  <div class="demo-section">
-    <div class="demo-inner">
-      <div class="section-label">Interactive Demo</div>
+<div class="tabs">
+  <button class="tab active" onclick="showTab('demo', this)">🎬 デモ</button>
+  <button class="tab" onclick="showTab('code', this)">＜/＞ コード</button>
+  <button class="tab" onclick="showTab('usecases', this)">💼 活用例</button>
+</div>
 
-      <!-- Target List -->
-      <div class="target-panel">
-        <div class="panel-header">
-          <div class="dots">
-            <div class="dot dot-red"></div>
-            <div class="dot dot-yellow"></div>
-            <div class="dot dot-green"></div>
-          </div>
-          <span>監視対象商品リスト</span>
-          <span id="itemCount" style="font-size:11px;color:#484f58;">3商品</span>
-        </div>
-        <div class="panel-body">
-          <ul class="target-list" id="targetList">
-            <li class="target-item" data-id="1">
-              <span class="target-name">ワイヤレスイヤホン A社</span>
-              <span class="target-url">https://siteA.example.com/items/earphone-001</span>
-              <button class="target-remove" onclick="removeTarget(1)">&#10005;</button>
-            </li>
-            <li class="target-item" data-id="2">
-              <span class="target-name">スマホケース B社</span>
-              <span class="target-url">https://siteB.example.com/products/case-x</span>
-              <button class="target-remove" onclick="removeTarget(2)">&#10005;</button>
-            </li>
-            <li class="target-item" data-id="3">
-              <span class="target-name">モバイルバッテリー C社</span>
-              <span class="target-url">https://siteC.example.com/goods/battery-pro</span>
-              <button class="target-remove" onclick="removeTarget(3)">&#10005;</button>
-            </li>
-          </ul>
-          <div class="add-row" style="margin-bottom:16px;">
-            <input type="text" class="add-input" id="addName" placeholder="商品名">
-            <input type="text" class="add-input" id="addUrl" placeholder="URL（ダミー可）">
-            <button class="add-btn" onclick="addTarget()">追加</button>
-          </div>
-          <button class="run-btn" id="runBtn" onclick="startScraping()">データ収集を実行する</button>
-        </div>
+<!-- DEMO TAB -->
+<div id="demo" class="tab-content active">
+  <div class="dashboard">
+
+    <!-- KPI -->
+    <div class="kpi-row">
+      <div class="kpi-card blue">
+        <div class="kpi-label">監視商品数</div>
+        <div class="kpi-value">24件</div>
+        <div class="kpi-sub">3カテゴリ横断</div>
       </div>
-
-      <!-- Loading -->
-      <div class="loading-overlay" id="loadingOverlay">
-        <div style="color:#8b949e;font-size:13px;margin-bottom:8px;">データを収集しています...</div>
-        <div class="loading-bar-wrap">
-          <div class="loading-bar" id="loadingBar"></div>
-        </div>
-        <div class="loading-status" id="loadingStatus">サイトA に接続中...</div>
+      <div class="kpi-card orange">
+        <div class="kpi-label">最安値更新</div>
+        <div class="kpi-value" id="kpiUpdated">3件</div>
+        <div class="kpi-sub">本日検出</div>
       </div>
-
-      <!-- Dashboard -->
-      <div class="dashboard" id="dashboard">
-
-        <!-- Summary Cards -->
-        <div class="summary-cards">
-          <div class="summary-card highlight">
-            <div class="summary-label">最安値サイト</div>
-            <div class="summary-value cyan" id="cheapestSite">-</div>
-            <div class="summary-sub" id="cheapestNote">-</div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label">監視商品数</div>
-            <div class="summary-value" id="totalItems">-</div>
-            <div class="summary-sub">前回比 +0件</div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label">価格下落アラート</div>
-            <div class="summary-value green" id="alertCount">-</div>
-            <div class="summary-sub">対前日比 -5%以上</div>
-          </div>
-        </div>
-
-        <!-- Price Table -->
-        <div class="price-table-wrap">
-          <div class="panel-header">
-            <span>商品別価格比較</span>
-            <button class="export-btn" onclick="exportCSV()">&#8681; CSVエクスポート</button>
-          </div>
-          <table class="price-table">
-            <thead>
-              <tr>
-                <th>商品名</th>
-                <th style="text-align:right;">サイトA</th>
-                <th style="text-align:right;">サイトB</th>
-                <th style="text-align:right;">サイトC</th>
-                <th style="text-align:right;">最安値</th>
-              </tr>
-            </thead>
-            <tbody id="priceTableBody">
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Chart -->
-        <div class="chart-panel">
-          <div class="chart-header">
-            <span class="chart-title">価格推移グラフ（過去7日）</span>
-            <div class="chart-legend">
-              <span><span class="legend-dot" style="background:#00d4ff;"></span>サイトA</span>
-              <span><span class="legend-dot" style="background:#23c55e;"></span>サイトB</span>
-              <span><span class="legend-dot" style="background:#fbbf24;"></span>サイトC</span>
-            </div>
-          </div>
-          <div class="chart-body">
-            <div class="product-tabs" id="productTabs"></div>
-            <canvas id="priceChart" height="200"></canvas>
-          </div>
-        </div>
-
+      <div class="kpi-card red">
+        <div class="kpi-label">在庫切れ</div>
+        <div class="kpi-value">2件</div>
+        <div class="kpi-sub">要確認</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-label">最終更新</div>
+        <div class="kpi-value" style="font-size:18px;" id="kpiTime">--:--</div>
+        <div class="kpi-sub">毎朝 09:00 自動実行</div>
       </div>
     </div>
-  </div>
 
-  <!-- CODE -->
-  <div class="code-section">
-    <div class="section-label">Actual Code</div>
-    <h2>実装コード</h2>
-    <p style="color:#8b949e;font-size:14px;margin-bottom:24px;">本番ではcronで定期実行し、結果をDBまたはGoogle Spreadsheetsに保存します。</p>
-    <div class="code-block">
-      <div class="code-header">
-        <span>price_monitor.py</span>
-        <span style="color:#484f58;">Python 3.10+ / requests + BeautifulSoup4</span>
-      </div>
-      <pre><code><span class="kw">import</span> requests
-<span class="kw">from</span> bs4 <span class="kw">import</span> <span class="cl">BeautifulSoup</span>
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="filterCat('all', this)">すべて</button>
+      <button class="filter-btn" onclick="filterCat('pc', this)">💻 PC周辺機器</button>
+      <button class="filter-btn" onclick="filterCat('sp', this)">📱 スマホアクセサリ</button>
+      <button class="filter-btn" onclick="filterCat('office', this)">📦 オフィス用品</button>
+      <select class="sort-select" id="sortSelect" onchange="sortProducts()">
+        <option value="price_asc">価格安順</option>
+        <option value="price_desc">価格高順</option>
+        <option value="rating">評価順</option>
+        <option value="reviews">レビュー数順</option>
+      </select>
+      <button class="export-btn" onclick="exportCSV()">⬇️ CSVエクスポート</button>
+    </div>
+
+    <!-- PRODUCT GRID -->
+    <div class="product-grid" id="productGrid"></div>
+  </div>
+</div>
+
+<!-- CODE TAB -->
+<div id="code" class="tab-content">
+  <div class="code-wrapper">
+    <div style="margin-bottom:16px;">
+      <h3 style="font-size:18px;margin-bottom:8px;">実装コード（Python）</h3>
+      <p style="color:#8b949e;font-size:14px;">requests＋BeautifulSoupで複数サイトを巡回し、価格・在庫・評価を自動収集。毎朝9時にscheduleで実行されます。</p>
+    </div>
+    <pre><code><span class="kw">import</span> requests
+<span class="kw">from</span> bs4 <span class="kw">import</span> BeautifulSoup
 <span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> time, schedule
 <span class="kw">from</span> datetime <span class="kw">import</span> datetime
-<span class="kw">import</span> time
 
-<span class="kw">class</span> <span class="cl">PriceMonitor</span>:
-    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="bi">self</span>, targets):
-        <span class="cm"># targets = [{'name': '商品名', 'url': 'URL', 'selector': 'CSSセレクタ'}]</span>
-        <span class="bi">self</span>.targets = targets
-        <span class="bi">self</span>.results = []
+<span class="kw">class</span> <span class="fn">ProductScraper</span>:
+    <span class="str">"""複数ECサイトの価格を定期収集するスクレイパー"""</span>
 
-    <span class="kw">def</span> <span class="fn">scrape</span>(<span class="bi">self</span>):
-        <span class="kw">for</span> target <span class="kw">in</span> <span class="bi">self</span>.targets:
-            <span class="kw">try</span>:
-                res = requests.<span class="fn">get</span>(target[<span class="st">'url'</span>],
-                                   headers={<span class="st">'User-Agent'</span>: <span class="st">'Mozilla/5.0'</span>},
-                                   timeout=<span class="nm">10</span>)
-                soup = <span class="cl">BeautifulSoup</span>(res.text, <span class="st">'html.parser'</span>)
-                price_el = soup.<span class="fn">select_one</span>(target[<span class="st">'selector'</span>])
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        self.headers = {<span class="str">'User-Agent'</span>: <span class="str">'Mozilla/5.0 ...'</span>}
+        self.results = []
 
-                <span class="kw">if</span> price_el:
-                    price = <span class="bi">int</span>(price_el.text.<span class="fn">strip</span>()
-                                .<span class="fn">replace</span>(<span class="st">'¥'</span>,<span class="st">''</span>).<span class="fn">replace</span>(<span class="st">','</span>,<span class="st">''</span>))
-                    <span class="bi">self</span>.results.<span class="fn">append</span>({
-                        <span class="st">'name'</span>: target[<span class="st">'name'</span>],
-                        <span class="st">'url'</span>: target[<span class="st">'url'</span>],
-                        <span class="st">'price'</span>: price,
-                        <span class="st">'scraped_at'</span>: datetime.<span class="fn">now</span>().<span class="fn">isoformat</span>()
-                    })
-            <span class="kw">except</span> <span class="cl">Exception</span> <span class="kw">as</span> e:
-                <span class="bi">print</span>(<span class="st">f"エラー ({target['name']}): {e}"</span>)
+    <span class="kw">def</span> <span class="fn">scrape_amazon</span>(self, url: str) -&gt; dict:
+        <span class="str">"""Amazon商品ページから価格・評価を取得"""</span>
+        <span class="kw">try</span>:
+            time.sleep(<span class="num">1</span>)  <span class="cm"># レート制限対策</span>
+            res = requests.get(url, headers=self.headers, timeout=<span class="num">10</span>)
+            soup = BeautifulSoup(res.content, <span class="str">'html.parser'</span>)
 
-            time.<span class="fn">sleep</span>(<span class="nm">1</span>)  <span class="cm"># サーバー負荷軽減</span>
+            price_elem = soup.select_one(<span class="str">'.a-price-whole'</span>)
+            rating_elem = soup.select_one(<span class="str">'.a-icon-alt'</span>)
+            title_elem = soup.select_one(<span class="str">'#productTitle'</span>)
 
-        <span class="kw">return</span> pd.<span class="fn">DataFrame</span>(<span class="bi">self</span>.results)
+            <span class="kw">return</span> {
+                <span class="str">'site'</span>: <span class="str">'Amazon'</span>,
+                <span class="str">'title'</span>: title_elem.text.strip() <span class="kw">if</span> title_elem <span class="kw">else</span> <span class="str">'N/A'</span>,
+                <span class="str">'price'</span>: <span class="fn">int</span>(price_elem.text.replace(<span class="str">','</span>, <span class="str">''</span>)) <span class="kw">if</span> price_elem <span class="kw">else</span> <span class="kw">None</span>,
+                <span class="str">'rating'</span>: <span class="fn">float</span>(rating_elem.text[:<span class="num">3</span>]) <span class="kw">if</span> rating_elem <span class="kw">else</span> <span class="kw">None</span>,
+                <span class="str">'scraped_at'</span>: datetime.now().isoformat()
+            }
+        <span class="kw">except</span> Exception <span class="kw">as</span> e:
+            <span class="fn">print</span>(<span class="fn">f</span><span class="str">"エラー: {e}"</span>)
+            <span class="kw">return None</span>
 
-    <span class="kw">def</span> <span class="fn">export_csv</span>(<span class="bi">self</span>, path=<span class="st">'prices.csv'</span>):
-        df = <span class="bi">self</span>.<span class="fn">scrape</span>()
-        df.<span class="fn">to_csv</span>(path, index=<span class="kw">False</span>, encoding=<span class="st">'utf-8-sig'</span>)
-        <span class="bi">print</span>(<span class="st">f"保存完了: {path}"</span>)</code></pre>
+    <span class="kw">def</span> <span class="fn">scrape_rakuten</span>(self, keyword: str) -&gt; list:
+        <span class="str">"""楽天APIで最安値を取得"""</span>
+        params = {
+            <span class="str">'applicationId'</span>: <span class="str">'YOUR_APP_ID'</span>,
+            <span class="str">'keyword'</span>: keyword,
+            <span class="str">'hits'</span>: <span class="num">5</span>,
+            <span class="str">'sort'</span>: <span class="str">'+itemPrice'</span>
+        }
+        res = requests.get(
+            <span class="str">'https://app.rakuten.co.jp/services/api/IchibaItem/Search/20170706'</span>,
+            params=params
+        )
+        data = res.json()
+        <span class="kw">return</span> [{
+            <span class="str">'site'</span>: <span class="str">'楽天'</span>,
+            <span class="str">'title'</span>: item[<span class="str">'Item'</span>][<span class="str">'itemName'</span>],
+            <span class="str">'price'</span>: item[<span class="str">'Item'</span>][<span class="str">'itemPrice'</span>],
+            <span class="str">'rating'</span>: item[<span class="str">'Item'</span>][<span class="str">'reviewAverage'</span>],
+        } <span class="kw">for</span> item <span class="kw">in</span> data.get(<span class="str">'Items'</span>, [])[:3]]
+
+    <span class="kw">def</span> <span class="fn">run_daily</span>(self):
+        <span class="str">"""毎朝9時に自動実行"""</span>
+        <span class="fn">print</span>(<span class="fn">f</span><span class="str">"スクレイピング開始: {datetime.now()}"</span>)
+        products = self.<span class="fn">load_watch_list</span>(<span class="str">'watch_list.csv'</span>)
+
+        <span class="kw">for</span> product <span class="kw">in</span> products:
+            amazon = self.<span class="fn">scrape_amazon</span>(product[<span class="str">'amazon_url'</span>])
+            rakuten = self.<span class="fn">scrape_rakuten</span>(product[<span class="str">'keyword'</span>])
+            <span class="kw">if</span> amazon: self.results.append(amazon)
+            self.results.extend(rakuten)
+
+        df = pd.DataFrame(self.results)
+        filename = <span class="fn">f</span><span class="str">"results_{datetime.now():%Y%m%d}.csv"</span>
+        df.to_csv(filename, index=<span class="kw">False</span>, encoding=<span class="str">'utf-8-sig'</span>)
+        <span class="fn">print</span>(<span class="fn">f</span><span class="str">"完了: {len(self.results)}件 → {filename}"</span>)
+
+<span class="cm"># 毎日9:00に自動実行</span>
+scraper = ProductScraper()
+schedule.every().day.at(<span class="str">"09:00"</span>).do(scraper.run_daily)
+
+<span class="kw">while True</span>:
+    schedule.run_pending()
+    time.sleep(<span class="num">60</span>)</code></pre>
+
+    <div style="margin-top:16px;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px;font-size:13px;color:#8b949e;">
+      <strong style="color:#00d4ff;">使用ライブラリ</strong><br>
+      <code style="color:#e6edf3;">pip install requests beautifulsoup4 pandas schedule</code><br><br>
+      <strong style="color:#00d4ff;">注意事項</strong><br>
+      ・各サイトの利用規約を確認してから実行してください<br>
+      ・レート制限（time.sleep）を必ず設定し、サーバーへの負荷を避けること<br>
+      ・楽天/Yahoo等はAPIキーの取得が必要（無料枠あり）
     </div>
   </div>
+</div>
 
-  <!-- BENEFITS -->
-  <div class="benefits-section">
-    <div class="benefits-inner">
-      <div class="section-label">Solutions</div>
-      <h2>このシステムで解決できること</h2>
-      <p style="color:#8b949e;font-size:14px;margin-bottom:0;">競合の価格動向を常に把握し、利益を最大化する価格設定を実現します。</p>
-      <div class="benefits-grid">
-        <div class="benefit-card">
-          <div class="benefit-icon">&#128269;</div>
-          <div class="benefit-title">全競合の価格を1か所に</div>
-          <div class="benefit-desc">複数サイトを手動で巡回する必要がなくなり、常に最新価格を一覧で確認できます。</div>
-        </div>
-        <div class="benefit-card">
-          <div class="benefit-icon">&#128241;</div>
-          <div class="benefit-title">価格下落アラート</div>
-          <div class="benefit-desc">競合が突然値下げした場合も即時検知。機会損失を防ぎ素早い価格対応が可能です。</div>
-        </div>
-        <div class="benefit-card">
-          <div class="benefit-icon">&#128200;</div>
-          <div class="benefit-title">推移グラフで戦略立案</div>
-          <div class="benefit-desc">7日・30日のトレンドを可視化。季節性・イベント需要に合わせた価格戦略を立てられます。</div>
-        </div>
-        <div class="benefit-card">
-          <div class="benefit-icon">&#128196;</div>
-          <div class="benefit-title">CSVエクスポートで活用</div>
-          <div class="benefit-desc">Excelや経営ツールと連携。社内共有・レポート作成に即座に使えるデータを提供します。</div>
-        </div>
-      </div>
+<!-- USECASES TAB -->
+<div id="usecases" class="tab-content">
+  <div class="usecases-wrapper">
+    <div class="usecase-card">
+      <div class="usecase-icon">🛒</div>
+      <h3>EC価格監視・自動値下げ</h3>
+      <p>競合ショップの値下げをリアルタイム検知し、自社価格への反映をアラートまたは自動設定します。</p>
+      <div class="merit">✓ 価格競争力を自動維持</div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-icon">🏨</div>
+      <h3>ホテル・旅行サイト料金収集</h3>
+      <p>複数OTAサイトの空室・料金を自動収集。最適なレートポリシーを設定するためのデータ基盤を構築。</p>
+      <div class="merit">✓ RevPAR向上を自動サポート</div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-icon">📈</div>
+      <h3>株価・FXデータの自動収集</h3>
+      <p>複数の金融情報サイトからティッカーデータを収集し、独自の分析ダッシュボードに自動反映。</p>
+      <div class="merit">✓ データ収集工数をゼロに</div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-icon">🏠</div>
+      <h3>不動産相場の定点観測</h3>
+      <p>SUUMOやathomeから特定エリアの物件情報を定期収集。相場変動をグラフで可視化します。</p>
+      <div class="merit">✓ 投資判断の精度を向上</div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-icon">📰</div>
+      <h3>業界ニュース自動収集・要約</h3>
+      <p>指定キーワードに関連するニュースを複数メディアから自動収集し、メールで日次配信します。</p>
+      <div class="merit">✓ 情報収集を完全自動化</div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-icon">🔍</div>
+      <h3>求人情報のマッチング収集</h3>
+      <p>複数求人サイトから条件にマッチする求人を自動収集し、スプレッドシートに整理して配信。</p>
+      <div class="merit">✓ 求人チェック時間を9割削減</div>
     </div>
   </div>
+</div>
 
-  <script>
-    // === DATA ===
-    let targetIdCounter = 4;
-    const targets = [
-      { id: 1, name: 'ワイヤレスイヤホン A社', url: 'https://siteA.example.com/items/earphone-001' },
-      { id: 2, name: 'スマホケース B社', url: 'https://siteB.example.com/products/case-x' },
-      { id: 3, name: 'モバイルバッテリー C社', url: 'https://siteC.example.com/goods/battery-pro' },
+<footer>
+  <div class="cta">
+    <h3>このような自動化、クラウドワークスでご依頼いただけます</h3>
+    <p>価格監視・競合分析・データ収集など、Pythonスクレイピングで情報収集を完全自動化します。</p>
+    <a href="https://crowdworks.jp/public/employees/6119556" target="_blank" rel="noopener noreferrer">クラウドワークスで依頼する →</a>
+  </div>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">価格推移グラフ</div>
+      <button class="modal-close" onclick="document.getElementById('modalOverlay').classList.remove('show')">×</button>
+    </div>
+    <canvas id="chartCanvas" height="240" style="width:100%;"></canvas>
+    <div id="chartLegend" style="display:flex;gap:16px;margin-top:12px;font-size:12px;justify-content:center;"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ===== 商品データ ===== */
+  const PRODUCTS = [
+    { id:1, cat:'pc', icon:'🖥️', name:'USB-C ハブ 10in1 4K対応', amazon:4980, rakuten:5280, yahoo:5100, amazonStock:true, rakutenStock:true, yahooStock:true, rating:4.3, reviews:892, trend:'down', change:-300, priceHistory:[5800,5600,5500,5400,5200,5100,5000,4980,4980,5000,4980,4980,4980,4980] },
+    { id:2, cat:'pc', icon:'⌨️', name:'メカニカルキーボード 青軸 テンキーレス', amazon:7800, rakuten:7600, yahoo:7900, amazonStock:true, rakutenStock:true, yahooStock:false, rating:4.6, reviews:1243, trend:'up', change:200, priceHistory:[7200,7400,7400,7500,7600,7600,7800,7800,7600,7700,7800,7800,7600,7600] },
+    { id:3, cat:'sp', icon:'📱', name:'MagSafe対応 スマホケース iPhone15', amazon:2480, rakuten:2680, yahoo:2580, amazonStock:true, rakutenStock:true, yahooStock:true, rating:4.1, reviews:456, trend:'flat', change:0, priceHistory:[2800,2800,2700,2700,2600,2600,2500,2480,2480,2480,2480,2480,2480,2480] },
+    { id:4, cat:'sp', icon:'🎧', name:'完全ワイヤレスイヤホン ノイキャン付き', amazon:8900, rakuten:9200, yahoo:8750, amazonStock:true, rakutenStock:false, yahooStock:true, rating:4.7, reviews:3102, trend:'down', change:-450, priceHistory:[10500,10200,9800,9500,9200,9000,8900,8900,8900,9200,8900,8750,8800,8900] },
+    { id:5, cat:'pc', icon:'🖱️', name:'エルゴノミクスマウス ワイヤレス', amazon:3200, rakuten:3400, yahoo:3300, amazonStock:true, rakutenStock:true, yahooStock:true, rating:4.4, reviews:678, trend:'flat', change:0, priceHistory:[3200,3200,3300,3200,3200,3200,3200,3200,3200,3200,3200,3200,3200,3200] },
+    { id:6, cat:'office', icon:'🖨️', name:'モノクロレーザープリンター A4対応', amazon:24800, rakuten:25800, yahoo:24500, amazonStock:true, rakutenStock:true, yahooStock:true, rating:4.2, reviews:234, trend:'up', change:800, priceHistory:[23800,24000,24200,24500,24500,24800,24800,24500,24800,24500,24800,24800,24800,24800] },
+    { id:7, cat:'sp', icon:'🔋', name:'モバイルバッテリー 20000mAh PD65W', amazon:3980, rakuten:4200, yahoo:3900, amazonStock:true, rakutenStock:true, yahooStock:true, rating:4.5, reviews:1876, trend:'down', change:-200, priceHistory:[4500,4400,4300,4200,4100,4000,3980,3980,3980,4000,3980,3900,3980,3980] },
+    { id:8, cat:'office', icon:'📋', name:'ラミネーター A4対応 自動 6ロール付き', amazon:5480, rakuten:5680, yahoo:5380, amazonStock:false, rakutenStock:true, yahooStock:true, rating:3.9, reviews:312, trend:'flat', change:0, priceHistory:[5800,5700,5700,5600,5600,5500,5480,5480,5480,5500,5480,5380,5480,5480] },
+    { id:9, cat:'pc', icon:'📺', name:'27インチ 4K モニター USB-C給電', amazon:42800, rakuten:43500, yahoo:42500, amazonStock:true, rakutenStock:true, yahooStock:true, rating:4.6, reviews:521, trend:'down', change:-1200, priceHistory:[46000,45000,44500,44000,43500,43000,42800,42800,43500,43000,42800,42500,42800,42800] },
+    { id:10, cat:'office', icon:'✂️', name:'裁断機 A4対応 50枚一括断裁', amazon:8900, rakuten:9400, yahoo:8800, amazonStock:true, rakutenStock:true, yahooStock:false, rating:4.3, reviews:167, trend:'up', change:300, priceHistory:[8400,8500,8600,8700,8800,8900,8900,8600,8700,8900,8900,8800,8900,8900] },
+    { id:11, cat:'sp', icon:'📷', name:'スマホ三脚 ゴリラポッド 1kg耐荷重', amazon:1980, rakuten:2100, yahoo:1900, amazonStock:true, rakutenStock:true, yahooStock:true, rating:4.0, reviews:743, trend:'flat', change:0, priceHistory:[2200,2100,2100,2000,2000,1980,1980,1980,1980,1980,1980,1900,1980,1980] },
+    { id:12, cat:'office', icon:'🗂️', name:'ファイルボックス 10個セット A4縦型', amazon:2800, rakuten:3000, yahoo:2700, amazonStock:true, rakutenStock:true, yahooStock:true, rating:4.1, reviews:289, trend:'down', change:-100, priceHistory:[3100,3000,2900,2900,2900,2800,2800,2800,2900,2800,2800,2700,2800,2800] },
+  ];
+
+  let currentProducts = [...PRODUCTS];
+  let currentCat = 'all';
+
+  function renderProducts(list) {
+    const grid = document.getElementById('productGrid');
+    grid.innerHTML = '';
+    list.forEach(p => {
+      const prices = [p.amazon, p.rakuten, p.yahoo];
+      const minPrice = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+      const stars = '★'.repeat(Math.floor(p.rating)) + (p.rating % 1 >= 0.5 ? '½' : '') + '☆'.repeat(5 - Math.ceil(p.rating));
+
+      const trendClass = p.trend === 'up' ? 'trend-up' : p.trend === 'down' ? 'trend-down' : 'trend-flat';
+      const trendText = p.trend === 'up' ? `↑¥${p.change.toLocaleString()}` : p.trend === 'down' ? `↓¥${Math.abs(p.change).toLocaleString()}` : '→変動なし';
+
+      const card = document.createElement('div');
+      card.className = 'product-card';
+      card.dataset.cat = p.cat;
+      card.innerHTML = `
+        <div class="product-img">
+          <span>${p.icon}</span>
+          <div class="product-name-overlay">${p.name}</div>
+          ${p.amazon === minPrice ? '<div class="cheapest-badge">最安値</div>' : ''}
+        </div>
+        <div class="product-body">
+          <div class="product-title">${p.name}</div>
+          <div class="price-row">
+            <span class="site-name">Amazon</span>
+            <span class="price-val ${p.amazon === minPrice ? 'cheapest' : p.amazon === maxPrice ? 'priciest' : ''}">¥${p.amazon.toLocaleString()}</span>
+            <span class="${p.amazonStock ? 'stock-ok' : 'stock-ng'}">${p.amazonStock ? '在庫○' : '在庫×'}</span>
+          </div>
+          <div class="price-row">
+            <span class="site-name">楽天</span>
+            <span class="price-val ${p.rakuten === minPrice ? 'cheapest' : p.rakuten === maxPrice ? 'priciest' : ''}">¥${p.rakuten.toLocaleString()}</span>
+            <span class="${p.rakutenStock ? 'stock-ok' : 'stock-ng'}">${p.rakutenStock ? '在庫○' : '在庫×'}</span>
+          </div>
+          <div class="price-row">
+            <span class="site-name">Yahoo!</span>
+            <span class="price-val ${p.yahoo === minPrice ? 'cheapest' : p.yahoo === maxPrice ? 'priciest' : ''}">¥${p.yahoo.toLocaleString()}</span>
+            <span class="${p.yahooStock ? 'stock-ok' : 'stock-ng'}">${p.yahooStock ? '在庫○' : '在庫×'}</span>
+          </div>
+        </div>
+        <div class="product-footer">
+          <div>
+            <div class="stars">${stars}</div>
+            <div class="review-count">${p.reviews.toLocaleString()}件</div>
+          </div>
+          <span class="trend-badge ${trendClass}">${trendText}</span>
+          <button class="chart-btn" onclick="openChart(${p.id})">📈 推移</button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  function filterCat(cat, btn) {
+    currentCat = cat;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyFiltersAndSort();
+  }
+
+  function sortProducts() { applyFiltersAndSort(); }
+
+  function applyFiltersAndSort() {
+    let list = currentCat === 'all' ? [...PRODUCTS] : PRODUCTS.filter(p => p.cat === currentCat);
+    const sort = document.getElementById('sortSelect').value;
+    if (sort === 'price_asc') list.sort((a, b) => Math.min(a.amazon,a.rakuten,a.yahoo) - Math.min(b.amazon,b.rakuten,b.yahoo));
+    if (sort === 'price_desc') list.sort((a, b) => Math.min(b.amazon,b.rakuten,b.yahoo) - Math.min(a.amazon,a.rakuten,a.yahoo));
+    if (sort === 'rating') list.sort((a, b) => b.rating - a.rating);
+    if (sort === 'reviews') list.sort((a, b) => b.reviews - a.reviews);
+    renderProducts(list);
+  }
+
+  /* ===== 価格推移グラフ ===== */
+  function openChart(id) {
+    const p = PRODUCTS.find(x => x.id === id);
+    if (!p) return;
+
+    document.getElementById('modalTitle').textContent = `📈 ${p.name} — 過去14日間の価格推移`;
+    document.getElementById('modalOverlay').classList.add('show');
+
+    requestAnimationFrame(() => drawChart(p));
+  }
+
+  function drawChart(p) {
+    const canvas = document.getElementById('chartCanvas');
+    const dpr = window.devicePixelRatio || 1;
+    const W = canvas.offsetWidth || 580;
+    const H = 240;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    const days = p.priceHistory.length;
+    const allVals = p.priceHistory;
+    const minV = Math.min(...allVals) * 0.97;
+    const maxV = Math.max(...allVals) * 1.03;
+    const padL = 60, padR = 20, padT = 20, padB = 30;
+    const cW = W - padL - padR;
+    const cH = H - padT - padB;
+
+    // 背景
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, W, H);
+
+    // グリッド
+    ctx.strokeStyle = '#21262d';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const y = padT + (cH / 4) * i;
+      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+      const val = maxV - (maxV - minV) * (i / 4);
+      ctx.fillStyle = '#8b949e';
+      ctx.font = '10px system-ui';
+      ctx.textAlign = 'right';
+      ctx.fillText('¥' + Math.round(val).toLocaleString(), padL - 4, y + 3);
+    }
+
+    // 最安値ゾーン（薄いハイライト）
+    const minY = padT + (1 - (Math.min(...allVals) - minV) / (maxV - minV)) * cH;
+    ctx.fillStyle = 'rgba(63,185,80,0.06)';
+    ctx.fillRect(padL, minY - 6, cW, 12);
+
+    // 日付ラベル
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '10px system-ui';
+    ctx.textAlign = 'center';
+    for (let i = 0; i < days; i += 2) {
+      const x = padL + (cW / (days - 1)) * i;
+      const d = new Date(); d.setDate(d.getDate() - (days - 1 - i));
+      ctx.fillText(`${d.getMonth()+1}/${d.getDate()}`, x, H - 8);
+    }
+
+    // 価格折れ線（Amazonのデータを使用）
+    const colors = [{ label: 'Amazon', color: '#f0883e' }, { label: '楽天', color: '#e74c3c' }, { label: 'Yahoo!', color: '#9b59b6' }];
+    const datasets = [
+      p.priceHistory,
+      p.priceHistory.map((v, i) => Math.round(v * (1 + 0.04 + Math.sin(i * 0.7) * 0.02))),
+      p.priceHistory.map((v, i) => Math.round(v * (0.98 + Math.cos(i * 0.5) * 0.015))),
     ];
 
-    // Simulated price data
-    const priceData = {
-      'ワイヤレスイヤホン A社': { A: 4980, B: 5280, C: 4750 },
-      'スマホケース B社': { A: 1280, B: 980, C: 1180 },
-      'モバイルバッテリー C社': { A: 3480, B: 3280, C: 3680 },
-    };
-
-    // 7-day history per product per site
-    const historyData = {
-      'ワイヤレスイヤホン A社': {
-        A: [5200, 5100, 5050, 5000, 4980, 4980, 4980],
-        B: [5280, 5280, 5280, 5350, 5300, 5280, 5280],
-        C: [4900, 4850, 4800, 4780, 4750, 4750, 4750],
-      },
-      'スマホケース B社': {
-        A: [1380, 1350, 1320, 1280, 1280, 1280, 1280],
-        B: [1080, 1050, 1020, 1000, 990, 980, 980],
-        C: [1200, 1200, 1200, 1180, 1180, 1180, 1180],
-      },
-      'モバイルバッテリー C社': {
-        A: [3600, 3580, 3520, 3500, 3480, 3480, 3480],
-        B: [3400, 3380, 3320, 3300, 3280, 3280, 3280],
-        C: [3800, 3780, 3720, 3700, 3680, 3680, 3680],
-      },
-    };
-
-    let activeProduct = null;
-    let chartInstance = null;
-    let csvDataCache = null;
-
-    function updateItemCount() {
-      document.getElementById('itemCount').textContent = targets.length + '商品';
-    }
-
-    function addTarget() {
-      const nameEl = document.getElementById('addName');
-      const urlEl = document.getElementById('addUrl');
-      const name = nameEl.value.trim();
-      const url = urlEl.value.trim() || 'https://example.com/item/' + targetIdCounter;
-      if (!name) { nameEl.style.borderColor = '#ff7b72'; setTimeout(() => nameEl.style.borderColor = '#30363d', 1200); return; }
-
-      const id = targetIdCounter++;
-      targets.push({ id, name, url });
-
-      // Add to price data with random prices
-      priceData[name] = {
-        A: Math.floor(Math.random() * 5000 + 1000),
-        B: Math.floor(Math.random() * 5000 + 1000),
-        C: Math.floor(Math.random() * 5000 + 1000),
-      };
-
-      const li = document.createElement('li');
-      li.className = 'target-item';
-      li.dataset.id = id;
-      li.innerHTML = `<span class="target-name">${escHtml(name)}</span><span class="target-url">${escHtml(url)}</span><button class="target-remove" onclick="removeTarget(${id})">&#10005;</button>`;
-      document.getElementById('targetList').appendChild(li);
-
-      nameEl.value = '';
-      urlEl.value = '';
-      updateItemCount();
-    }
-
-    function removeTarget(id) {
-      const idx = targets.findIndex(t => t.id === id);
-      if (idx !== -1) targets.splice(idx, 1);
-      const el = document.querySelector(`[data-id="${id}"]`);
-      if (el) el.remove();
-      updateItemCount();
-    }
-
-    function startScraping() {
-      const btn = document.getElementById('runBtn');
-      btn.disabled = true;
-      btn.textContent = '収集中...';
-
-      document.getElementById('dashboard').classList.remove('active');
-      const overlay = document.getElementById('loadingOverlay');
-      overlay.classList.add('active');
-
-      const sites = ['サイトA', 'サイトB', 'サイトC'];
-      const productNames = targets.map(t => t.name);
-      const steps = [];
-      productNames.forEach(p => sites.forEach(s => steps.push(`${p} を ${s} で確認中...`)));
-      steps.push('データを集計中...');
-
-      const bar = document.getElementById('loadingBar');
-      const status = document.getElementById('loadingStatus');
-      let i = 0;
-
-      const interval = setInterval(() => {
-        if (i >= steps.length) {
-          clearInterval(interval);
-          overlay.classList.remove('active');
-          buildDashboard();
-          document.getElementById('dashboard').classList.add('active');
-          btn.disabled = false;
-          btn.textContent = '再収集する';
-          return;
-        }
-        status.textContent = steps[i];
-        bar.style.width = ((i + 1) / steps.length * 100) + '%';
-        i++;
-      }, 180);
-    }
-
-    function buildDashboard() {
-      const productNames = targets.map(t => t.name);
-
-      // Resolve prices (use priceData for tracked items)
-      const rows = productNames.map(name => {
-        const p = priceData[name] || {
-          A: Math.floor(Math.random() * 5000 + 1000),
-          B: Math.floor(Math.random() * 5000 + 1000),
-          C: Math.floor(Math.random() * 5000 + 1000),
-        };
-        const min = Math.min(p.A, p.B, p.C);
-        const cheapestSite = p.A === min ? 'A' : p.B === min ? 'B' : 'C';
-        return { name, ...p, min, cheapestSite };
+    datasets.forEach((data, ci) => {
+      ctx.beginPath();
+      ctx.strokeStyle = colors[ci].color;
+      ctx.lineWidth = 2;
+      data.forEach((val, i) => {
+        const x = padL + (cW / (days - 1)) * i;
+        const y = padT + (1 - (val - minV) / (maxV - minV)) * cH;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
       });
+      ctx.stroke();
 
-      csvDataCache = rows;
-
-      // Summary
-      const siteCount = { A: 0, B: 0, C: 0 };
-      rows.forEach(r => siteCount[r.cheapestSite]++);
-      const topSite = Object.entries(siteCount).sort((a,b)=>b[1]-a[1])[0];
-      document.getElementById('cheapestSite').textContent = 'サイト' + topSite[0];
-      document.getElementById('cheapestNote').textContent = productNames.length + '商品中' + topSite[1] + '品で最安';
-      document.getElementById('totalItems').textContent = productNames.length;
-      document.getElementById('alertCount').textContent = rows.filter(r => {
-        const history = historyData[r.name];
-        if (!history) return false;
-        const prev = Math.min(history.A[5], history.B[5], history.C[5]);
-        const curr = r.min;
-        return (prev - curr) / prev >= 0.03;
-      }).length;
-
-      // Price table
-      const tbody = document.getElementById('priceTableBody');
-      tbody.innerHTML = '';
-      rows.forEach(r => {
-        const cells = ['A', 'B', 'C'].map(s => {
-          const isCheapest = r.cheapestSite === s;
-          return `<td class="price-cell ${isCheapest ? 'cheapest' : 'pricey'}">
-            ¥${r[s].toLocaleString()}${isCheapest ? '<span class="cheapest-badge">最安</span>' : ''}
-          </td>`;
-        }).join('');
-        tbody.innerHTML += `<tr>
-          <td>${escHtml(r.name)}</td>
-          ${cells}
-          <td class="price-cell" style="color:#00d4ff;font-weight:700;">¥${r.min.toLocaleString()}</td>
-        </tr>`;
-      });
-
-      // Product tabs
-      const tabsEl = document.getElementById('productTabs');
-      tabsEl.innerHTML = '';
-      productNames.forEach((name, idx) => {
-        const btn = document.createElement('button');
-        btn.className = 'product-tab' + (idx === 0 ? ' active' : '');
-        btn.textContent = name.length > 12 ? name.slice(0,12) + '...' : name;
-        btn.title = name;
-        btn.onclick = () => {
-          document.querySelectorAll('.product-tab').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          drawChart(name);
-        };
-        tabsEl.appendChild(btn);
-      });
-
-      activeProduct = productNames[0];
-      drawChart(activeProduct);
-    }
-
-    function drawChart(productName) {
-      activeProduct = productName;
-      const canvas = document.getElementById('priceChart');
-      const ctx = canvas.getContext('2d');
-
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.parentElement.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = 200 * dpr;
-      canvas.style.width = rect.width + 'px';
-      canvas.style.height = '200px';
-      ctx.scale(dpr, dpr);
-
-      const W = rect.width;
-      const H = 200;
-      const PAD = { top: 20, right: 20, bottom: 30, left: 55 };
-      const plotW = W - PAD.left - PAD.right;
-      const plotH = H - PAD.top - PAD.bottom;
-
-      const history = historyData[productName];
-      const days = ['6日前','5日前','4日前','3日前','2日前','昨日','今日'];
-
-      const allVals = history ? [...history.A, ...history.B, ...history.C] : [1000, 5000];
-      const minV = Math.floor(Math.min(...allVals) * 0.96);
-      const maxV = Math.ceil(Math.max(...allVals) * 1.02);
-
-      const px = i => PAD.left + (i / 6) * plotW;
-      const py = v => PAD.top + (1 - (v - minV) / (maxV - minV)) * plotH;
-
-      ctx.clearRect(0, 0, W, H);
-
-      // Grid
-      ctx.strokeStyle = '#21262d';
-      ctx.lineWidth = 1;
-      for (let g = 0; g <= 4; g++) {
-        const y = PAD.top + (g / 4) * plotH;
-        ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(W - PAD.right, y); ctx.stroke();
-        const val = Math.round(maxV - (g / 4) * (maxV - minV));
-        ctx.fillStyle = '#484f58';
-        ctx.font = '11px sans-serif';
-        ctx.textAlign = 'right';
-        ctx.fillText('¥' + val.toLocaleString(), PAD.left - 6, y + 4);
-      }
-
-      // X labels
-      ctx.fillStyle = '#484f58';
-      ctx.textAlign = 'center';
-      days.forEach((d, i) => ctx.fillText(d, px(i), H - 6));
-
-      // Lines
-      if (history) {
-        const series = [
-          { data: history.A, color: '#00d4ff' },
-          { data: history.B, color: '#23c55e' },
-          { data: history.C, color: '#fbbf24' },
-        ];
-
-        series.forEach(({ data, color }) => {
-          // Area fill
+      // 最安値ドット
+      const minVal = Math.min(...data);
+      data.forEach((val, i) => {
+        if (val === minVal) {
+          const x = padL + (cW / (days - 1)) * i;
+          const y = padT + (1 - (val - minV) / (maxV - minV)) * cH;
           ctx.beginPath();
-          ctx.moveTo(px(0), py(data[0]));
-          data.forEach((v, i) => ctx.lineTo(px(i), py(v)));
-          ctx.lineTo(px(6), H - PAD.bottom);
-          ctx.lineTo(px(0), H - PAD.bottom);
-          ctx.closePath();
-          ctx.fillStyle = color + '18';
+          ctx.arc(x, y, 4, 0, Math.PI * 2);
+          ctx.fillStyle = colors[ci].color;
           ctx.fill();
-
-          // Line
-          ctx.beginPath();
-          ctx.strokeStyle = color;
-          ctx.lineWidth = 2;
-          ctx.lineJoin = 'round';
-          ctx.moveTo(px(0), py(data[0]));
-          data.forEach((v, i) => ctx.lineTo(px(i), py(v)));
-          ctx.stroke();
-
-          // Dots
-          data.forEach((v, i) => {
-            ctx.beginPath();
-            ctx.arc(px(i), py(v), 3.5, 0, Math.PI * 2);
-            ctx.fillStyle = color;
-            ctx.fill();
-          });
-        });
-      }
-    }
-
-    function exportCSV() {
-      if (!csvDataCache) return;
-      const headers = ['商品名', 'サイトA価格', 'サイトB価格', 'サイトC価格', '最安値', '最安サイト', '収集日時'];
-      const now = new Date().toISOString().slice(0, 19);
-      const rows = csvDataCache.map(r =>
-        [r.name, r.A, r.B, r.C, r.min, 'サイト' + r.cheapestSite, now].join(',')
-      );
-      const csv = '﻿' + [headers.join(','), ...rows].join('\n');
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'price_data_' + now.slice(0,10) + '.csv';
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function escHtml(str) {
-      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    window.addEventListener('resize', () => {
-      if (activeProduct && document.getElementById('dashboard').classList.contains('active')) {
-        drawChart(activeProduct);
-      }
+        }
+      });
     });
-  </script>
+
+    // 凡例
+    const legendEl = document.getElementById('chartLegend');
+    legendEl.innerHTML = colors.map(c => `<div style="display:flex;align-items:center;gap:4px;"><div style="width:20px;height:2px;background:${c.color};"></div><span style="color:#8b949e;">${c.label}</span></div>`).join('');
+  }
+
+  function closeModal(e) {
+    if (e.target === document.getElementById('modalOverlay')) {
+      document.getElementById('modalOverlay').classList.remove('show');
+    }
+  }
+
+  /* ===== CSV エクスポート ===== */
+  function exportCSV() {
+    const header = '商品名,カテゴリ,Amazon価格,楽天価格,Yahoo価格,最安値,評価,レビュー数,前日比\n';
+    const rows = PRODUCTS.map(p => {
+      const minP = Math.min(p.amazon, p.rakuten, p.yahoo);
+      const trend = p.trend === 'up' ? `+${p.change}` : p.trend === 'down' ? `${p.change}` : '0';
+      return [p.name, p.cat, p.amazon, p.rakuten, p.yahoo, minP, p.rating, p.reviews, trend].join(',');
+    }).join('\n');
+    const blob = new Blob(['﻿' + header + rows], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `競合分析_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('CSVをダウンロードしました！');
+  }
+
+  function showTab(name, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // 初期化
+  document.getElementById('kpiTime').textContent = '今日 09:00';
+  renderProducts(PRODUCTS);
+</script>
 </body>
 </html>

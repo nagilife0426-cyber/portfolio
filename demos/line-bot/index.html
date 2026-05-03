@@ -1,376 +1,775 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LINE/Slack通知Bot | GAS デモ</title>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #0d1117;
-    --bg2: #161b22;
-    --bg3: #21262d;
-    --accent: #00d4ff;
-    --green: #3fb950;
-    --red: #f85149;
-    --yellow: #d29922;
-    --line: #06c755;
-    --line-dark: #04a846;
-    --text: #c9d1d9;
-    --text-muted: #8b949e;
-    --border: #30363d;
-    --radius: 8px;
-  }
-  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; }
-  a { color: var(--accent); text-decoration: none; }
-  a:hover { text-decoration: underline; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LINE 予約受付Bot | なぎ</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0d1117;
+      color: #e6edf3;
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+    }
+    a { color: #00d4ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
 
-  .nav { padding: 12px 24px; border-bottom: 1px solid var(--border); background: var(--bg2); display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); }
-  .nav a { color: var(--accent); }
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 32px;
+      border-bottom: 1px solid #21262d;
+      position: sticky;
+      top: 0;
+      background: #0d1117;
+      z-index: 100;
+    }
+    .logo { font-size: 20px; font-weight: 700; color: #00d4ff; font-family: 'Courier New', monospace; }
+    .back-btn { padding: 8px 16px; border: 1px solid #30363d; border-radius: 8px; color: #8b949e; font-size: 14px; transition: all 0.2s; }
+    .back-btn:hover { border-color: #00d4ff; color: #00d4ff; text-decoration: none; }
 
-  .hero { padding: 56px 24px 40px; max-width: 1040px; margin: 0 auto; }
-  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; background: rgba(6,199,85,.12); color: var(--line); border: 1px solid rgba(6,199,85,.3); margin-bottom: 16px; }
-  .hero h1 { font-size: clamp(26px,4vw,40px); font-weight: 700; line-height: 1.2; margin-bottom: 16px; }
-  .hero h1 span { color: var(--accent); }
-  .hero p { color: var(--text-muted); font-size: 16px; max-width: 680px; }
+    header { text-align: center; padding: 48px 24px 32px; max-width: 900px; margin: 0 auto; }
+    .tag { display: inline-block; background: rgba(0,212,255,0.1); color: #00d4ff; border: 1px solid rgba(0,212,255,0.3); padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px; }
+    header h1 { font-size: clamp(24px, 4vw, 36px); font-weight: 800; margin-bottom: 16px; background: linear-gradient(135deg, #e6edf3, #00d4ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .problem { background: rgba(248,81,73,0.1); border: 1px solid rgba(248,81,73,0.3); border-radius: 8px; padding: 10px 18px; margin: 8px auto; max-width: 680px; font-size: 14px; color: #ffa0a0; }
+    .solution { background: rgba(46,160,67,0.1); border: 1px solid rgba(46,160,67,0.3); border-radius: 8px; padding: 10px 18px; margin: 8px auto; max-width: 680px; font-size: 14px; color: #7ee787; }
 
-  .section { max-width: 1040px; margin: 0 auto; padding: 0 24px 56px; }
-  .section-title { font-size: 20px; font-weight: 700; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-  .section-title::before { content: ''; display: inline-block; width: 4px; height: 20px; background: var(--accent); border-radius: 2px; }
+    .tabs { display: flex; gap: 4px; padding: 0 24px; border-bottom: 1px solid #21262d; max-width: 1100px; margin: 0 auto; }
+    .tab { padding: 12px 20px; background: none; border: none; color: #8b949e; cursor: pointer; font-size: 14px; font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; }
+    .tab:hover { color: #e6edf3; }
+    .tab.active { color: #00d4ff; border-bottom-color: #00d4ff; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 
-  .demo-box { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+    /* DEMO LAYOUT */
+    .demo-wrapper {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 32px;
+      align-items: start;
+    }
+    @media (max-width: 800px) {
+      .demo-wrapper { grid-template-columns: 1fr; }
+    }
 
-  /* demo layout */
-  .demo-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  @media (max-width: 700px) { .demo-layout { grid-template-columns: 1fr; } }
+    /* DESCRIPTION PANEL */
+    .desc-panel { }
+    .desc-panel h2 { font-size: 20px; margin-bottom: 16px; }
+    .feature-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .feature-list li {
+      display: flex;
+      gap: 12px;
+      padding: 14px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .feature-list .fi { font-size: 20px; flex-shrink: 0; }
+    .feature-list strong { color: #00d4ff; display: block; margin-bottom: 2px; }
 
-  /* phone mock */
-  .phone { width: 100%; max-width: 320px; margin: 0 auto; background: #1a1a2e; border-radius: 24px; overflow: hidden; border: 2px solid #333; box-shadow: 0 8px 32px rgba(0,0,0,.5); }
-  .phone-status { background: #111; padding: 8px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #888; }
-  .phone-header { background: var(--line); padding: 10px 16px; display: flex; align-items: center; gap: 10px; }
-  .bot-avatar { width: 34px; height: 34px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-  .bot-info { flex: 1; }
-  .bot-name { font-size: 13px; font-weight: 700; color: #fff; }
-  .bot-status { font-size: 10px; color: rgba(255,255,255,.7); }
-  .chat-area { height: 300px; overflow-y: auto; padding: 12px 10px; background: #e5ddd5; display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth; }
-  .msg { display: flex; gap: 6px; max-width: 85%; }
-  .msg.user { flex-direction: row-reverse; margin-left: auto; }
-  .msg-bubble { padding: 8px 12px; border-radius: 14px; font-size: 12px; line-height: 1.5; word-break: break-word; }
-  .msg.bot .msg-bubble { background: #fff; color: #333; border-bottom-left-radius: 2px; }
-  .msg.user .msg-bubble { background: var(--line); color: #fff; border-bottom-right-radius: 2px; }
-  .msg-time { font-size: 9px; color: #888; display: flex; align-items: flex-end; padding-bottom: 2px; }
-  .msg-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--line); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
-  .typing { display: none; }
-  .typing .msg-bubble { background: #fff; }
-  .typing-dots { display: flex; gap: 4px; padding: 4px 0; align-items: center; }
-  .typing-dot { width: 7px; height: 7px; background: #aaa; border-radius: 50%; animation: typingAnim 1.2s infinite; }
-  .typing-dot:nth-child(2) { animation-delay: .2s; }
-  .typing-dot:nth-child(3) { animation-delay: .4s; }
-  @keyframes typingAnim { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
-  .chat-input { background: #f0f0f0; display: flex; gap: 8px; padding: 8px 10px; align-items: center; border-top: 1px solid #ddd; }
-  .chat-input input { flex: 1; background: #fff; border: 1px solid #ddd; border-radius: 20px; padding: 7px 14px; font-size: 12px; color: #333; outline: none; }
-  .chat-input input:focus { border-color: var(--line); }
-  .send-btn { background: var(--line); color: #fff; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: background .2s; flex-shrink: 0; }
-  .send-btn:hover { background: var(--line-dark); }
+    .reset-btn {
+      margin-top: 16px;
+      padding: 10px 20px;
+      background: none;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      color: #8b949e;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .reset-btn:hover { border-color: #f85149; color: #f85149; }
 
-  /* command chips */
-  .cmd-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
-  .cmd-chip { padding: 5px 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; font-size: 12px; cursor: pointer; transition: all .2s; color: var(--text); }
-  .cmd-chip:hover { border-color: var(--line); color: var(--line); }
+    /* LINE PHONE MOCK */
+    .phone-mock {
+      width: 360px;
+      max-width: 100%;
+      margin: 0 auto;
+      border-radius: 36px;
+      background: #1a1a2e;
+      border: 3px solid #333;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6), inset 0 0 0 2px #111;
+      overflow: hidden;
+      position: sticky;
+      top: 80px;
+    }
+    .phone-notch {
+      height: 28px;
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .phone-notch-bar { width: 100px; height: 14px; background: #222; border-radius: 8px; }
 
-  /* sheet panel */
-  .sheet-panel { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  .sheet-panel-header { background: #1d6f42; padding: 10px 14px; display: flex; align-items: center; gap: 8px; }
-  .sheet-panel-header span { font-size: 12px; font-weight: 700; color: #fff; }
-  .sheet-tabs { display: flex; background: #155734; padding: 4px 8px 0; gap: 2px; }
-  .stab { padding: 4px 10px; font-size: 10px; font-weight: 600; border-radius: 3px 3px 0 0; color: rgba(255,255,255,.6); cursor: pointer; }
-  .stab.active { background: var(--bg3); color: #fff; }
-  .sheet-body { padding: 8px; overflow: auto; max-height: 220px; }
-  table { width: 100%; border-collapse: collapse; font-size: 11px; }
-  .sh { padding: 4px 8px; border: 1px solid var(--border); }
-  .sh.head { background: #155734; color: #fff; font-weight: 700; text-align: center; }
-  .sh.num { text-align: right; font-family: 'SFMono-Regular', Consolas, monospace; }
-  .sh.hl { background: rgba(0,212,255,.08); color: var(--accent); font-weight: 700; text-align: right; font-family: monospace; }
+    /* LINE HEADER */
+    .line-header {
+      background: linear-gradient(135deg, #00b900, #00a000);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .line-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .line-title { flex: 1; }
+    .line-title .name { font-size: 14px; font-weight: 700; color: white; }
+    .line-title .status { font-size: 11px; color: rgba(255,255,255,0.75); display: flex; align-items: center; gap: 4px; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #90ee90; }
+    .line-back { color: white; font-size: 20px; cursor: pointer; }
 
-  /* code */
-  pre { background: #0a0e13; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; overflow-x: auto; font-size: 13px; line-height: 1.7; }
-  .token-kw { color: #ff7b72; }
-  .token-fn { color: #d2a8ff; }
-  .token-str { color: #a5d6ff; }
-  .token-cm { color: var(--text-muted); font-style: italic; }
-  .token-bi { color: #ffa657; }
-  .token-num { color: #79c0ff; }
-  .token-var { color: var(--text); }
+    /* CHAT AREA */
+    .chat-area {
+      background: #e8f5e9;
+      height: 480px;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      scroll-behavior: smooth;
+    }
+    .chat-date {
+      text-align: center;
+      font-size: 11px;
+      color: #888;
+      background: rgba(0,0,0,0.08);
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 10px;
+      margin: 0 auto;
+    }
 
-  /* use cases */
-  .use-cases { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
-  .use-case { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; transition: border-color .2s; }
-  .use-case:hover { border-color: var(--accent); }
-  .use-case-icon { font-size: 24px; margin-bottom: 10px; }
-  .use-case h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; color: var(--accent); }
-  .use-case p { font-size: 13px; color: var(--text-muted); }
-</style>
+    /* MESSAGES */
+    .msg-row { display: flex; gap: 8px; align-items: flex-end; }
+    .msg-row.user { flex-direction: row-reverse; }
+    .bot-icon { width: 32px; height: 32px; border-radius: 50%; background: #00b900; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+
+    .bubble {
+      max-width: 240px;
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 13px;
+      line-height: 1.55;
+      word-break: break-word;
+    }
+    .bubble.bot { background: white; color: #333; border-bottom-left-radius: 4px; }
+    .bubble.user { background: #00b900; color: white; border-bottom-right-radius: 4px; }
+    .msg-time { font-size: 10px; color: #888; flex-shrink: 0; }
+
+    /* QUICK REPLY BUTTONS */
+    .quick-replies {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 2px;
+      margin-left: 40px;
+    }
+    .qr-btn {
+      padding: 7px 12px;
+      background: white;
+      border: 1.5px solid #00b900;
+      border-radius: 20px;
+      color: #00b900;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+    .qr-btn:hover { background: #00b900; color: white; }
+
+    /* TYPING INDICATOR */
+    .typing {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+    .typing-bubble {
+      background: white;
+      border-radius: 18px;
+      border-bottom-left-radius: 4px;
+      padding: 12px 14px;
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .typing-dot {
+      width: 6px; height: 6px;
+      background: #aaa;
+      border-radius: 50%;
+      animation: typingBounce 1.2s infinite ease-in-out;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typingBounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
+
+    /* PRICE TABLE */
+    .price-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 4px; }
+    .price-table th { background: #00b900; color: white; padding: 5px 8px; text-align: left; }
+    .price-table td { padding: 5px 8px; border-bottom: 1px solid #e0e0e0; }
+
+    /* INPUT AREA */
+    .line-input-area {
+      background: #f0f0f0;
+      padding: 10px 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      border-top: 1px solid #ddd;
+    }
+    .line-input {
+      flex: 1;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      padding: 8px 14px;
+      font-size: 13px;
+      outline: none;
+      color: #333;
+    }
+    .line-input:focus { border-color: #00b900; }
+    .line-send {
+      width: 36px; height: 36px;
+      background: #00b900;
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .line-send:hover { background: #009900; }
+
+    .phone-home { height: 20px; background: #111; display: flex; align-items: center; justify-content: center; }
+    .home-bar { width: 80px; height: 4px; background: #333; border-radius: 2px; }
+
+    /* CODE TAB */
+    .code-wrapper { max-width: 900px; margin: 0 auto; padding: 24px; }
+    pre { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 24px; overflow-x: auto; line-height: 1.7; font-size: 13px; }
+    code { font-family: 'SFMono-Regular', Consolas, monospace; color: #e6edf3; }
+    .kw { color: #ff7b72; }
+    .fn { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .cm { color: #8b949e; font-style: italic; }
+    .num { color: #79c0ff; }
+    .dc { color: #ffa657; }
+
+    /* USECASES */
+    .usecases-wrapper { max-width: 900px; margin: 0 auto; padding: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    .usecase-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; transition: border-color 0.2s; }
+    .usecase-card:hover { border-color: #00d4ff; }
+    .usecase-icon { font-size: 32px; margin-bottom: 12px; }
+    .usecase-card h3 { font-size: 16px; margin-bottom: 8px; color: #00d4ff; }
+    .usecase-card p { font-size: 13px; color: #8b949e; line-height: 1.6; }
+    .usecase-card .merit { margin-top: 12px; padding: 8px 12px; background: rgba(46,160,67,0.1); border-radius: 6px; font-size: 12px; color: #7ee787; }
+
+    footer { margin-top: 48px; border-top: 1px solid #21262d; padding: 40px 24px; text-align: center; }
+    .cta { max-width: 560px; margin: 0 auto; background: linear-gradient(135deg, rgba(0,212,255,0.08), rgba(0,212,255,0.03)); border: 1px solid rgba(0,212,255,0.25); border-radius: 16px; padding: 32px; }
+    .cta h3 { font-size: 18px; margin-bottom: 8px; }
+    .cta p { font-size: 13px; color: #8b949e; margin-bottom: 20px; }
+    .cta a { display: inline-block; background: linear-gradient(135deg, #00d4ff, #0099bb); color: #0d1117; font-weight: 700; padding: 12px 28px; border-radius: 8px; text-decoration: none; transition: all 0.2s; }
+    .cta a:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,212,255,0.3); }
+  </style>
 </head>
 <body>
 
-<nav class="nav">
-  <a href="../../index.html">← ホームへ戻る</a>
-  <span>/</span>
-  <span>Bot デモ</span>
-  <span>/</span>
-  <span>LINE / Slack 通知 Bot</span>
+<nav>
+  <a href="/portfolio/" class="logo">&lt;nagi /&gt;</a>
+  <a href="/portfolio/" class="back-btn">← ポートフォリオに戻る</a>
 </nav>
 
-<section class="hero">
-  <div class="badge">GAS / LINE Messaging API / Slack API</div>
-  <h1>LINE / Slack<span>通知Bot</span></h1>
-  <p>スプレッドシートのデータをLINEから呼び出す業務Botです。「今日の売上は？」と送るだけで即座に返答。ノーコード・ノーサーバーで動作します。</p>
-</section>
+<header>
+  <div class="tag">LINE Bot</div>
+  <h1>LINE 予約受付Bot</h1>
+  <p class="problem">❌ 課題: 営業時間中の予約電話対応と、営業時間外の問い合わせ漏れに困っている</p>
+  <p class="solution">✅ 解決: LINE Botが24時間自動応答・予約受付 → 機会損失ゼロに</p>
+</header>
 
-<!-- DEMO -->
-<section class="section">
-  <div class="section-title">インタラクティブデモ</div>
-  <div class="demo-box">
+<div class="tabs">
+  <button class="tab active" onclick="showTab('demo', this)">🎬 デモ</button>
+  <button class="tab" onclick="showTab('code', this)">＜/＞ コード</button>
+  <button class="tab" onclick="showTab('usecases', this)">💼 活用例</button>
+</div>
 
-    <div class="cmd-chips">
-      <span style="font-size:12px;color:var(--text-muted);align-self:center;margin-right:4px;">コマンド例:</span>
-      <div class="cmd-chip" onclick="sendMsg('今日の売上を教えて')">今日の売上を教えて</div>
-      <div class="cmd-chip" onclick="sendMsg('在庫チェック')">在庫チェック</div>
-      <div class="cmd-chip" onclick="sendMsg('月次レポートを出して')">月次レポートを出して</div>
-      <div class="cmd-chip" onclick="sendMsg('ヘルプ')">ヘルプ</div>
+<!-- DEMO TAB -->
+<div id="demo" class="tab-content active">
+  <div class="demo-wrapper">
+
+    <!-- LEFT: 説明 -->
+    <div class="desc-panel">
+      <h2 style="margin-bottom:12px;">💬 実際に操作してみてください</h2>
+      <p style="font-size:13px;color:#8b949e;margin-bottom:20px;">ボタンをクリックするか、テキストを入力して送信すると、Botが自動応答します。</p>
+
+      <ul class="feature-list">
+        <li>
+          <span class="fi">📅</span>
+          <div><strong>24時間予約受付</strong>深夜・休日も自動応答。日時・メニュー・担当者の選択フローを完全自動化。</div>
+        </li>
+        <li>
+          <span class="fi">💰</span>
+          <div><strong>料金・メニュー案内</strong>「料金」と入力するだけで、メニュー一覧を即座に表示。</div>
+        </li>
+        <li>
+          <span class="fi">🕐</span>
+          <div><strong>営業時間・アクセス案内</strong>よくある問い合わせを自動解決し、スタッフの対応工数をゼロに。</div>
+        </li>
+        <li>
+          <span class="fi">🔍</span>
+          <div><strong>キーワード自動認識</strong>「予約したい」「キャンセル」「場所」など自然なテキストを解析して適切な返答を送信。</div>
+        </li>
+        <li>
+          <span class="fi">📊</span>
+          <div><strong>管理画面との連携</strong>Googleスプレッドシートに予約データを自動書き込み。リアルタイムで確認可能。</div>
+        </li>
+      </ul>
+
+      <button class="reset-btn" onclick="resetChat()">🔄 会話をリセット</button>
     </div>
 
-    <div class="demo-layout">
-      <!-- phone -->
-      <div>
-        <div class="phone">
-          <div class="phone-status">
-            <span>9:41</span>
-            <span>●●●</span>
-          </div>
-          <div class="phone-header">
-            <div class="bot-avatar">🤖</div>
-            <div class="bot-info">
-              <div class="bot-name">業務管理Bot</div>
-              <div class="bot-status">オンライン</div>
-            </div>
-          </div>
-          <div class="chat-area" id="chat-area">
-            <div class="msg bot">
-              <div class="msg-avatar">🤖</div>
-              <div>
-                <div class="msg-bubble">こんにちは！業務管理Botです。<br>「売上」「在庫」「レポート」「ヘルプ」でコマンドを呼び出せます📊</div>
-                <div class="msg-time">9:00</div>
-              </div>
-            </div>
-            <div class="msg bot typing" id="typing-indicator">
-              <div class="msg-avatar">🤖</div>
-              <div>
-                <div class="msg-bubble">
-                  <div class="typing-dots">
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="chat-input">
-            <input type="text" id="chat-input" placeholder="メッセージを入力..." onkeydown="if(event.key==='Enter')sendFromInput()">
-            <button class="send-btn" onclick="sendFromInput()">➤</button>
-          </div>
-        </div>
-      </div>
+    <!-- RIGHT: LINE MOCK -->
+    <div style="display:flex;justify-content:center;">
+      <div class="phone-mock">
+        <div class="phone-notch"><div class="phone-notch-bar"></div></div>
 
-      <!-- spreadsheet panel -->
-      <div>
-        <div class="sheet-panel">
-          <div class="sheet-panel-header">
-            <span>📊</span>
-            <span>業務管理スプレッドシート（連携中）</span>
+        <div class="line-header">
+          <div class="line-back">‹</div>
+          <div class="line-avatar">🌸</div>
+          <div class="line-title">
+            <div class="name">美容室サクラ 公式LINE</div>
+            <div class="status"><span class="status-dot"></span>オンライン</div>
           </div>
-          <div class="sheet-tabs">
-            <div class="stab active">売上</div>
-            <div class="stab">在庫</div>
-            <div class="stab">設定</div>
-          </div>
-          <div class="sheet-body">
-            <table>
-              <tr>
-                <td class="sh head">日付</td>
-                <td class="sh head">商品</td>
-                <td class="sh head">売上</td>
-                <td class="sh head">前日比</td>
-              </tr>
-              <tr><td class="sh">4/30</td><td class="sh">家電</td><td class="sh num">¥128,400</td><td class="sh num" style="color:var(--green);">+12%</td></tr>
-              <tr><td class="sh">4/30</td><td class="sh">衣料</td><td class="sh num">¥56,200</td><td class="sh num" style="color:var(--red);">-3%</td></tr>
-              <tr><td class="sh">4/30</td><td class="sh">食品</td><td class="sh num">¥38,900</td><td class="sh num" style="color:var(--green);">+8%</td></tr>
-              <tr>
-                <td class="sh" colspan="2" style="font-weight:700;text-align:right;">本日合計</td>
-                <td class="sh hl" id="today-total">¥223,500</td>
-                <td class="sh hl" style="color:var(--green);">+6.2%</td>
-              </tr>
-              <tr><td class="sh">4/29</td><td class="sh">家電</td><td class="sh num">¥114,600</td><td class="sh num" style="color:var(--text-muted);">—</td></tr>
-              <tr><td class="sh">4/28</td><td class="sh">家電</td><td class="sh num">¥98,200</td><td class="sh num" style="color:var(--text-muted);">—</td></tr>
-            </table>
-          </div>
+          <div style="color:white;font-size:18px;cursor:pointer;">⋮</div>
         </div>
 
-        <div style="margin-top:12px;font-size:12px;color:var(--text-muted);background:var(--bg3);border-radius:var(--radius);padding:12px 14px;border:1px solid var(--border);">
-          <div style="font-weight:700;color:var(--text);margin-bottom:6px;">Bot 処理フロー</div>
-          <div>1. LINEメッセージ受信 → Webhook起動</div>
-          <div>2. GAS でテキスト解析（キーワード判定）</div>
-          <div>3. スプレッドシートからデータ取得</div>
-          <div>4. LINE Messaging API でリプライ送信</div>
+        <div class="chat-area" id="chatArea">
+          <div class="chat-date">今日</div>
         </div>
+
+        <div class="line-input-area">
+          <input type="text" class="line-input" id="userInput" placeholder="メッセージを入力" maxlength="60"
+            onkeydown="if(event.key==='Enter')sendUserMsg()">
+          <button class="line-send" onclick="sendUserMsg()">➤</button>
+        </div>
+
+        <div class="phone-home"><div class="home-bar"></div></div>
       </div>
     </div>
-
   </div>
-</section>
+</div>
 
-<!-- CODE -->
-<section class="section">
-  <div class="section-title">実装コード（GAS）</div>
-  <pre><code><span class="token-cm">// LINE Messaging API Webhook（Google Apps Script）</span>
-<span class="token-kw">function</span> <span class="token-fn">doPost</span>(<span class="token-var">e</span>) {
-  <span class="token-kw">const</span> <span class="token-var">events</span> = <span class="token-bi">JSON</span>.<span class="token-fn">parse</span>(<span class="token-var">e</span>.<span class="token-var">postData</span>.<span class="token-var">contents</span>).<span class="token-var">events</span>;
-
-  <span class="token-var">events</span>.<span class="token-fn">forEach</span>(<span class="token-var">event</span> => {
-    <span class="token-kw">if</span> (<span class="token-var">event</span>.<span class="token-var">type</span> !== <span class="token-str">'message'</span>) <span class="token-kw">return</span>;
-
-    <span class="token-kw">const</span> <span class="token-var">userMessage</span> = <span class="token-var">event</span>.<span class="token-var">message</span>.<span class="token-var">text</span>;
-    <span class="token-kw">let</span> <span class="token-var">reply</span> = <span class="token-str">''</span>;
-
-    <span class="token-kw">if</span> (<span class="token-var">userMessage</span>.<span class="token-fn">includes</span>(<span class="token-str">'売上'</span>)) {
-      <span class="token-cm">// スプレッドシートからリアルタイムデータ取得</span>
-      <span class="token-kw">const</span> <span class="token-var">ss</span> = <span class="token-bi">SpreadsheetApp</span>.<span class="token-fn">openById</span>(<span class="token-str">'YOUR_SHEET_ID'</span>);
-      <span class="token-kw">const</span> <span class="token-var">sheet</span> = <span class="token-var">ss</span>.<span class="token-fn">getSheetByName</span>(<span class="token-str">'売上'</span>);
-      <span class="token-kw">const</span> <span class="token-var">today</span> = <span class="token-var">sheet</span>.<span class="token-fn">getRange</span>(<span class="token-num">2</span>, <span class="token-num">2</span>).<span class="token-fn">getValue</span>();
-      <span class="token-var">reply</span> = <span class="token-str">`本日の売上: ¥${today.toLocaleString()}\n前日比: +6.2% ↑`</span>;
-
-    } <span class="token-kw">else if</span> (<span class="token-var">userMessage</span>.<span class="token-fn">includes</span>(<span class="token-str">'在庫'</span>)) {
-      <span class="token-var">reply</span> = <span class="token-fn">checkInventory</span>();  <span class="token-cm">// 在庫シートを参照</span>
-
-    } <span class="token-kw">else if</span> (<span class="token-var">userMessage</span>.<span class="token-fn">includes</span>(<span class="token-str">'レポート'</span>)) {
-      <span class="token-var">reply</span> = <span class="token-fn">generateReport</span>();  <span class="token-cm">// 月次集計を生成</span>
-
-    } <span class="token-kw">else</span> {
-      <span class="token-var">reply</span> = <span class="token-str">'コマンド一覧:\n📊 売上\n📦 在庫\n📋 レポート'</span>;
-    }
-
-    <span class="token-fn">replyToLine</span>(<span class="token-var">event</span>.<span class="token-var">replyToken</span>, <span class="token-var">reply</span>);
-  });
-}
-
-<span class="token-kw">function</span> <span class="token-fn">replyToLine</span>(<span class="token-var">token</span>, <span class="token-var">message</span>) {
-  <span class="token-bi">UrlFetchApp</span>.<span class="token-fn">fetch</span>(<span class="token-str">'https://api.line.me/v2/bot/message/reply'</span>, {
-    <span class="token-var">method</span>: <span class="token-str">'POST'</span>,
-    <span class="token-var">contentType</span>: <span class="token-str">'application/json'</span>,
-    <span class="token-var">headers</span>: { <span class="token-str">'Authorization'</span>: <span class="token-str">`Bearer ${LINE_CHANNEL_TOKEN}`</span> },
-    <span class="token-var">payload</span>: <span class="token-bi">JSON</span>.<span class="token-fn">stringify</span>({
-      <span class="token-var">replyToken</span>: <span class="token-var">token</span>,
-      <span class="token-var">messages</span>: [{ <span class="token-var">type</span>: <span class="token-str">'text'</span>, <span class="token-var">text</span>: <span class="token-var">message</span> }]
-    })
-  });
-}</code></pre>
-</section>
-
-<!-- USE CASES -->
-<section class="section">
-  <div class="section-title">解決できること</div>
-  <div class="use-cases">
-    <div class="use-case">
-      <div class="use-case-icon">📊</div>
-      <h3>売上・在庫の即時確認</h3>
-      <p>LINEを開くだけでリアルタイムのスプレッドシートデータを取得。外出中でも即確認。</p>
+<!-- CODE TAB -->
+<div id="code" class="tab-content">
+  <div class="code-wrapper">
+    <div style="margin-bottom:16px;">
+      <h3 style="font-size:18px;margin-bottom:8px;">実装コード（Python / Flask）</h3>
+      <p style="color:#8b949e;font-size:14px;">LINE Messaging APIとFlaskを組み合わせた予約受付Bot。キーワード解析でメニュー・予約・営業時間に自動分岐します。</p>
     </div>
-    <div class="use-case">
-      <div class="use-case-icon">🔔</div>
-      <h3>アラート自動通知</h3>
-      <p>在庫切れ・売上目標達成・値下がりをGASのトリガーで自動検知してLINE通知。</p>
-    </div>
-    <div class="use-case">
-      <div class="use-case-icon">🖥️</div>
-      <h3>ノーサーバー運用</h3>
-      <p>GAS（Google Apps Script）のみで動作。サーバー費用・インフラ管理は不要。</p>
-    </div>
-    <div class="use-case">
-      <div class="use-case-icon">🔗</div>
-      <h3>Slack・メール連携</h3>
-      <p>LINE以外にもSlack・Chatwork・メールへの通知を同一コードから実現可能。</p>
+    <pre><code><span class="cm"># LINE Bot - Flask + line-bot-sdk</span>
+<span class="kw">from</span> flask <span class="kw">import</span> Flask, request, abort
+<span class="kw">from</span> linebot <span class="kw">import</span> LineBotApi, WebhookHandler
+<span class="kw">from</span> linebot.models <span class="kw">import</span> (
+    MessageEvent, TextMessage, TextSendMessage,
+    TemplateSendMessage, ButtonsTemplate, PostbackAction
+)
+
+app = Flask(__name__)
+line_bot_api = LineBotApi(<span class="str">'YOUR_CHANNEL_ACCESS_TOKEN'</span>)
+handler = WebhookHandler(<span class="str">'YOUR_CHANNEL_SECRET'</span>)
+
+user_sessions = {}  <span class="cm"># 予約セッション管理（本番はRedis等を使用）</span>
+
+<span class="dc">@app.route</span>(<span class="str">"/callback"</span>, methods=[<span class="str">'POST'</span>])
+<span class="kw">def</span> <span class="fn">callback</span>():
+    signature = request.headers[<span class="str">'X-Line-Signature'</span>]
+    body = request.get_data(as_text=<span class="kw">True</span>)
+    <span class="kw">try</span>:
+        handler.handle(body, signature)
+    <span class="kw">except</span> Exception:
+        abort(<span class="num">400</span>)
+    <span class="kw">return</span> <span class="str">'OK'</span>
+
+<span class="dc">@handler.add</span>(MessageEvent, message=TextMessage)
+<span class="kw">def</span> <span class="fn">handle_message</span>(event):
+    user_id = event.source.user_id
+    text = event.message.text
+
+    <span class="cm"># キーワード解析</span>
+    <span class="kw">if</span> <span class="str">'予約'</span> <span class="kw">in</span> text <span class="kw">or</span> <span class="str">'よやく'</span> <span class="kw">in</span> text:
+        reply = <span class="fn">create_reservation_menu</span>()
+    <span class="kw">elif</span> <span class="str">'キャンセル'</span> <span class="kw">in</span> text:
+        reply = TextSendMessage(
+            text=<span class="str">"キャンセルのご希望ですね。\n予約の日時をお知らせください。\n担当者が確認後ご連絡いたします📞"</span>
+        )
+    <span class="kw">elif</span> <span class="str">'料金'</span> <span class="kw">in</span> text <span class="kw">or</span> <span class="str">'値段'</span> <span class="kw">in</span> text:
+        reply = <span class="fn">create_price_list</span>()
+    <span class="kw">elif</span> <span class="str">'営業'</span> <span class="kw">in</span> text <span class="kw">or</span> <span class="str">'時間'</span> <span class="kw">in</span> text:
+        reply = TextSendMessage(
+            text=<span class="str">"営業時間のご案内🕐\n\n月〜土: 10:00〜20:00\n日・祝: 10:00〜18:00\n定休日: 毎週火曜日\n\nオンライン予約は24時間受付中です！"</span>
+        )
+    <span class="kw">else</span>:
+        reply = <span class="fn">create_main_menu</span>()
+
+    line_bot_api.reply_message(event.reply_token, reply)
+
+<span class="kw">def</span> <span class="fn">create_main_menu</span>():
+    <span class="kw">return</span> TemplateSendMessage(
+        alt_text=<span class="str">'メニュー'</span>,
+        template=ButtonsTemplate(
+            title=<span class="str">'美容室サクラ 公式LINE'</span>,
+            text=<span class="str">'ご用件をお選びください'</span>,
+            actions=[
+                PostbackAction(label=<span class="str">'📅 予約する'</span>, data=<span class="str">'action=reserve'</span>),
+                PostbackAction(label=<span class="str">'💰 料金確認'</span>, data=<span class="str">'action=price'</span>),
+                PostbackAction(label=<span class="str">'🕐 営業時間'</span>, data=<span class="str">'action=hours'</span>),
+                PostbackAction(label=<span class="str">'📍 アクセス'</span>, data=<span class="str">'action=access'</span>),
+            ]
+        )
+    )</code></pre>
+
+    <div style="margin-top:16px;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px;font-size:13px;color:#8b949e;">
+      <strong style="color:#00d4ff;">構成・必要技術</strong><br>
+      <code style="color:#e6edf3;">pip install flask line-bot-sdk</code><br><br>
+      ・LINE Developers でチャネルアクセストークンを取得<br>
+      ・Webhook URLにFlaskサーバーのエンドポイントを設定<br>
+      ・本番環境ではngrok（開発）→ AWS/GCP（本番）でホスティング
     </div>
   </div>
-</section>
+</div>
+
+<!-- USECASES TAB -->
+<div id="usecases" class="tab-content">
+  <div class="usecases-wrapper">
+    <div class="usecase-card">
+      <div class="usecase-icon">✂️</div>
+      <h3>美容室・サロンの予約受付</h3>
+      <p>メニュー選択・担当者指定・日時確認まで自動化。スタッフは施術に集中できます。</p>
+      <div class="merit">✓ 予約電話対応コスト90%削減</div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-icon">🍽️</div>
+      <h3>飲食店の予約・問い合わせBot</h3>
+      <p>席数・人数・日時の確認から予約確定まで自動応答。アレルギー情報の収集も自動化。</p>
+      <div class="merit">✓ 営業時間外の予約取りこぼし防止</div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-icon">🏠</div>
+      <h3>不動産の物件問い合わせBot</h3>
+      <p>条件入力→物件提案→内見予約まで自動化。有望顧客を自動スクリーニングして担当者に通知。</p>
+      <div class="merit">✓ 初回問い合わせ対応を自動化</div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-icon">🏥</div>
+      <h3>医院・クリニックの診察予約</h3>
+      <p>症状ヒアリング→診察科目の案内→予約受付。問診票の事前入力も自動化できます。</p>
+      <div class="merit">✓ 受付スタッフの負担を大幅削減</div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-icon">🎓</div>
+      <h3>習い事・スクールの体験申込</h3>
+      <p>体験レッスンの日程案内・申込受付・リマインド送信まで一気通貫で自動化。</p>
+      <div class="merit">✓ 体験参加率を向上</div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-icon">🛠️</div>
+      <h3>リフォーム・工事の見積依頼</h3>
+      <p>工事種別・希望日・予算感をヒアリングし、担当者への自動通知と見積日程調整を実現。</p>
+      <div class="merit">✓ 見積依頼から商談化までを加速</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="cta">
+    <h3>このような自動化、クラウドワークスでご依頼いただけます</h3>
+    <p>LINE Bot構築・予約受付自動化・24時間問い合わせ対応など、業種に合わせて開発します。</p>
+    <a href="https://crowdworks.jp/public/employees/6119556" target="_blank" rel="noopener noreferrer">クラウドワークスで依頼する →</a>
+  </div>
+</footer>
 
 <script>
-const BOT_REPLIES = {
-  '売上': (msg) => {
-    if (msg.includes('月次')) return '📋 4月月次レポート\n合計: ¥2,320,000\n前月比: +8.4% ↑\n目標達成率: 116%\n\n詳細はスプレッドシートで確認できます。';
-    return '📊 本日の売上\n\n合計: ¥223,500\n├ 家電: ¥128,400\n├ 衣料: ¥56,200\n└ 食品: ¥38,900\n\n前日比: +6.2% ↑';
-  },
-  '在庫': () => '📦 在庫状況\n\nワイヤレスイヤホン: 残り8個\nスマートウォッチ: 残り3個 ⚠️\nBluetoothスピーカー: 在庫切れ ❌\n\n⚠️ 要発注: 2品目',
-  'レポート': () => '📋 4月月次レポート\n合計: ¥2,320,000\n前月比: +8.4% ↑\n目標達成率: 116%\n\n詳細はスプレッドシートで確認できます。',
-  'ヘルプ': () => '📖 コマンド一覧\n\n📊 売上 → 本日の売上を表示\n📦 在庫 → 在庫状況を表示\n📋 月次レポート → 月次集計を表示\n\nご不明な点はお気軽にどうぞ！',
-  'default': () => 'コマンドを認識できませんでした。\n\n「ヘルプ」と送るとコマンド一覧が確認できます 😊',
-};
+  /* ===== 会話シナリオ ===== */
+  const STATE = {
+    step: 'init',
+    reserveDate: null,
+    reserveMenu: null,
+    reserveStaff: null,
+  };
 
-function getReply(msg) {
-  for (const key of Object.keys(BOT_REPLIES)) {
-    if (key !== 'default' && msg.includes(key)) return BOT_REPLIES[key](msg);
+  const MENUS = [
+    { name: 'カット', price: '¥3,300〜', time: '45分' },
+    { name: 'カラー', price: '¥6,600〜', time: '90分' },
+    { name: 'パーマ', price: '¥8,800〜', time: '120分' },
+    { name: 'トリートメント', price: '¥2,200〜', time: '30分' },
+  ];
+  const STAFF = ['田中 (ベテラン)', '鈴木 (カラー得意)', 'おまかせ'];
+  const DATES = ['今週土曜 10:00', '今週土曜 14:00', '今週日曜 11:00', '来週月曜 13:00'];
+
+  function nowTime() {
+    const d = new Date();
+    return `${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
   }
-  return BOT_REPLIES.default();
-}
 
-function now() {
-  const d = new Date();
-  return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
-}
+  /* ===== チャット操作 ===== */
+  function addMsg(text, isBot, delay = 0) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const area = document.getElementById('chatArea');
 
-function appendMsg(text, role) {
-  const area = document.getElementById('chat-area');
-  const typing = document.getElementById('typing-indicator');
-  const div = document.createElement('div');
-  div.className = 'msg ' + role;
-  if (role === 'bot') {
-    div.innerHTML = `<div class="msg-avatar">🤖</div><div><div class="msg-bubble">${text.replace(/\n/g, '<br>')}</div><div class="msg-time">${now()}</div></div>`;
-  } else {
-    div.innerHTML = `<div><div class="msg-bubble">${text.replace(/\n/g, '<br>')}</div><div class="msg-time" style="justify-content:flex-end;">${now()}</div></div>`;
+        if (isBot) {
+          // タイピング表示
+          const typingEl = document.createElement('div');
+          typingEl.className = 'typing';
+          typingEl.id = 'typing';
+          typingEl.innerHTML = `
+            <div class="bot-icon">🌸</div>
+            <div class="typing-bubble">
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+            </div>
+          `;
+          area.appendChild(typingEl);
+          area.scrollTop = area.scrollHeight;
+
+          setTimeout(() => {
+            const t = document.getElementById('typing');
+            if (t) t.remove();
+
+            const row = document.createElement('div');
+            row.className = 'msg-row';
+            row.innerHTML = `
+              <div class="bot-icon">🌸</div>
+              <div>
+                <div class="bubble bot">${text}</div>
+              </div>
+              <div class="msg-time">${nowTime()}</div>
+            `;
+            area.appendChild(row);
+            area.scrollTop = area.scrollHeight;
+            resolve();
+          }, 600);
+        } else {
+          const row = document.createElement('div');
+          row.className = 'msg-row user';
+          row.innerHTML = `
+            <div class="msg-time">${nowTime()}</div>
+            <div class="bubble user">${escHtml(text)}</div>
+          `;
+          area.appendChild(row);
+          area.scrollTop = area.scrollHeight;
+          resolve();
+        }
+      }, delay);
+    });
   }
-  area.insertBefore(div, typing);
-  area.scrollTop = area.scrollHeight;
-}
 
-function showTyping(v) {
-  document.getElementById('typing-indicator').style.display = v ? 'flex' : 'none';
-  if (v) {
-    const area = document.getElementById('chat-area');
+  function addQuickReplies(buttons) {
+    const area = document.getElementById('chatArea');
+    const wrap = document.createElement('div');
+    wrap.className = 'quick-replies';
+    wrap.id = 'qr-' + Date.now();
+    buttons.forEach(b => {
+      const btn = document.createElement('button');
+      btn.className = 'qr-btn';
+      btn.textContent = b.label;
+      btn.onclick = () => {
+        wrap.remove();
+        handleUserInput(b.value || b.label);
+      };
+      wrap.appendChild(btn);
+    });
+    area.appendChild(wrap);
     area.scrollTop = area.scrollHeight;
   }
-}
 
-let busy = false;
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
 
-function sendMsg(text) {
-  if (busy) return;
-  busy = true;
-  appendMsg(text, 'user');
-  showTyping(true);
-  setTimeout(() => {
-    showTyping(false);
-    appendMsg(getReply(text), 'bot');
-    busy = false;
-  }, 900 + Math.random() * 600);
-}
+  /* ===== 初期メッセージ ===== */
+  async function initChat() {
+    STATE.step = 'main';
+    await addMsg('いらっしゃいませ！<br>美容室サクラ公式LINEです🌸<br>ご用件をお選びください。', true, 300);
+    addQuickReplies([
+      { label: '📅 予約する', value: 'reserve' },
+      { label: '💰 料金を確認', value: 'price' },
+      { label: '🕐 営業時間', value: 'hours' },
+      { label: '📍 アクセス', value: 'access' },
+    ]);
+  }
 
-function sendFromInput() {
-  const inp = document.getElementById('chat-input');
-  const text = inp.value.trim();
-  if (!text || busy) return;
-  inp.value = '';
-  sendMsg(text);
-}
+  /* ===== ユーザー入力処理 ===== */
+  function sendUserMsg() {
+    const input = document.getElementById('userInput');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    handleUserInput(text);
+  }
+
+  async function handleUserInput(text) {
+    await addMsg(text, false);
+
+    // キーワード検出
+    const t = text.toLowerCase();
+    if (STATE.step === 'main' || t.includes('予約') || t.includes('よやく') || text === 'reserve') {
+      if (text === 'reserve' || t.includes('予約') || t.includes('よやく')) {
+        await doReserveFlow();
+        return;
+      }
+    }
+    if (text === 'price' || t.includes('料金') || t.includes('値段') || t.includes('価格')) { await doPriceFlow(); return; }
+    if (text === 'hours' || t.includes('営業') || t.includes('時間')) { await doHoursFlow(); return; }
+    if (text === 'access' || t.includes('アクセス') || t.includes('場所') || t.includes('住所')) { await doAccessFlow(); return; }
+    if (t.includes('キャンセル')) { await doCancelFlow(); return; }
+    if (t.includes('電話') || t.includes('でんわ')) {
+      await addMsg('お電話でのご予約も承っております📞<br><br><strong>03-XXXX-XXXX</strong><br>（受付時間: 10:00〜18:00）', true, 200);
+      setTimeout(() => addQuickReplies([{ label: '🔙 メインメニュー', value: 'main_menu' }]), 900);
+      return;
+    }
+
+    // 予約フロー内の応答
+    if (STATE.step === 'select_date') { await handleDateSelect(text); return; }
+    if (STATE.step === 'select_menu') { await handleMenuSelect(text); return; }
+    if (STATE.step === 'select_staff') { await handleStaffSelect(text); return; }
+    if (STATE.step === 'confirm') { await handleConfirm(text); return; }
+
+    if (text === 'main_menu') {
+      STATE.step = 'main';
+      await addMsg('他にご用件はございますか？🌸', true, 200);
+      setTimeout(() => addQuickReplies([
+        { label: '📅 予約する', value: 'reserve' },
+        { label: '💰 料金を確認', value: 'price' },
+        { label: '🕐 営業時間', value: 'hours' },
+        { label: '📍 アクセス', value: 'access' },
+      ]), 800);
+      return;
+    }
+
+    // 未認識
+    await addMsg('申し訳ございません、ご用件を確認できませんでした。<br>以下からお選びいただくか、お電話（03-XXXX-XXXX）でもご対応いたします。', true, 200);
+    setTimeout(() => addQuickReplies([
+      { label: '📅 予約する', value: 'reserve' },
+      { label: '💰 料金を確認', value: 'price' },
+      { label: '📍 アクセス', value: 'access' },
+    ]), 900);
+  }
+
+  /* ===== 各フロー ===== */
+  async function doReserveFlow() {
+    STATE.step = 'select_date';
+    await addMsg('ご予約ありがとうございます！😊<br>ご希望の日時をお選びください。', true, 200);
+    setTimeout(() => addQuickReplies(DATES.map(d => ({ label: d, value: d }))), 900);
+  }
+
+  async function handleDateSelect(date) {
+    STATE.reserveDate = date;
+    STATE.step = 'select_menu';
+    await addMsg(`${date} のご予約ですね✅<br>ご希望のメニューをお選びください。`, true, 200);
+    setTimeout(() => addQuickReplies(MENUS.map(m => ({ label: `${m.name}（${m.price}）`, value: m.name }))), 900);
+  }
+
+  async function handleMenuSelect(menu) {
+    STATE.reserveMenu = menu;
+    STATE.step = 'select_staff';
+    await addMsg(`${menu} をご選択いただきました✂️<br>担当スタイリストをお選びください。`, true, 200);
+    setTimeout(() => addQuickReplies(STAFF.map(s => ({ label: s, value: s }))), 900);
+  }
+
+  async function handleStaffSelect(staff) {
+    STATE.reserveStaff = staff;
+    STATE.step = 'confirm';
+    await addMsg(
+      `以下の内容でご予約を確定しますか？<br><br>📅 <strong>${STATE.reserveDate}</strong><br>✂️ <strong>${STATE.reserveMenu}</strong><br>👤 担当: <strong>${STATE.reserveStaff}</strong>`,
+      true, 200
+    );
+    setTimeout(() => addQuickReplies([
+      { label: '✅ 確定する', value: 'confirm_yes' },
+      { label: '🔄 やり直す', value: 'reserve' },
+    ]), 900);
+  }
+
+  async function handleConfirm(val) {
+    if (val === 'confirm_yes') {
+      STATE.step = 'done';
+      await addMsg('ご予約が完了しました！🎉<br><br>当日の変更・キャンセルはこちらのLINEまたはお電話（03-XXXX-XXXX）でご連絡ください。<br><br>ご来店をお待ちしております🌸', true, 200);
+      setTimeout(() => addQuickReplies([{ label: '🔙 メインメニューへ', value: 'main_menu' }]), 1000);
+    }
+  }
+
+  async function doPriceFlow() {
+    STATE.step = 'main';
+    const rows = MENUS.map(m => `<tr><td>${m.name}</td><td>${m.price}</td><td>${m.time}</td></tr>`).join('');
+    await addMsg(
+      `料金メニューのご案内💰<br><br><table class="price-table"><thead><tr><th>メニュー</th><th>料金</th><th>所要時間</th></tr></thead><tbody>${rows}</tbody></table><br>※税込み価格です`,
+      true, 200
+    );
+    setTimeout(() => addQuickReplies([
+      { label: '📅 予約する', value: 'reserve' },
+      { label: '🔙 メインメニュー', value: 'main_menu' },
+    ]), 900);
+  }
+
+  async function doHoursFlow() {
+    STATE.step = 'main';
+    await addMsg('営業時間のご案内🕐<br><br>月〜土: <strong>10:00〜20:00</strong><br>日・祝: <strong>10:00〜18:00</strong><br>定休日: <strong>毎週火曜日</strong><br><br>オンライン予約は24時間受付中です！', true, 200);
+    setTimeout(() => addQuickReplies([
+      { label: '📅 予約する', value: 'reserve' },
+      { label: '🔙 メインメニュー', value: 'main_menu' },
+    ]), 900);
+  }
+
+  async function doAccessFlow() {
+    STATE.step = 'main';
+    await addMsg('アクセスのご案内📍<br><br>〒XXX-XXXX<br>東京都○○区△△ 1-2-3<br><br>🚃 ○○駅 徒歩3分<br>🅿️ 近隣にコインパーキングあり<br><br>📞 03-XXXX-XXXX', true, 200);
+    setTimeout(() => addQuickReplies([
+      { label: '📅 予約する', value: 'reserve' },
+      { label: '🔙 メインメニュー', value: 'main_menu' },
+    ]), 900);
+  }
+
+  async function doCancelFlow() {
+    STATE.step = 'main';
+    await addMsg('キャンセルのご希望ですね。<br><br>ご予約の日時をメッセージでお知らせください。担当者が確認後、折り返しご連絡いたします📞<br><br>お急ぎの場合はお電話（03-XXXX-XXXX）でも承ります。', true, 200);
+    setTimeout(() => addQuickReplies([{ label: '🔙 メインメニュー', value: 'main_menu' }]), 900);
+  }
+
+  function resetChat() {
+    const area = document.getElementById('chatArea');
+    area.innerHTML = '<div class="chat-date">今日</div>';
+    Object.assign(STATE, { step: 'init', reserveDate: null, reserveMenu: null, reserveStaff: null });
+    setTimeout(initChat, 200);
+  }
+
+  function showTab(name, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // 起動
+  initChat();
 </script>
 </body>
 </html>

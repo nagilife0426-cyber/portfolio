@@ -1,378 +1,910 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CSV一括変換・クレンジング | Python デモ</title>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #0d1117;
-    --bg2: #161b22;
-    --bg3: #21262d;
-    --accent: #00d4ff;
-    --accent2: #0099bb;
-    --green: #3fb950;
-    --red: #f85149;
-    --yellow: #d29922;
-    --text: #c9d1d9;
-    --text-muted: #8b949e;
-    --border: #30363d;
-    --radius: 8px;
-  }
-  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; }
-  a { color: var(--accent); text-decoration: none; }
-  a:hover { text-decoration: underline; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSVデータ クリーニングツール | なぎ</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* nav */
-  .nav { padding: 12px 24px; border-bottom: 1px solid var(--border); background: var(--bg2); display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); }
-  .nav a { color: var(--accent); }
-  .nav span { color: var(--text-muted); }
+    :root {
+      --bg: #0d1117;
+      --bg2: #161b22;
+      --bg3: #21262d;
+      --border: #30363d;
+      --accent: #00d4ff;
+      --accent2: #0099bb;
+      --text: #e6edf3;
+      --text2: #8b949e;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --red: #f85149;
+      --purple: #bc8cff;
+      --orange: #f0883e;
+      --radius: 8px;
+    }
 
-  /* hero */
-  .hero { padding: 56px 24px 40px; max-width: 900px; margin: 0 auto; }
-  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; background: rgba(0,212,255,.12); color: var(--accent); border: 1px solid rgba(0,212,255,.3); margin-bottom: 16px; }
-  .hero h1 { font-size: clamp(26px,4vw,40px); font-weight: 700; line-height: 1.2; margin-bottom: 16px; }
-  .hero h1 span { color: var(--accent); }
-  .hero p { color: var(--text-muted); font-size: 16px; max-width: 680px; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+    }
 
-  /* section */
-  .section { max-width: 900px; margin: 0 auto; padding: 0 24px 56px; }
-  .section-title { font-size: 20px; font-weight: 700; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-  .section-title::before { content: ''; display: inline-block; width: 4px; height: 20px; background: var(--accent); border-radius: 2px; }
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 24px; background: var(--bg2); border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; }
+    .back-btn {
+      display: flex; align-items: center; gap: 6px;
+      color: var(--text2); text-decoration: none; font-size: 13px;
+      padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius);
+      transition: all 0.2s;
+    }
+    .back-btn:hover { color: var(--text); border-color: var(--accent); }
 
-  /* demo box */
-  .demo-box { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+    header { padding: 40px 24px 32px; max-width: 960px; margin: 0 auto; }
+    .tag {
+      display: inline-block; background: rgba(0,212,255,0.12); color: var(--accent);
+      font-size: 11px; font-weight: 600; padding: 4px 10px;
+      border-radius: 20px; border: 1px solid rgba(0,212,255,0.3);
+      margin-bottom: 12px; letter-spacing: 0.5px; text-transform: uppercase;
+    }
+    h1 { font-size: clamp(20px, 4vw, 30px); font-weight: 700; margin-bottom: 16px; line-height: 1.3; }
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .badge { font-size: 12px; padding: 4px 10px; border-radius: 20px; font-weight: 500; }
+    .badge.problem { background: rgba(248,81,73,0.12); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
+    .badge.solution { background: rgba(63,185,80,0.12); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+    .summary-line { font-size: 14px; color: var(--text2); line-height: 1.7; }
 
-  /* upload area */
-  .upload-area { border: 2px dashed var(--border); border-radius: var(--radius); padding: 36px; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; }
-  .upload-area:hover, .upload-area.drag-over { border-color: var(--accent); background: rgba(0,212,255,.05); }
-  .upload-area .icon { font-size: 40px; margin-bottom: 12px; }
-  .upload-area p { color: var(--text-muted); font-size: 14px; margin-bottom: 16px; }
-  #file-input { display: none; }
+    .tabs {
+      max-width: 960px; margin: 0 auto; padding: 0 24px;
+      display: flex; gap: 4px; border-bottom: 1px solid var(--border);
+    }
+    .tab {
+      background: none; border: none; color: var(--text2); cursor: pointer;
+      padding: 10px 18px; font-size: 14px; font-family: inherit;
+      border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 
-  /* buttons */
-  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: var(--radius); border: none; cursor: pointer; font-size: 14px; font-weight: 600; transition: all .2s; }
-  .btn-primary { background: var(--accent); color: #000; }
-  .btn-primary:hover { background: #33ddff; transform: translateY(-1px); }
-  .btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
-  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
-  .btn-success { background: var(--green); color: #000; }
-  .btn-success:hover { background: #52c96a; transform: translateY(-1px); }
-  .btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
-  .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+    .content-area { max-width: 960px; margin: 0 auto; padding: 24px; }
 
-  /* tables */
-  .tables-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
-  @media (max-width: 640px) { .tables-wrap { grid-template-columns: 1fr; } }
-  .table-pane { background: var(--bg3); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
-  .table-pane-header { padding: 10px 14px; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
-  .table-pane-header.before { background: rgba(248,81,73,.12); color: var(--red); border-bottom: 1px solid rgba(248,81,73,.2); }
-  .table-pane-header.after { background: rgba(63,185,80,.12); color: var(--green); border-bottom: 1px solid rgba(63,185,80,.2); }
-  .table-scroll { overflow: auto; max-height: 280px; }
-  table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  th { background: var(--bg); color: var(--text-muted); padding: 6px 10px; text-align: left; position: sticky; top: 0; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--border); }
-  td { padding: 6px 10px; border-bottom: 1px solid rgba(48,54,61,.6); color: var(--text); }
-  .dirty { background: rgba(248,81,73,.08); color: #ff8585; }
-  .clean { background: rgba(63,185,80,.06); }
-  .row-count { font-size: 11px; font-weight: 400; opacity: .7; }
+    .section-label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--text2); margin-bottom: 10px;
+    }
 
-  /* stats */
-  .stats { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
-  .stat { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; flex: 1; min-width: 120px; }
-  .stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
-  .stat-value { font-size: 22px; font-weight: 700; color: var(--accent); }
+    /* CONTROL PANEL */
+    .control-panel {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; margin-bottom: 20px;
+    }
+    .control-top {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px; margin-bottom: 16px;
+    }
+    .control-title { font-size: 14px; font-weight: 600; }
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
 
-  /* hidden */
-  .hidden { display: none !important; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: var(--radius);
+      font-size: 13px; font-family: inherit; font-weight: 500;
+      cursor: pointer; border: none; transition: all 0.2s;
+    }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-primary:hover { background: #00b8d9; transform: translateY(-1px); }
+    .btn-primary:disabled { background: var(--bg3); color: var(--text2); cursor: default; transform: none; }
+    .btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: #2d333b; }
+    .btn-green { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+    .btn-green:hover { background: rgba(63,185,80,0.25); }
+    .btn-small { padding: 5px 10px; font-size: 12px; }
 
-  /* code */
-  pre { background: #0a0e13; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; overflow-x: auto; font-size: 13px; line-height: 1.7; }
-  .token-kw { color: #ff7b72; }
-  .token-fn { color: #d2a8ff; }
-  .token-str { color: #a5d6ff; }
-  .token-cm { color: var(--text-muted); font-style: italic; }
-  .token-bi { color: #ffa657; }
-  .token-num { color: #79c0ff; }
-  .token-var { color: var(--text); }
+    /* DATA AREA */
+    .data-area { overflow-x: auto; }
+    .csv-table { width: 100%; border-collapse: collapse; min-width: 640px; font-size: 12px; }
+    .csv-table th {
+      background: var(--bg3); padding: 8px 10px; text-align: left;
+      font-size: 11px; font-weight: 600; color: var(--text2);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    .csv-table td {
+      padding: 7px 10px; border-bottom: 1px solid rgba(48,54,61,0.5);
+      white-space: nowrap; vertical-align: middle;
+    }
+    .csv-table tr:last-child td { border-bottom: none; }
+    .csv-table tr:hover td { background: rgba(255,255,255,0.015); }
 
-  /* use cases */
-  .use-cases { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
-  .use-case { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; transition: border-color .2s; }
-  .use-case:hover { border-color: var(--accent); }
-  .use-case-icon { font-size: 24px; margin-bottom: 10px; }
-  .use-case h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; color: var(--accent); }
-  .use-case p { font-size: 13px; color: var(--text-muted); }
+    /* HIGHLIGHT CLASSES */
+    .error-blank td { background: rgba(248,81,73,0.06) !important; }
+    .error-dup td { background: rgba(210,153,34,0.06) !important; }
 
-  /* toast */
-  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--green); color: #000; padding: 12px 20px; border-radius: var(--radius); font-size: 14px; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,.4); transition: all .3s; z-index: 999; }
-  .toast.hidden { opacity: 0; pointer-events: none; }
-</style>
+    .cell-error { color: var(--red); }
+    .cell-dup { color: var(--yellow); }
+    .cell-error-bg {
+      background: rgba(248,81,73,0.15) !important;
+      border-radius: 3px;
+      padding: 2px 5px;
+      color: var(--red);
+    }
+    .cell-fixed-bg {
+      background: rgba(63,185,80,0.12) !important;
+      border-radius: 3px;
+      padding: 2px 5px;
+      color: var(--green);
+    }
+
+    /* ISSUE PANEL */
+    .issues-panel {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px; margin-bottom: 20px;
+      display: none;
+    }
+    .issues-panel.visible { display: block; }
+    .issues-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text2); }
+    .issue-list { display: flex; flex-direction: column; gap: 8px; }
+    .issue-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; border-radius: 6px; background: var(--bg3);
+      border-left: 3px solid;
+    }
+    .issue-item.error { border-color: var(--red); }
+    .issue-item.warning { border-color: var(--yellow); }
+    .issue-item.info { border-color: var(--accent); }
+    .issue-icon { font-size: 14px; flex-shrink: 0; }
+    .issue-text { font-size: 12px; }
+    .issue-count {
+      margin-left: auto; font-size: 11px; font-weight: 700;
+      padding: 2px 8px; border-radius: 20px; flex-shrink: 0;
+    }
+    .issue-item.error .issue-count { background: rgba(248,81,73,0.15); color: var(--red); }
+    .issue-item.warning .issue-count { background: rgba(210,153,34,0.15); color: var(--yellow); }
+    .issue-item.info .issue-count { background: rgba(0,212,255,0.1); color: var(--accent); }
+
+    /* OPTIONS */
+    .options-panel {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px; margin-bottom: 20px;
+      display: none;
+    }
+    .options-panel.visible { display: block; }
+    .options-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+    .option-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+    .option-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; background: var(--bg3); border-radius: 6px;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .option-item:hover { background: #2d333b; }
+    .option-item input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+    .option-label { font-size: 13px; cursor: pointer; }
+    .option-desc { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+    /* BEFORE AFTER */
+    .before-after {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+      margin-bottom: 20px; display: none;
+    }
+    .before-after.visible { display: grid; }
+    @media (max-width: 640px) { .before-after { grid-template-columns: 1fr; } }
+
+    .ba-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+    }
+    .ba-header {
+      padding: 10px 14px; font-size: 12px; font-weight: 600;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .ba-header.before { background: rgba(248,81,73,0.08); color: var(--red); border-bottom: 1px solid rgba(248,81,73,0.15); }
+    .ba-header.after { background: rgba(63,185,80,0.08); color: var(--green); border-bottom: 1px solid rgba(63,185,80,0.15); }
+    .ba-body { padding: 12px 14px; font-size: 12px; overflow-x: auto; }
+    .ba-row { padding: 4px 0; border-bottom: 1px solid rgba(48,54,61,0.4); display: flex; gap: 8px; font-family: monospace; }
+    .ba-row:last-child { border-bottom: none; }
+    .ba-row.removed { text-decoration: line-through; color: var(--red); opacity: 0.6; }
+    .ba-row.fixed { color: var(--green); }
+    .ba-row.normal { color: var(--text2); }
+
+    /* STATS */
+    .stats-row {
+      display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;
+      display: none;
+    }
+    .stats-row.visible { display: flex; }
+    .stat-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 18px; flex: 1; min-width: 120px;
+      text-align: center;
+    }
+    .stat-num { font-size: 24px; font-weight: 700; }
+    .stat-label { font-size: 11px; color: var(--text2); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card.ok .stat-num { color: var(--green); }
+    .stat-card.del .stat-num { color: var(--red); }
+    .stat-card.fix .stat-num { color: var(--accent); }
+    .stat-card.time .stat-num { color: var(--yellow); }
+
+    /* CODE */
+    .code-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .code-header {
+      background: var(--bg3); padding: 10px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .code-filename { font-size: 12px; color: var(--text2); font-family: monospace; }
+    .copy-code-btn {
+      background: none; border: 1px solid var(--border); color: var(--text2);
+      cursor: pointer; padding: 4px 10px; border-radius: 4px;
+      font-size: 11px; font-family: inherit; transition: all 0.2s;
+    }
+    .copy-code-btn:hover { color: var(--text); border-color: var(--text2); }
+    pre { padding: 20px; overflow-x: auto; font-size: 12.5px; line-height: 1.7; color: var(--text); }
+    pre code { font-family: 'SF Mono', 'Fira Code', monospace; }
+    .kw { color: #ff7b72; }
+    .fn { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .cm { color: #8b949e; font-style: italic; }
+    .num { color: #79c0ff; }
+    .imp { color: #ffa657; }
+
+    /* USECASES */
+    .usecase-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .usecase-card {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 20px; transition: border-color 0.2s;
+    }
+    .usecase-card:hover { border-color: var(--accent); }
+    .usecase-icon { font-size: 28px; margin-bottom: 10px; }
+    .usecase-name { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+    .usecase-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
+    .usecase-tag {
+      display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px;
+      background: rgba(0,212,255,0.1); color: var(--accent); margin-top: 10px;
+    }
+
+    footer {
+      text-align: center; padding: 48px 24px; margin-top: 40px;
+      border-top: 1px solid var(--border);
+    }
+    .footer-label { font-size: 12px; color: var(--text2); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+    .footer-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+    .cta-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent); color: #000; font-weight: 700;
+      padding: 14px 28px; border-radius: var(--radius); text-decoration: none;
+      font-size: 15px; transition: all 0.2s;
+    }
+    .cta-btn:hover { background: #00b8d9; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,212,255,0.25); }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--bg3); border: 1px solid var(--green); color: var(--green);
+      padding: 12px 18px; border-radius: var(--radius); font-size: 13px;
+      opacity: 0; transform: translateY(10px); transition: all 0.3s;
+      z-index: 999; pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+  </style>
 </head>
 <body>
 
-<nav class="nav">
-  <a href="../../index.html">← ホームへ戻る</a>
-  <span>/</span>
-  <span>Python デモ</span>
-  <span>/</span>
-  <span>CSV 一括変換・クレンジング</span>
+<nav>
+  <span class="logo">&lt;nagi /&gt;</span>
+  <a href="/portfolio/" class="back-btn">← ポートフォリオに戻る</a>
 </nav>
 
-<section class="hero">
-  <div class="badge">Python / pandas</div>
-  <h1>CSV 一括変換・<span>クレンジング</span></h1>
-  <p>全角半角混在・余分なスペース・空行など「汚いCSV」を自動で整形します。ブラウザ上でそのまま動作するデモをお試しください。</p>
-</section>
+<header>
+  <div class="tag">Python 自動化</div>
+  <h1>CSVデータ クリーニングツール</h1>
+  <div class="badges">
+    <span class="badge problem">❌ 課題: Excelエクスポートの汚いデータを整えるのに毎回1時間かかる</span>
+    <span class="badge solution">✅ 解決: Pythonスクリプトで一括処理 → 数秒で完了</span>
+  </div>
+  <p class="summary-line">サンプルデータを読み込んで「データを解析」→「一括修正」の流れを体験してください。日付フォーマット統一・全角数字変換・重複削除など実務で頻出する処理を自動化します。</p>
+</header>
 
-<!-- DEMO -->
-<section class="section">
-  <div class="section-title">インタラクティブデモ</div>
-  <div class="demo-box">
+<div class="tabs">
+  <button class="tab active" onclick="showTab('demo', this)">🎬 デモ</button>
+  <button class="tab" onclick="showTab('code', this)">＜/＞ コード</button>
+  <button class="tab" onclick="showTab('usecases', this)">💼 活用例</button>
+</div>
 
-    <!-- upload -->
-    <div id="upload-area" class="upload-area" onclick="document.getElementById('file-input').click()">
-      <div class="icon">📂</div>
-      <p>CSVファイルをドラッグ＆ドロップ、またはクリックして選択</p>
-      <button class="btn btn-secondary" onclick="event.stopPropagation(); loadSample()">サンプルデータを使う</button>
-      <input type="file" id="file-input" accept=".csv">
-    </div>
+<!-- DEMO TAB -->
+<div id="demo" class="tab-content active">
+  <div class="content-area">
 
-    <!-- controls -->
-    <div class="btn-group hidden" id="controls">
-      <button class="btn btn-primary" id="clean-btn" onclick="runCleaning()">クレンジング実行</button>
-      <button class="btn btn-success hidden" id="dl-btn" onclick="downloadClean()">クリーンCSVをダウンロード</button>
-      <button class="btn btn-secondary" onclick="resetAll()">リセット</button>
-    </div>
-
-    <!-- stats -->
-    <div class="stats hidden" id="stats">
-      <div class="stat"><div class="stat-label">入力行数</div><div class="stat-value" id="stat-in">-</div></div>
-      <div class="stat"><div class="stat-label">出力行数</div><div class="stat-value" id="stat-out">-</div></div>
-      <div class="stat"><div class="stat-label">修正セル数</div><div class="stat-value" id="stat-fix">-</div></div>
-      <div class="stat"><div class="stat-label">削除行数</div><div class="stat-value" id="stat-del">-</div></div>
-    </div>
-
-    <!-- tables -->
-    <div class="tables-wrap hidden" id="tables">
-      <div class="table-pane">
-        <div class="table-pane-header before">変換前 <span class="row-count" id="count-before"></span></div>
-        <div class="table-scroll"><table id="table-before"></table></div>
+    <!-- STEP 1: LOAD DATA -->
+    <div class="control-panel">
+      <div class="control-top">
+        <div>
+          <div class="control-title">Step 1: データを読み込む</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="loadSampleData()">📂 サンプルデータを読み込む</button>
+          <button class="btn btn-secondary btn-small" onclick="resetAll()">↺ リセット</button>
+        </div>
       </div>
-      <div class="table-pane">
-        <div class="table-pane-header after">変換後 <span class="row-count" id="count-after"></span></div>
-        <div class="table-scroll"><table id="table-after"></table></div>
+      <div class="data-area">
+        <table class="csv-table" id="csv-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>顧客ID</th>
+              <th>顧客名</th>
+              <th>メールアドレス</th>
+              <th>登録日</th>
+              <th>購入金額</th>
+              <th>電話番号</th>
+            </tr>
+          </thead>
+          <tbody id="csv-body">
+            <tr>
+              <td colspan="7" style="text-align:center; padding:30px; color:var(--text2)">
+                「サンプルデータを読み込む」ボタンを押してください
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
+    </div>
+
+    <!-- STEP 2: ANALYZE -->
+    <div class="control-panel" id="analyze-panel" style="display:none">
+      <div class="control-top">
+        <div class="control-title">Step 2: データを解析する</div>
+        <button class="btn btn-primary" onclick="analyzeData()" id="analyze-btn">🔍 データを解析</button>
+      </div>
+    </div>
+
+    <!-- ISSUES LIST -->
+    <div class="issues-panel" id="issues-panel">
+      <div class="issues-title">⚠️ 検出された問題</div>
+      <div class="issue-list" id="issue-list"></div>
+    </div>
+
+    <!-- OPTIONS -->
+    <div class="options-panel" id="options-panel">
+      <div class="options-title">Step 3: 修正オプションを選択する</div>
+      <div class="option-grid">
+        <label class="option-item">
+          <input type="checkbox" id="opt-blank" checked>
+          <div>
+            <div class="option-label">空白行を削除</div>
+            <div class="option-desc">完全に空のデータ行を除去</div>
+          </div>
+        </label>
+        <label class="option-item">
+          <input type="checkbox" id="opt-dup" checked>
+          <div>
+            <div class="option-label">重複行を削除（最初の1件を残す）</div>
+            <div class="option-desc">顧客IDが同一の行を削除</div>
+          </div>
+        </label>
+        <label class="option-item">
+          <input type="checkbox" id="opt-date" checked>
+          <div>
+            <div class="option-label">日付を YYYY-MM-DD に統一</div>
+            <div class="option-desc">YYYY/M/D・M月D日など複数形式に対応</div>
+          </div>
+        </label>
+        <label class="option-item">
+          <input type="checkbox" id="opt-zen" checked>
+          <div>
+            <div class="option-label">全角数字を半角に変換</div>
+            <div class="option-desc">１２３４５ → 12345</div>
+          </div>
+        </label>
+        <label class="option-item">
+          <input type="checkbox" id="opt-space" checked>
+          <div>
+            <div class="option-label">文字列の前後スペースを除去</div>
+            <div class="option-desc">　田中太郎　→ 田中太郎</div>
+          </div>
+        </label>
+        <label class="option-item">
+          <input type="checkbox" id="opt-email" checked>
+          <div>
+            <div class="option-label">メールアドレス形式チェック</div>
+            <div class="option-desc">不正な形式に⚠️フラグを付与</div>
+          </div>
+        </label>
+      </div>
+      <div style="margin-top:16px; display:flex; gap:10px;">
+        <button class="btn btn-primary" onclick="fixData()">🔧 一括修正する</button>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card ok"><div class="stat-num" id="stat-ok">0</div><div class="stat-label">修正後の件数</div></div>
+      <div class="stat-card del"><div class="stat-num" id="stat-del">0</div><div class="stat-label">削除した行</div></div>
+      <div class="stat-card fix"><div class="stat-num" id="stat-fix">0</div><div class="stat-label">修正したセル</div></div>
+      <div class="stat-card time"><div class="stat-num" id="stat-time">0</div><div class="stat-label">処理時間 (ms)</div></div>
+    </div>
+
+    <!-- BEFORE / AFTER -->
+    <div class="before-after" id="before-after">
+      <div class="ba-card">
+        <div class="ba-header before">❌ 修正前（問題のある行のみ）</div>
+        <div class="ba-body" id="ba-before"></div>
+      </div>
+      <div class="ba-card">
+        <div class="ba-header after">✅ 修正後（クリーンなデータ）</div>
+        <div class="ba-body" id="ba-after"></div>
+      </div>
+    </div>
+
+    <!-- DOWNLOAD -->
+    <div id="download-area" style="display:none">
+      <button class="btn btn-green" onclick="downloadCSV()">⬇️ CSVをダウンロード</button>
+      <span style="font-size:12px; color:var(--text2); margin-left:10px;">クリーニング済みの clean_data.csv をダウンロード</span>
     </div>
 
   </div>
-</section>
+</div>
 
-<!-- CODE -->
-<section class="section">
-  <div class="section-title">実装コード（Python）</div>
-  <pre><code><span class="token-kw">import</span> <span class="token-bi">pandas</span> <span class="token-kw">as</span> <span class="token-var">pd</span>
-<span class="token-kw">import</span> <span class="token-bi">unicodedata</span>
+<!-- CODE TAB -->
+<div id="code" class="tab-content">
+  <div class="content-area">
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-filename">csv_cleaner.py</span>
+        <button class="copy-code-btn" onclick="copyCode()">コピー</button>
+      </div>
+      <pre><code id="py-code"><span class="imp">import</span> pandas <span class="imp">as</span> pd
+<span class="imp">import</span> re
+<span class="imp">import</span> unicodedata
+<span class="imp">from</span> datetime <span class="imp">import</span> datetime
+<span class="imp">from</span> pathlib <span class="imp">import</span> Path
 
-<span class="token-kw">def</span> <span class="token-fn">clean_csv</span>(<span class="token-var">input_path</span>, <span class="token-var">output_path</span>):
-    <span class="token-var">df</span> = <span class="token-var">pd</span>.<span class="token-fn">read_csv</span>(<span class="token-var">input_path</span>, <span class="token-var">encoding</span>=<span class="token-str">'utf-8-sig'</span>)
+<span class="kw">def</span> <span class="fn">clean_csv</span>(input_path: str, output_path: str = <span class="kw">None</span>) -> pd.DataFrame:
+    <span class="str">"""
+    CSVファイルを読み込んでクリーニングし、保存する。
+    - 空白行・重複行を削除
+    - 日付フォーマットを YYYY-MM-DD に統一
+    - 全角数字・記号を半角に変換
+    - 文字列の前後スペースを除去
+    """</span>
+    df = pd.<span class="fn">read_csv</span>(input_path, encoding=<span class="str">'utf-8-sig'</span>)
+    stats = {<span class="str">'removed_blank'</span>: <span class="num">0</span>, <span class="str">'removed_dup'</span>: <span class="num">0</span>, <span class="str">'fixed_cells'</span>: <span class="num">0</span>}
+    original_len = len(df)
 
-    <span class="token-cm"># 全角→半角変換（NFKC正規化）</span>
-    <span class="token-kw">for</span> <span class="token-var">col</span> <span class="token-kw">in</span> <span class="token-var">df</span>.<span class="token-fn">select_dtypes</span>(<span class="token-var">include</span>=<span class="token-str">'object'</span>).<span class="token-var">columns</span>:
-        <span class="token-var">df</span>[<span class="token-var">col</span>] = <span class="token-var">df</span>[<span class="token-var">col</span>].<span class="token-fn">apply</span>(
-            <span class="token-kw">lambda</span> <span class="token-var">x</span>: <span class="token-bi">unicodedata</span>.<span class="token-fn">normalize</span>(<span class="token-str">'NFKC'</span>, <span class="token-fn">str</span>(<span class="token-var">x</span>))
-            <span class="token-kw">if</span> <span class="token-var">pd</span>.<span class="token-fn">notna</span>(<span class="token-var">x</span>) <span class="token-kw">else</span> <span class="token-var">x</span>
+    <span class="cm"># ① 完全に空の行を削除</span>
+    df.<span class="fn">dropna</span>(how=<span class="str">'all'</span>, inplace=<span class="kw">True</span>)
+    stats[<span class="str">'removed_blank'</span>] = original_len - len(df)
+
+    <span class="cm"># ② 重複行を削除（顧客IDをキーに最初の1件を残す）</span>
+    before_dup = len(df)
+    df.<span class="fn">drop_duplicates</span>(subset=[<span class="str">'顧客ID'</span>], keep=<span class="str">'first'</span>, inplace=<span class="kw">True</span>)
+    stats[<span class="str">'removed_dup'</span>] = before_dup - len(df)
+
+    <span class="cm"># ③ 全角を半角に変換（NFKC正規化）</span>
+    <span class="kw">for</span> col <span class="kw">in</span> df.<span class="fn">select_dtypes</span>(include=<span class="str">'object'</span>).columns:
+        df[col] = df[col].<span class="fn">apply</span>(
+            <span class="kw">lambda</span> x: unicodedata.<span class="fn">normalize</span>(<span class="str">'NFKC'</span>, str(x))
+            <span class="kw">if</span> pd.<span class="fn">notna</span>(x) <span class="kw">else</span> x
+        )
+        stats[<span class="str">'fixed_cells'</span>] += <span class="num">1</span>
+
+    <span class="cm"># ④ 前後スペース除去</span>
+    <span class="kw">for</span> col <span class="kw">in</span> df.<span class="fn">select_dtypes</span>(include=<span class="str">'object'</span>).columns:
+        df[col] = df[col].str.<span class="fn">strip</span>()
+
+    <span class="cm"># ⑤ 日付フォーマット統一（複数形式に対応）</span>
+    DATE_PATTERNS = [
+        (<span class="str">r'(\d{4})/(\d{1,2})/(\d{1,2})'</span>, <span class="str">'{}-{:02d}-{:02d}'</span>),
+        (<span class="str">r'(\d{1,2})月(\d{1,2})日'</span>,       <span class="str">'2025-{:02d}-{:02d}'</span>),
+        (<span class="str">r'(\d{4})\.(\d{1,2})\.(\d{1,2})'</span>, <span class="str">'{}-{:02d}-{:02d}'</span>),
+    ]
+    <span class="kw">if</span> <span class="str">'登録日'</span> <span class="kw">in</span> df.columns:
+        df[<span class="str">'登録日'</span>] = df[<span class="str">'登録日'</span>].<span class="fn">apply</span>(
+            <span class="kw">lambda</span> x: <span class="fn">normalize_date</span>(str(x), DATE_PATTERNS)
         )
 
-    <span class="token-cm"># 前後の空白除去</span>
-    <span class="token-var">df</span> = <span class="token-var">df</span>.<span class="token-fn">apply</span>(
-        <span class="token-kw">lambda</span> <span class="token-var">col</span>: <span class="token-var">col</span>.<span class="token-fn">str.strip</span>() <span class="token-kw">if</span> <span class="token-var">col</span>.<span class="token-var">dtype</span> == <span class="token-str">'object'</span> <span class="token-kw">else</span> <span class="token-var">col</span>
-    )
+    <span class="cm"># ⑥ メールアドレス形式チェック</span>
+    EMAIL_RE = re.<span class="fn">compile</span>(<span class="str">r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'</span>)
+    <span class="kw">if</span> <span class="str">'メールアドレス'</span> <span class="kw">in</span> df.columns:
+        df[<span class="str">'メール_valid'</span>] = df[<span class="str">'メールアドレス'</span>].<span class="fn">apply</span>(
+            <span class="kw">lambda</span> x: <span class="str">'OK'</span> <span class="kw">if</span> EMAIL_RE.<span class="fn">match</span>(str(x)) <span class="kw">else</span> <span class="str">'⚠️要確認'</span>
+        )
 
-    <span class="token-cm"># 完全空行を削除</span>
-    <span class="token-var">df</span>.<span class="token-fn">dropna</span>(<span class="token-var">how</span>=<span class="token-str">'all'</span>, <span class="token-var">inplace</span>=<span class="token-kw">True</span>)
+    <span class="cm"># 保存</span>
+    save_path = output_path or Path(input_path).stem + <span class="str">'_clean.csv'</span>
+    df.<span class="fn">to_csv</span>(save_path, index=<span class="kw">False</span>, encoding=<span class="str">'utf-8-sig'</span>)
+    <span class="fn">print</span>(<span class="str">f"✅ 保存完了: {save_path}"</span>)
+    <span class="fn">print</span>(<span class="str">f"   削除(空白): {stats['removed_blank']}行"</span>)
+    <span class="fn">print</span>(<span class="str">f"   削除(重複): {stats['removed_dup']}行"</span>)
+    <span class="fn">print</span>(<span class="str">f"   修正セル: {stats['fixed_cells']}箇所"</span>)
+    <span class="kw">return</span> df
 
-    <span class="token-var">df</span>.<span class="token-fn">to_csv</span>(<span class="token-var">output_path</span>, <span class="token-var">index</span>=<span class="token-kw">False</span>, <span class="token-var">encoding</span>=<span class="token-str">'utf-8-sig'</span>)
-    <span class="token-fn">print</span>(<span class="token-str">f"完了: {<span class="token-bi">len</span>(<span class="token-var">df</span>)}行を出力しました"</span>)
+<span class="kw">def</span> <span class="fn">normalize_date</span>(s: str, patterns: list) -> str:
+    <span class="kw">for</span> pattern, fmt <span class="kw">in</span> patterns:
+        m = re.<span class="fn">match</span>(pattern, s.<span class="fn">strip</span>())
+        <span class="kw">if</span> m:
+            parts = [int(g) <span class="kw">for</span> g <span class="kw">in</span> m.<span class="fn">groups</span>()]
+            <span class="kw">return</span> fmt.<span class="fn">format</span>(*parts)
+    <span class="kw">return</span> s  <span class="cm"># 変換できなければそのまま返す</span>
 
-<span class="token-fn">clean_csv</span>(<span class="token-str">'input.csv'</span>, <span class="token-str">'output_clean.csv'</span>)</code></pre>
-</section>
-
-<!-- USE CASES -->
-<section class="section">
-  <div class="section-title">解決できること</div>
-  <div class="use-cases">
-    <div class="use-case">
-      <div class="use-case-icon">🔤</div>
-      <h3>全角・半角の統一</h3>
-      <p>「１２３」→「123」「ＡＢＣ」→「ABC」を自動正規化。Excelで混在しがちな文字を一括修正。</p>
-    </div>
-    <div class="use-case">
-      <div class="use-case-icon">✂️</div>
-      <h3>余分なスペース除去</h3>
-      <p>前後のスペース・タブをすべて自動削除。VLOOKUP不一致やDB投入エラーを防ぎます。</p>
-    </div>
-    <div class="use-case">
-      <div class="use-case-icon">🗑️</div>
-      <h3>空行・不完全レコード削除</h3>
-      <p>全列がNaNの行を自動削除し、後続の集計・可視化に備えたクリーンなデータセットを作成。</p>
-    </div>
-    <div class="use-case">
-      <div class="use-case-icon">🔄</div>
-      <h3>複数ファイル一括処理</h3>
-      <p>glob等と組み合わせてフォルダ内の全CSVを一括変換。毎月の手作業を数秒に短縮。</p>
+<span class="cm"># 実行例</span>
+<span class="kw">if</span> __name__ == <span class="str">'__main__'</span>:
+    <span class="fn">clean_csv</span>(<span class="str">'customer_export.csv'</span>, <span class="str">'customer_clean.csv'</span>)</code></pre>
     </div>
   </div>
-</section>
+</div>
 
-<div id="toast" class="toast hidden">ダウンロード準備完了！</div>
+<!-- USE CASES TAB -->
+<div id="usecases" class="tab-content">
+  <div class="content-area">
+    <div class="usecase-grid">
+      <div class="usecase-card">
+        <div class="usecase-icon">🏪</div>
+        <div class="usecase-name">EC / 小売業</div>
+        <div class="usecase-desc">Shopify・楽天・Amazonからエクスポートした注文データを統合・クリーニング。日付・金額・住所フォーマットを一括統一。</div>
+        <span class="usecase-tag">集計ミス ゼロ</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">🏢</div>
+        <div class="usecase-name">営業・CRM管理</div>
+        <div class="usecase-desc">複数の名刺管理アプリからエクスポートした顧客データの重複・表記ゆれを一括解消。Salesforceへのインポート前処理に。</div>
+        <span class="usecase-tag">データ品質 向上</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">📊</div>
+        <div class="usecase-name">経理・財務</div>
+        <div class="usecase-desc">会計ソフトの出力CSVの日付・金額フォーマットを統一し、分析ツールへの取り込み作業を自動化。手作業での修正を撲滅。</div>
+        <span class="usecase-tag">作業時間 90%削減</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">🎓</div>
+        <div class="usecase-name">教育機関</div>
+        <div class="usecase-desc">複数のシートからコピペで作られた名簿の表記ゆれ・重複を除去。学籍番号の全角→半角変換も自動化。</div>
+        <span class="usecase-tag">名簿整備 自動化</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">🔬</div>
+        <div class="usecase-name">データ分析前処理</div>
+        <div class="usecase-desc">機械学習・BIツールへのデータ投入前の前処理を自動化。欠損値処理・外れ値フラグ付けなど分析特有の処理も対応。</div>
+        <span class="usecase-tag">前処理 自動化</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">💡</div>
+        <div class="usecase-name">既存データへの対応</div>
+        <div class="usecase-desc">お客様の既存データの形式を確認した上でカスタム処理を実装。一度作れば毎回使い回せるスクリプトを納品します。</div>
+        <span class="usecase-tag">クラウドワークスで依頼</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p class="footer-label">このデモについて</p>
+  <p class="footer-title">このような自動化、クラウドワークスでご依頼いただけます</p>
+  <a href="https://crowdworks.jp/public/employees/6119556" target="_blank" rel="noopener noreferrer" class="cta-btn">
+    クラウドワークスで依頼する →
+  </a>
+</footer>
+
+<div class="toast" id="toast"></div>
 
 <script>
-// ---- sample data ----
-const SAMPLE = [
-  ['氏名','メールアドレス','電話番号','売上金額','備考'],
-  ['  田中　太郎','tanaka@example.com ','０９０－１２３４－５６７８','１２３，４５６',''],
-  ['佐藤 花子 ',' sato@example.com','090-9876-5432','98000','VIP顧客'],
-  ['','','','',''],  // 空行
-  ['鈴木　一郎','suzuki@example.com','０８０－０００１－１１１１',' ２００，０００',''],
-  ['  伊藤めぐみ','ito@example.com ','070-2222-3333','55000','新規'],
-  ['渡辺　健','watanabe@example.com','０９０－４４４４－５５５５','８８，０００',''],
-  ['','','','',''],  // 空行
-  ['中村　さくら',' nakamura@example.com','090-6666-7777',' １６０，０００','リピーター'],
-  ['小林　拓也','kobayashi@example.com','０８０－８８８８－９９９９','３３，０００',''],
-  ['加藤　直美','kato@example.com ','090-0000-1111','72000',''],
+// -------------------------------------------------------
+// SAMPLE DATA (dirty on purpose)
+// -------------------------------------------------------
+const RAW_ROWS = [
+  { id:'C001', name:'田中 太郎', email:'tanaka@example.com', date:'2024/1/5',   amount:'89800',   phone:'090-1234-5678' },
+  { id:'C002', name:'  佐藤美咲  ', email:'sato@example.co.jp', date:'2024-01-12', amount:'２４５００', phone:'080-9876-5432' },
+  { id:'C003', name:'鈴木一郎',   email:'suzuki-invalid-email',  date:'１月１５日',  amount:'12000',  phone:'070-1111-2222' },
+  { id:'C004', name:'山田花子',   email:'yamada@company.jp',     date:'2024/2/3',   amount:'０',      phone:'090-3333-4444' },
+  { id:'C001', name:'田中 太郎', email:'tanaka@example.com',    date:'2024/1/5',   amount:'89800',   phone:'090-1234-5678' }, // duplicate
+  { id:'',     name:'',           email:'',                       date:'',            amount:'',        phone:'' },             // blank
+  { id:'C005', name:'木村健二',   email:'kimura@test.org',        date:'2024.2.28',  amount:'３３０００', phone:'080-5555-6666' },
+  { id:'C006', name:'  中村恵子', email:'nakamura@biz.co.jp',     date:'2024/3/1',   amount:'15000',  phone:'070-7777-8888' },
+  { id:'C007', name:'小林翔',     email:'kobayashi@@fail.com',    date:'3月10日',    amount:'５５０００', phone:'090-9999-0000' },
+  { id:'C008', name:'渡辺明',     email:'watanabe@valid.jp',      date:'2024/4/1',   amount:'72000',  phone:'080-1212-3434' },
+  { id:'',     name:'',           email:'',                       date:'',            amount:'',        phone:'' },             // blank
+  { id:'C009', name:'伊藤咲',     email:'ito@mail.com',           date:'2024/4/15',  amount:'４４０００', phone:'070-2323-4545' },
+  { id:'C002', name:'佐藤美咲',   email:'sato@example.co.jp',     date:'2024-01-12', amount:'24500',  phone:'080-9876-5432' }, // duplicate
+  { id:'C010', name:'加藤誠',     email:'kato@company.co.jp',     date:'2024/5/3',   amount:'98000',  phone:'090-5678-9012' },
 ];
 
-let rawData = [];
-let cleanData = [];
-let fixCount = 0;
+let cleanedRows = [];
+let issues = {};
+let dataLoaded = false;
+let analyzed = false;
 
-function loadSample() {
-  rawData = SAMPLE.map(r => [...r]);
-  showBeforeTable();
-  document.getElementById('controls').classList.remove('hidden');
-  document.getElementById('upload-area').style.opacity = '.4';
+function zenToHan(str) {
+  return str.normalize('NFKC');
 }
 
-document.getElementById('file-input').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    rawData = parseCSV(ev.target.result);
-    showBeforeTable();
-    document.getElementById('controls').classList.remove('hidden');
-    document.getElementById('upload-area').style.opacity = '.4';
-  };
-  reader.readAsText(file, 'utf-8');
-});
-
-// drag & drop
-const ua = document.getElementById('upload-area');
-ua.addEventListener('dragover', e => { e.preventDefault(); ua.classList.add('drag-over'); });
-ua.addEventListener('dragleave', () => ua.classList.remove('drag-over'));
-ua.addEventListener('drop', e => {
-  e.preventDefault(); ua.classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    rawData = parseCSV(ev.target.result);
-    showBeforeTable();
-    document.getElementById('controls').classList.remove('hidden');
-    document.getElementById('upload-area').style.opacity = '.4';
-  };
-  reader.readAsText(file, 'utf-8');
-});
-
-function parseCSV(text) {
-  return text.split('\n').filter(l => l.trim()).map(l =>
-    l.split(',').map(c => c.replace(/^"|"$/g, ''))
-  );
-}
-
-function showBeforeTable() {
-  renderTable('table-before', rawData, true);
-  document.getElementById('count-before').textContent = `${rawData.length - 1} 行`;
-  document.getElementById('tables').classList.remove('hidden');
-}
-
-function runCleaning() {
-  fixCount = 0;
-  const rows = rawData.map((row, ri) => {
-    if (ri === 0) return row; // header
-    return row.map(cell => {
-      const cleaned = cleanCell(cell);
-      if (cleaned !== cell) fixCount++;
-      return cleaned;
-    });
-  });
-  // remove all-empty rows (after header)
-  const delRows = rows.slice(1).filter(r => r.every(c => c.trim() === '')).length;
-  cleanData = [rows[0], ...rows.slice(1).filter(r => r.some(c => c.trim() !== ''))];
-
-  renderTable('table-after', cleanData, false);
-  document.getElementById('count-after').textContent = `${cleanData.length - 1} 行`;
-
-  document.getElementById('stat-in').textContent = rawData.length - 1;
-  document.getElementById('stat-out').textContent = cleanData.length - 1;
-  document.getElementById('stat-fix').textContent = fixCount;
-  document.getElementById('stat-del').textContent = delRows;
-  document.getElementById('stats').classList.remove('hidden');
-  document.getElementById('dl-btn').classList.remove('hidden');
-}
-
-function cleanCell(str) {
-  if (!str) return str;
-  // NFKC normalize (全角→半角)
-  let s = str.normalize('NFKC');
-  // trim
+function normalizeDate(s) {
   s = s.trim();
+  let m;
+  if ((m = s.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/))) {
+    return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  }
+  if ((m = s.match(/^(\d{4})\.(\d{1,2})\.(\d{1,2})$/))) {
+    return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  }
+  if ((m = s.match(/^(\d{1,2})月(\d{1,2})日$/))) {
+    return `2024-${String(m[1]).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}`;
+  }
+  // full-width
+  const han = zenToHan(s);
+  if ((m = han.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/))) {
+    return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  }
   return s;
 }
 
-function renderTable(id, data, highlight) {
-  const tbl = document.getElementById(id);
-  tbl.innerHTML = '';
-  data.forEach((row, ri) => {
-    const tr = document.createElement('tr');
-    row.forEach((cell, ci) => {
-      const el = document.createElement(ri === 0 ? 'th' : 'td');
-      el.textContent = cell;
-      if (highlight && ri > 0) {
-        const cleaned = cleanCell(cell);
-        if (cleaned !== cell || cell.trim() === '') el.classList.add('dirty');
-      }
-      if (!highlight && ri > 0) el.classList.add('clean');
-      tr.appendChild(el);
-    });
-    tbl.appendChild(tr);
-  });
+function isValidEmail(e) {
+  return /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/.test(e);
 }
 
-function downloadClean() {
-  const csv = cleanData.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+function hasZen(s) {
+  return /[０-９ａ-ｚＡ-Ｚ]/.test(s);
+}
+
+function hasDateFormat(s) {
+  return /^\d{4}[-\/]\d{1,2}[-\/]\d{1,2}$/.test(s) === false && s !== '';
+}
+
+function renderRawTable(rows, highlight) {
+  const tbody = document.getElementById('csv-body');
+  tbody.innerHTML = rows.map((r, i) => {
+    const isEmpty = !r.id && !r.name && !r.email;
+    const rowClass = isEmpty ? 'error-blank' : '';
+
+    let idCell = r.id || '<span style="color:var(--text2)">(空)</span>';
+    let nameCell = r.name.trim();
+    let emailCell = r.email;
+    let dateCell = r.date;
+    let amountCell = r.amount;
+
+    if (highlight) {
+      if (!isValidEmail(r.email) && r.email) {
+        emailCell = `<span class="cell-error-bg">${r.email}</span>`;
+      }
+      if (hasZen(r.amount)) {
+        amountCell = `<span class="cell-error-bg">${r.amount}</span>`;
+      }
+      if (hasDateFormat(r.date) && r.date) {
+        dateCell = `<span class="cell-error-bg">${r.date}</span>`;
+      }
+      if (r.name !== r.name.trim()) {
+        nameCell = `<span class="cell-error-bg">${r.name}</span>`;
+      }
+    }
+
+    return `
+      <tr class="${rowClass}">
+        <td style="color:var(--text2)">${i+1}</td>
+        <td>${idCell}</td>
+        <td>${nameCell}</td>
+        <td>${emailCell}</td>
+        <td>${dateCell}</td>
+        <td>${amountCell}</td>
+        <td>${r.phone}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function loadSampleData() {
+  dataLoaded = true;
+  analyzed = false;
+  renderRawTable(RAW_ROWS, false);
+  document.getElementById('analyze-panel').style.display = '';
+  document.getElementById('issues-panel').classList.remove('visible');
+  document.getElementById('options-panel').classList.remove('visible');
+  document.getElementById('stats-row').classList.remove('visible');
+  document.getElementById('before-after').classList.remove('visible');
+  document.getElementById('download-area').style.display = 'none';
+  showToast('📂 14件のサンプルデータを読み込みました');
+}
+
+function analyzeData() {
+  if (!dataLoaded) return;
+  analyzed = true;
+
+  const blankRows = RAW_ROWS.filter(r => !r.id && !r.name).length;
+  const ids = RAW_ROWS.map(r => r.id).filter(Boolean);
+  const dupIds = ids.filter((id, i) => ids.indexOf(id) !== i);
+  const dupRows = [...new Set(dupIds)].length;
+  const zenCells = RAW_ROWS.filter(r => hasZen(r.amount) || hasZen(r.name)).length;
+  const badDates = RAW_ROWS.filter(r => r.date && normalizeDate(r.date) !== r.date && !hasZen(r.date)).length;
+  const badEmails = RAW_ROWS.filter(r => r.email && !isValidEmail(r.email)).length;
+  const spaceCells = RAW_ROWS.filter(r => r.name !== r.name.trim()).length;
+
+  issues = { blankRows, dupRows, zenCells, badDates, badEmails, spaceCells };
+
+  const issueList = document.getElementById('issue-list');
+  issueList.innerHTML = `
+    <div class="issue-item error"><div class="issue-icon">🗑️</div><div class="issue-text">空白行</div><div class="issue-count">${blankRows}件</div></div>
+    <div class="issue-item warning"><div class="issue-icon">⚠️</div><div class="issue-text">重複行（顧客IDが同一）</div><div class="issue-count">${dupRows}件</div></div>
+    <div class="issue-item error"><div class="issue-icon">📅</div><div class="issue-text">日付フォーマット不統一 (1月1日・2024.1.1など)</div><div class="issue-count">${badDates}件</div></div>
+    <div class="issue-item error"><div class="issue-icon">🔢</div><div class="issue-text">全角数字・記号 (２４５００など)</div><div class="issue-count">${zenCells}件</div></div>
+    <div class="issue-item warning"><div class="issue-icon">✉️</div><div class="issue-text">メールアドレス形式エラー</div><div class="issue-count">${badEmails}件</div></div>
+    <div class="issue-item info"><div class="issue-icon">〿</div><div class="issue-text">前後スペース</div><div class="issue-count">${spaceCells}件</div></div>
+  `;
+
+  document.getElementById('issues-panel').classList.add('visible');
+  document.getElementById('options-panel').classList.add('visible');
+  renderRawTable(RAW_ROWS, true);
+  showToast(`🔍 ${blankRows + dupRows + zenCells + badDates + badEmails}件の問題を検出しました`);
+}
+
+function fixData() {
+  if (!analyzed) return;
+  const t0 = performance.now();
+
+  const optBlank = document.getElementById('opt-blank').checked;
+  const optDup   = document.getElementById('opt-dup').checked;
+  const optDate  = document.getElementById('opt-date').checked;
+  const optZen   = document.getElementById('opt-zen').checked;
+  const optSpace = document.getElementById('opt-space').checked;
+  const optEmail = document.getElementById('opt-email').checked;
+
+  let rows = RAW_ROWS.map(r => ({...r}));
+  let deletedRows = 0;
+  let fixedCells = 0;
+  const beforeSamples = [];
+  const afterSamples = [];
+
+  // blank removal
+  if (optBlank) {
+    const before = rows.length;
+    rows = rows.filter(r => r.id || r.name || r.email);
+    deletedRows += before - rows.length;
+  }
+
+  // dup removal
+  const seenIds = new Set();
+  if (optDup) {
+    const before = rows.length;
+    rows = rows.filter(r => {
+      if (!r.id) return true;
+      if (seenIds.has(r.id)) {
+        beforeSamples.push({ label:'重複行を削除', val:`${r.id} ${r.name}`, type:'removed' });
+        return false;
+      }
+      seenIds.add(r.id);
+      return true;
+    });
+    deletedRows += before - rows.length;
+  }
+
+  // fix cells
+  rows = rows.map(r => {
+    const nr = {...r};
+
+    if (optSpace && nr.name !== nr.name.trim()) {
+      beforeSamples.push({ label:'スペース除去', val:`"${nr.name}"`, type:'fixed' });
+      nr.name = nr.name.trim();
+      afterSamples.push({ label:'スペース除去後', val:`"${nr.name}"`, type:'fixed' });
+      fixedCells++;
+    }
+
+    if (optZen && hasZen(nr.amount)) {
+      beforeSamples.push({ label:'全角数字', val:nr.amount, type:'fixed' });
+      nr.amount = zenToHan(nr.amount);
+      afterSamples.push({ label:'半角変換後', val:nr.amount, type:'fixed' });
+      fixedCells++;
+    }
+
+    if (optDate && nr.date) {
+      const fixed = normalizeDate(zenToHan(nr.date));
+      if (fixed !== nr.date) {
+        beforeSamples.push({ label:'日付形式', val:nr.date, type:'fixed' });
+        nr.date = fixed;
+        afterSamples.push({ label:'統一後', val:nr.date, type:'fixed' });
+        fixedCells++;
+      }
+    }
+
+    if (optEmail && nr.email && !isValidEmail(nr.email)) {
+      nr.email_flag = '⚠️要確認';
+    }
+
+    return nr;
+  });
+
+  cleanedRows = rows;
+
+  const t1 = performance.now();
+
+  // Stats
+  document.getElementById('stat-ok').textContent = rows.length;
+  document.getElementById('stat-del').textContent = deletedRows;
+  document.getElementById('stat-fix').textContent = fixedCells;
+  document.getElementById('stat-time').textContent = Math.round(t1 - t0);
+  document.getElementById('stats-row').classList.add('visible');
+
+  // Before/after
+  const baLen = Math.min(beforeSamples.length, 6);
+  document.getElementById('ba-before').innerHTML = RAW_ROWS
+    .filter(r => !r.id && !r.name ? true : RAW_ROWS.filter(rr => rr.id === r.id).length > 1 ? true : hasZen(r.amount) || hasDateFormat(r.date) || r.name !== r.name.trim())
+    .slice(0, 6)
+    .map(r => `<div class="ba-row ${!r.id?'removed':'fixed'}">
+      ${r.id||'(空)'}, ${r.name||'(空)'}, ${r.date||'(空)'}, ${r.amount||'(空)'}
+    </div>`).join('');
+
+  document.getElementById('ba-after').innerHTML = rows
+    .slice(0, 6)
+    .map(r => `<div class="ba-row normal">
+      ${r.id}, ${r.name}, ${r.date}, ${r.amount}
+    </div>`).join('');
+
+  document.getElementById('before-after').classList.add('visible');
+
+  // Render fixed table
+  const tbody = document.getElementById('csv-body');
+  tbody.innerHTML = rows.map((r, i) => `
+    <tr>
+      <td style="color:var(--text2)">${i+1}</td>
+      <td>${r.id}</td>
+      <td><span class="cell-fixed-bg">${r.name}</span></td>
+      <td ${r.email_flag ? `title="${r.email_flag}"` : ''}>${r.email}${r.email_flag?` <span style="color:var(--yellow)">${r.email_flag}</span>`:''}</td>
+      <td><span class="cell-fixed-bg">${r.date}</span></td>
+      <td><span class="cell-fixed-bg">${r.amount}</span></td>
+      <td>${r.phone}</td>
+    </tr>
+  `).join('');
+
+  document.getElementById('download-area').style.display = '';
+  showToast(`✅ 完了: ${deletedRows}行削除 / ${fixedCells}セル修正`);
+}
+
+function downloadCSV() {
+  if (!cleanedRows.length) return;
+  const header = ['顧客ID','顧客名','メールアドレス','登録日','購入金額','電話番号'];
+  const rows = cleanedRows.map(r => [r.id, r.name, r.email, r.date, r.amount, r.phone]);
+  const csv = [header, ...rows].map(r => r.join(',')).join('\n');
   const bom = '﻿';
-  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob([bom + csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = 'output_clean.csv'; a.click();
+  a.href = url; a.download = 'clean_data.csv'; a.click();
   URL.revokeObjectURL(url);
-  showToast('ダウンロード完了！');
+  showToast('⬇️ clean_data.csv をダウンロードしました');
 }
 
 function resetAll() {
-  rawData = []; cleanData = []; fixCount = 0;
-  ['tables','controls','stats'].forEach(id => document.getElementById(id).classList.add('hidden'));
-  document.getElementById('dl-btn').classList.add('hidden');
-  document.getElementById('upload-area').style.opacity = '1';
-  document.getElementById('file-input').value = '';
+  dataLoaded = false; analyzed = false; cleanedRows = [];
+  const tbody = document.getElementById('csv-body');
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--text2)">「サンプルデータを読み込む」ボタンを押してください</td></tr>';
+  document.getElementById('analyze-panel').style.display = 'none';
+  document.getElementById('issues-panel').classList.remove('visible');
+  document.getElementById('options-panel').classList.remove('visible');
+  document.getElementById('stats-row').classList.remove('visible');
+  document.getElementById('before-after').classList.remove('visible');
+  document.getElementById('download-area').style.display = 'none';
+}
+
+function copyCode() {
+  const code = document.getElementById('py-code').innerText;
+  navigator.clipboard.writeText(code).then(() => showToast('コードをコピーしました'));
+}
+
+function showTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  if (btn) btn.classList.add('active');
 }
 
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.remove('hidden');
-  setTimeout(() => t.classList.add('hidden'), 2800);
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
 }
 </script>
 </body>

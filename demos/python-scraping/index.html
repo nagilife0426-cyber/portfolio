@@ -1,387 +1,839 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>価格監視スクレイピング | Python デモ</title>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #0d1117;
-    --bg2: #161b22;
-    --bg3: #21262d;
-    --accent: #00d4ff;
-    --green: #3fb950;
-    --red: #f85149;
-    --yellow: #d29922;
-    --text: #c9d1d9;
-    --text-muted: #8b949e;
-    --border: #30363d;
-    --radius: 8px;
-  }
-  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; }
-  a { color: var(--accent); text-decoration: none; }
-  a:hover { text-decoration: underline; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EC価格監視 ダッシュボード | なぎ</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  .nav { padding: 12px 24px; border-bottom: 1px solid var(--border); background: var(--bg2); display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); }
-  .nav a { color: var(--accent); }
+    :root {
+      --bg: #0d1117;
+      --bg2: #161b22;
+      --bg3: #21262d;
+      --border: #30363d;
+      --accent: #00d4ff;
+      --text: #e6edf3;
+      --text2: #8b949e;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --red: #f85149;
+      --purple: #bc8cff;
+      --orange: #f0883e;
+      --amazon: #ff9900;
+      --rakuten: #bf0000;
+      --yahoo: #ff0033;
+      --radius: 8px;
+    }
 
-  .hero { padding: 56px 24px 40px; max-width: 960px; margin: 0 auto; }
-  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; background: rgba(0,212,255,.12); color: var(--accent); border: 1px solid rgba(0,212,255,.3); margin-bottom: 16px; }
-  .hero h1 { font-size: clamp(26px,4vw,40px); font-weight: 700; line-height: 1.2; margin-bottom: 16px; }
-  .hero h1 span { color: var(--accent); }
-  .hero p { color: var(--text-muted); font-size: 16px; max-width: 680px; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+    }
 
-  .section { max-width: 960px; margin: 0 auto; padding: 0 24px 56px; }
-  .section-title { font-size: 20px; font-weight: 700; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-  .section-title::before { content: ''; display: inline-block; width: 4px; height: 20px; background: var(--accent); border-radius: 2px; }
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 24px; background: var(--bg2); border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; }
+    .back-btn {
+      display: flex; align-items: center; gap: 6px;
+      color: var(--text2); text-decoration: none; font-size: 13px;
+      padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius);
+      transition: all 0.2s;
+    }
+    .back-btn:hover { color: var(--text); border-color: var(--accent); }
 
-  .demo-box { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+    header { padding: 40px 24px 32px; max-width: 1000px; margin: 0 auto; }
+    .tag {
+      display: inline-block; background: rgba(0,212,255,0.12); color: var(--accent);
+      font-size: 11px; font-weight: 600; padding: 4px 10px;
+      border-radius: 20px; border: 1px solid rgba(0,212,255,0.3);
+      margin-bottom: 12px; letter-spacing: 0.5px; text-transform: uppercase;
+    }
+    h1 { font-size: clamp(20px, 4vw, 30px); font-weight: 700; margin-bottom: 16px; line-height: 1.3; }
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .badge { font-size: 12px; padding: 4px 10px; border-radius: 20px; font-weight: 500; }
+    .badge.problem { background: rgba(248,81,73,0.12); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
+    .badge.solution { background: rgba(63,185,80,0.12); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+    .summary-line { font-size: 14px; color: var(--text2); line-height: 1.7; }
 
-  /* form */
-  .form-row { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; margin-bottom: 16px; }
-  @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
-  label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .05em; }
-  input[type=text] { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); padding: 9px 12px; font-size: 14px; transition: border-color .2s; }
-  input[type=text]:focus { outline: none; border-color: var(--accent); }
+    .tabs {
+      max-width: 1000px; margin: 0 auto; padding: 0 24px;
+      display: flex; gap: 4px; border-bottom: 1px solid var(--border);
+    }
+    .tab {
+      background: none; border: none; color: var(--text2); cursor: pointer;
+      padding: 10px 18px; font-size: 14px; font-family: inherit;
+      border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 
-  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 20px; border-radius: var(--radius); border: none; cursor: pointer; font-size: 14px; font-weight: 600; transition: all .2s; }
-  .btn-primary { background: var(--accent); color: #000; }
-  .btn-primary:hover { background: #33ddff; transform: translateY(-1px); }
-  .btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
-  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
-  .btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; }
+    .content-area { max-width: 1000px; margin: 0 auto; padding: 24px; }
 
-  /* progress */
-  .progress-bar-wrap { height: 4px; background: var(--bg3); border-radius: 2px; margin: 16px 0; overflow: hidden; }
-  .progress-bar { height: 100%; background: var(--accent); width: 0; transition: width .4s ease; border-radius: 2px; }
-  .progress-log { font-size: 12px; color: var(--text-muted); font-family: 'SFMono-Regular', Consolas, monospace; min-height: 20px; }
+    /* STATUS BAR */
+    .status-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 10px; margin-bottom: 20px;
+      padding: 10px 16px; background: var(--bg2);
+      border: 1px solid var(--border); border-radius: var(--radius);
+    }
+    .status-left { display: flex; align-items: center; gap: 10px; }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .status-text { font-size: 12px; color: var(--text2); }
+    .status-text strong { color: var(--green); }
 
-  /* result card */
-  .result-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-top: 20px; display: none; }
-  .result-card.show { display: block; }
-  .result-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
-  .product-name { font-size: 16px; font-weight: 700; }
-  .price-now { font-size: 32px; font-weight: 800; color: var(--accent); }
-  .price-diff { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 13px; font-weight: 700; }
-  .price-diff.down { background: rgba(63,185,80,.15); color: var(--green); }
-  .price-diff.up { background: rgba(248,81,73,.15); color: var(--red); }
-  .price-diff.same { background: var(--bg); color: var(--text-muted); }
+    /* PRODUCT TABLE */
+    .product-table-wrap {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden; margin-bottom: 20px;
+    }
+    .product-table-header {
+      padding: 12px 16px; background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 8px;
+    }
+    .table-title { font-size: 13px; font-weight: 600; }
+    .header-right { display: flex; gap: 8px; align-items: center; }
 
-  /* canvas chart */
-  .chart-wrap { margin-top: 16px; }
-  .chart-label { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
-  canvas { display: block; border-radius: var(--radius); }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 13px; border-radius: var(--radius);
+      font-size: 12px; font-family: inherit; font-weight: 500;
+      cursor: pointer; border: none; transition: all 0.2s;
+    }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-primary:hover { background: #00b8d9; transform: translateY(-1px); }
+    .btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: #2d333b; }
+    .btn-small { padding: 5px 10px; font-size: 11px; }
 
-  /* code */
-  pre { background: #0a0e13; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; overflow-x: auto; font-size: 13px; line-height: 1.7; }
-  .token-kw { color: #ff7b72; }
-  .token-fn { color: #d2a8ff; }
-  .token-str { color: #a5d6ff; }
-  .token-cm { color: var(--text-muted); font-style: italic; }
-  .token-bi { color: #ffa657; }
-  .token-num { color: #79c0ff; }
-  .token-var { color: var(--text); }
+    .price-table { width: 100%; border-collapse: collapse; }
+    .price-table th {
+      padding: 10px 12px; text-align: left;
+      font-size: 11px; font-weight: 600; color: var(--text2);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    .price-table td {
+      padding: 10px 12px; border-bottom: 1px solid rgba(48,54,61,0.5);
+      vertical-align: middle;
+    }
+    .price-table tr:last-child td { border-bottom: none; }
+    .price-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .price-table tr.selected td { background: rgba(0,212,255,0.04); border-left: 2px solid var(--accent); }
 
-  /* use cases */
-  .use-cases { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
-  .use-case { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; transition: border-color .2s; }
-  .use-case:hover { border-color: var(--accent); }
-  .use-case-icon { font-size: 24px; margin-bottom: 10px; }
-  .use-case h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; color: var(--accent); }
-  .use-case p { font-size: 13px; color: var(--text-muted); }
-</style>
+    .product-name { font-weight: 500; font-size: 13px; }
+    .product-cat { font-size: 10px; color: var(--text2); margin-top: 2px; }
+
+    .price-cell { text-align: right; font-size: 13px; font-weight: 600; min-width: 70px; }
+    .price-cell.cheapest { color: var(--green); }
+    .price-cell.priciest { color: var(--red); }
+    .price-cell.mid { color: var(--text); }
+    .price-na { color: var(--text2); font-weight: 400; font-size: 12px; }
+
+    .site-badge {
+      display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 5px;
+      border-radius: 3px; letter-spacing: 0.3px; vertical-align: middle; margin-left: 3px;
+    }
+    .site-amz { background: rgba(255,153,0,0.15); color: var(--amazon); }
+    .site-rak { background: rgba(191,0,0,0.12); color: var(--rakuten); }
+    .site-yah { background: rgba(255,0,51,0.1); color: var(--yahoo); }
+
+    .change-badge {
+      display: inline-flex; align-items: center; gap: 2px;
+      font-size: 11px; padding: 2px 7px; border-radius: 20px; font-weight: 600;
+    }
+    .change-up { background: rgba(248,81,73,0.12); color: var(--red); }
+    .change-down { background: rgba(63,185,80,0.12); color: var(--green); }
+    .change-same { background: rgba(139,148,158,0.1); color: var(--text2); }
+
+    .row-btn {
+      background: none; border: 1px solid var(--border); color: var(--text2);
+      padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;
+      font-family: inherit; transition: all 0.2s;
+    }
+    .row-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .row-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,0.08); }
+
+    /* CHART SECTION */
+    .chart-section {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden; margin-bottom: 20px;
+      display: none;
+    }
+    .chart-section.visible { display: block; }
+    .chart-header {
+      padding: 12px 16px; background: var(--bg3); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    }
+    .chart-title { font-size: 13px; font-weight: 600; }
+    .chart-legend { display: flex; gap: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .chart-body { padding: 16px; }
+    canvas { display: block; width: 100% !important; }
+
+    /* ALERT PANEL */
+    .alert-panel {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden; margin-bottom: 20px;
+    }
+    .alert-header {
+      padding: 12px 16px; background: var(--bg3); border-bottom: 1px solid var(--border);
+      font-size: 13px; font-weight: 600;
+    }
+    .alert-body { padding: 16px; }
+    .alert-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;
+    }
+    .alert-item {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 6px; padding: 14px;
+    }
+    .alert-product { font-size: 12px; font-weight: 600; margin-bottom: 10px; color: var(--text2); }
+    .alert-input-row { display: flex; align-items: center; gap: 8px; }
+    .alert-label { font-size: 12px; white-space: nowrap; }
+    .alert-input {
+      flex: 1; background: var(--bg); border: 1px solid var(--border);
+      color: var(--text); padding: 6px 10px; border-radius: 4px;
+      font-family: inherit; font-size: 12px; outline: none;
+    }
+    .alert-input:focus { border-color: var(--accent); }
+    .alert-unit { font-size: 12px; color: var(--text2); }
+    .test-mail-btn {
+      margin-top: 10px; width: 100%;
+      background: none; border: 1px solid var(--border); color: var(--text2);
+      padding: 7px; border-radius: 4px; cursor: pointer; font-size: 12px;
+      font-family: inherit; transition: all 0.2s;
+    }
+    .test-mail-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* EMAIL PREVIEW POPUP */
+    .email-preview-box {
+      display: none; margin-top: 10px;
+      background: var(--bg); border: 1px solid rgba(0,212,255,0.3);
+      border-radius: 6px; padding: 12px; font-size: 11px;
+    }
+    .email-preview-box.visible { display: block; }
+    .ep-row { display: flex; gap: 6px; padding: 3px 0; }
+    .ep-label { color: var(--text2); min-width: 36px; }
+    .ep-val { color: var(--text); }
+    .ep-body { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); line-height: 1.8; color: var(--text); }
+
+    /* CODE */
+    .code-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .code-header {
+      background: var(--bg3); padding: 10px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .code-filename { font-size: 12px; color: var(--text2); font-family: monospace; }
+    .copy-code-btn {
+      background: none; border: 1px solid var(--border); color: var(--text2);
+      cursor: pointer; padding: 4px 10px; border-radius: 4px;
+      font-size: 11px; font-family: inherit; transition: all 0.2s;
+    }
+    .copy-code-btn:hover { color: var(--text); border-color: var(--text2); }
+    pre { padding: 20px; overflow-x: auto; font-size: 12.5px; line-height: 1.7; color: var(--text); }
+    pre code { font-family: 'SF Mono', 'Fira Code', monospace; }
+    .kw { color: #ff7b72; }
+    .fn { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .cm { color: #8b949e; font-style: italic; }
+    .num { color: #79c0ff; }
+    .imp { color: #ffa657; }
+
+    /* USECASES */
+    .usecase-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .usecase-card {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 20px; transition: border-color 0.2s;
+    }
+    .usecase-card:hover { border-color: var(--accent); }
+    .usecase-icon { font-size: 28px; margin-bottom: 10px; }
+    .usecase-name { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+    .usecase-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
+    .usecase-tag {
+      display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px;
+      background: rgba(0,212,255,0.1); color: var(--accent); margin-top: 10px;
+    }
+
+    footer {
+      text-align: center; padding: 48px 24px; margin-top: 40px;
+      border-top: 1px solid var(--border);
+    }
+    .footer-label { font-size: 12px; color: var(--text2); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+    .footer-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+    .cta-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent); color: #000; font-weight: 700;
+      padding: 14px 28px; border-radius: var(--radius); text-decoration: none;
+      font-size: 15px; transition: all 0.2s;
+    }
+    .cta-btn:hover { background: #00b8d9; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,212,255,0.25); }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--bg3); border: 1px solid var(--green); color: var(--green);
+      padding: 12px 18px; border-radius: var(--radius); font-size: 13px;
+      opacity: 0; transform: translateY(10px); transition: all 0.3s;
+      z-index: 999; pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 680px) {
+      .price-table th:nth-child(n+3):nth-child(-n+5),
+      .price-table td:nth-child(n+3):nth-child(-n+5) { display: none; }
+    }
+  </style>
 </head>
 <body>
 
-<nav class="nav">
-  <a href="../../index.html">← ホームへ戻る</a>
-  <span>/</span>
-  <span>Python デモ</span>
-  <span>/</span>
-  <span>価格監視スクレイピング</span>
+<nav>
+  <span class="logo">&lt;nagi /&gt;</span>
+  <a href="/portfolio/" class="back-btn">← ポートフォリオに戻る</a>
 </nav>
 
-<section class="hero">
-  <div class="badge">Python / BeautifulSoup / requests</div>
-  <h1>価格監視<span>スクレイピング</span></h1>
-  <p>ECサイトの商品価格を定期取得し、値下がりを自動検知します。LINE・メール通知との連携で、値下がりを見逃しません。</p>
-</section>
+<header>
+  <div class="tag">Python 自動化</div>
+  <h1>EC価格監視 ダッシュボード</h1>
+  <div class="badges">
+    <span class="badge problem">❌ 課題: 競合他社の価格を毎日手動でチェックしてExcelに記録している</span>
+    <span class="badge solution">✅ 解決: Pythonで自動収集・グラフ化 → 毎朝メールで届く</span>
+  </div>
+  <p class="summary-line">商品名クリックで30日間の価格推移グラフを表示。アラート設定でしきい値を下回った際のメール通知プレビューも確認できます。</p>
+</header>
 
-<!-- DEMO -->
-<section class="section">
-  <div class="section-title">インタラクティブデモ</div>
-  <div class="demo-box">
+<div class="tabs">
+  <button class="tab active" onclick="showTab('demo', this)">🎬 デモ</button>
+  <button class="tab" onclick="showTab('code', this)">＜/＞ コード</button>
+  <button class="tab" onclick="showTab('usecases', this)">💼 活用例</button>
+</div>
 
-    <div class="form-row">
-      <div>
-        <label>商品名</label>
-        <input type="text" id="product-name" value="ワイヤレスイヤホン XM5" placeholder="商品名を入力">
+<!-- DEMO TAB -->
+<div id="demo" class="tab-content active">
+  <div class="content-area">
+
+    <!-- STATUS -->
+    <div class="status-bar">
+      <div class="status-left">
+        <div class="status-dot"></div>
+        <span class="status-text">前回の収集: <strong>2025-05-03 09:00</strong> 自動実行 (cron毎朝9時)</span>
       </div>
-      <div>
-        <label>監視URL（ダミー）</label>
-        <input type="text" id="monitor-url" value="https://example-shop.com/products/earphone-xm5" placeholder="https://...">
+      <div style="display:flex; gap:8px; align-items:center;">
+        <span style="font-size:11px; color:var(--text2)">監視商品: 7件</span>
+        <button class="btn btn-secondary btn-small" onclick="refreshPrices()">🔄 最新に更新</button>
       </div>
     </div>
 
-    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      <button class="btn btn-primary" id="start-btn" onclick="startMonitor()">監視開始</button>
-      <button class="btn btn-secondary" onclick="resetDemo()">リセット</button>
-    </div>
-
-    <div class="progress-bar-wrap" id="progress-wrap" style="display:none;">
-      <div class="progress-bar" id="progress-bar"></div>
-    </div>
-    <div class="progress-log" id="progress-log"></div>
-
-    <div class="result-card" id="result-card">
-      <div class="result-header">
-        <div>
-          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">商品</div>
-          <div class="product-name" id="res-name"></div>
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">現在価格</div>
-          <div style="display:flex;align-items:baseline;gap:10px;">
-            <div class="price-now" id="res-price"></div>
-            <span class="price-diff" id="res-diff"></span>
-          </div>
+    <!-- PRODUCT PRICE TABLE -->
+    <div class="product-table-wrap">
+      <div class="product-table-header">
+        <span class="table-title">📦 監視中の商品一覧</span>
+        <div class="header-right">
+          <span style="font-size:11px; color:var(--text2)">商品名をクリックで価格推移グラフを表示</span>
         </div>
       </div>
-      <div class="chart-wrap">
-        <div class="chart-label">価格履歴（過去7日）</div>
-        <canvas id="price-chart" height="160"></canvas>
+      <div style="overflow-x:auto">
+        <table class="price-table" id="price-table">
+          <thead>
+            <tr>
+              <th>商品名</th>
+              <th style="text-align:right"><span class="site-badge site-amz">AMZ</span></th>
+              <th style="text-align:right"><span class="site-badge site-rak">楽天</span></th>
+              <th style="text-align:right"><span class="site-badge site-yah">Y!</span></th>
+              <th style="text-align:right">最安値</th>
+              <th style="text-align:center">前日比</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="price-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CHART -->
+    <div class="chart-section" id="chart-section">
+      <div class="chart-header">
+        <span class="chart-title" id="chart-title">価格推移グラフ</span>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--amazon)"></div>Amazon</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--rakuten)"></div>楽天</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--yahoo)"></div>Yahoo!</div>
+        </div>
+      </div>
+      <div class="chart-body">
+        <canvas id="price-chart" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- ALERT PANEL -->
+    <div class="alert-panel">
+      <div class="alert-header">🔔 アラート設定（価格がしきい値を下回ったらメール通知）</div>
+      <div class="alert-body">
+        <div class="alert-grid" id="alert-grid"></div>
       </div>
     </div>
 
   </div>
-</section>
+</div>
 
-<!-- CODE -->
-<section class="section">
-  <div class="section-title">実装コード（Python）</div>
-  <pre><code><span class="token-kw">import</span> <span class="token-bi">requests</span>
-<span class="token-kw">from</span> <span class="token-bi">bs4</span> <span class="token-kw">import</span> <span class="token-bi">BeautifulSoup</span>
-<span class="token-kw">import</span> <span class="token-bi">time</span>
-<span class="token-kw">from</span> <span class="token-bi">datetime</span> <span class="token-kw">import</span> <span class="token-bi">datetime</span>
+<!-- CODE TAB -->
+<div id="code" class="tab-content">
+  <div class="content-area">
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-filename">price_monitor.py</span>
+        <button class="copy-code-btn" onclick="copyCode()">コピー</button>
+      </div>
+      <pre><code id="py-code"><span class="imp">import</span> requests
+<span class="imp">from</span> bs4 <span class="imp">import</span> BeautifulSoup
+<span class="imp">import</span> smtplib
+<span class="imp">import</span> json
+<span class="imp">import</span> time
+<span class="imp">from</span> datetime <span class="imp">import</span> datetime
+<span class="imp">from</span> pathlib <span class="imp">import</span> Path
+<span class="imp">from</span> email.mime.text <span class="imp">import</span> MIMEText
+<span class="imp">from</span> email.mime.multipart <span class="imp">import</span> MIMEMultipart
 
-<span class="token-kw">def</span> <span class="token-fn">monitor_price</span>(<span class="token-var">url</span>, <span class="token-var">selector</span>, <span class="token-var">interval_minutes</span>=<span class="token-num">60</span>):
-    <span class="token-var">history</span> = []
+<span class="cm"># 監視商品リスト</span>
+PRODUCTS = [
+    {
+        <span class="str">"name"</span>: <span class="str">"ワイヤレスイヤホン A10"</span>,
+        <span class="str">"amazon_url"</span>: <span class="str">"https://amazon.co.jp/dp/XXXXXXXX"</span>,
+        <span class="str">"rakuten_url"</span>: <span class="str">"https://item.rakuten.co.jp/xxx/yyy"</span>,
+        <span class="str">"alert_price"</span>: <span class="num">8000</span>
+    },
+    <span class="cm"># ... 他の商品を追加</span>
+]
 
-    <span class="token-kw">while</span> <span class="token-kw">True</span>:
-        <span class="token-var">res</span> = <span class="token-bi">requests</span>.<span class="token-fn">get</span>(<span class="token-var">url</span>, <span class="token-var">headers</span>={<span class="token-str">'User-Agent'</span>: <span class="token-str">'Mozilla/5.0'</span>})
-        <span class="token-var">soup</span> = <span class="token-bi">BeautifulSoup</span>(<span class="token-var">res</span>.<span class="token-var">text</span>, <span class="token-str">'html.parser'</span>)
-        <span class="token-var">price_text</span> = <span class="token-var">soup</span>.<span class="token-fn">select_one</span>(<span class="token-var">selector</span>).<span class="token-var">text</span>.<span class="token-fn">strip</span>()
-        <span class="token-var">price</span> = <span class="token-fn">int</span>(<span class="token-var">price_text</span>.<span class="token-fn">replace</span>(<span class="token-str">'¥'</span>,<span class="token-str">''</span>).<span class="token-fn">replace</span>(<span class="token-str">','</span>,<span class="token-str">''</span>))
+<span class="kw">def</span> <span class="fn">scrape_amazon_price</span>(url: str) -> int | <span class="kw">None</span>:
+    <span class="str">"""Amazon商品ページから価格を取得"""</span>
+    headers = {
+        <span class="str">"User-Agent"</span>: <span class="str">"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "</span>
+                     <span class="str">"AppleWebKit/537.36"</span>,
+        <span class="str">"Accept-Language"</span>: <span class="str">"ja-JP,ja;q=0.9"</span>
+    }
+    <span class="kw">try</span>:
+        res = requests.<span class="fn">get</span>(url, headers=headers, timeout=<span class="num">10</span>)
+        soup = BeautifulSoup(res.text, <span class="str">"html.parser"</span>)
 
-        <span class="token-var">record</span> = {
-            <span class="token-str">'timestamp'</span>: <span class="token-bi">datetime</span>.<span class="token-fn">now</span>().<span class="token-fn">isoformat</span>(),
-            <span class="token-str">'price'</span>: <span class="token-var">price</span>
-        }
-        <span class="token-var">history</span>.<span class="token-fn">append</span>(<span class="token-var">record</span>)
+        <span class="cm"># 複数のセレクタで価格を探す（ページ構造変化に対応）</span>
+        selectors = [
+            <span class="str">"#priceblock_ourprice"</span>,
+            <span class="str">"#priceblock_dealprice"</span>,
+            <span class="str">".a-price .a-offscreen"</span>
+        ]
+        <span class="kw">for</span> sel <span class="kw">in</span> selectors:
+            el = soup.<span class="fn">select_one</span>(sel)
+            <span class="kw">if</span> el:
+                price_text = el.<span class="fn">get_text</span>().<span class="fn">strip</span>()
+                price = int(price_text.<span class="fn">replace</span>(<span class="str">'¥'</span>, <span class="str">''</span>)
+                                      .<span class="fn">replace</span>(<span class="str">','</span>, <span class="str">''</span>))
+                <span class="kw">return</span> price
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        <span class="fn">print</span>(<span class="str">f"Amazon取得エラー: {e}"</span>)
+    <span class="kw">return</span> <span class="kw">None</span>
 
-        <span class="token-cm"># 値下がり検知</span>
-        <span class="token-kw">if</span> <span class="token-fn">len</span>(<span class="token-var">history</span>) > <span class="token-num">1</span> <span class="token-kw">and</span> <span class="token-var">price</span> &lt; <span class="token-var">history</span>[<span class="token-num">-2</span>][<span class="token-str">'price'</span>]:
-            <span class="token-fn">print</span>(<span class="token-str">f"値下がり検知: ¥{history[-2]['price']} → ¥{price}"</span>)
-            <span class="token-cm"># LINE / メール通知をここで呼ぶ</span>
-            <span class="token-fn">send_line_notify</span>(<span class="token-var">price</span>)
+<span class="kw">def</span> <span class="fn">save_price_history</span>(product_name: str, prices: dict):
+    <span class="str">"""価格履歴をJSONファイルに保存"""</span>
+    history_file = Path(<span class="str">f"history/{product_name}.json"</span>)
+    history_file.parent.<span class="fn">mkdir</span>(exist_ok=<span class="kw">True</span>)
 
-        <span class="token-bi">time</span>.<span class="token-fn">sleep</span>(<span class="token-var">interval_minutes</span> * <span class="token-num">60</span>)
+    history = json.<span class="fn">loads</span>(history_file.<span class="fn">read_text</span>()) \
+        <span class="kw">if</span> history_file.<span class="fn">exists</span>() <span class="kw">else</span> []
 
-<span class="token-kw">def</span> <span class="token-fn">send_line_notify</span>(<span class="token-var">price</span>):
-    <span class="token-bi">requests</span>.<span class="token-fn">post</span>(
-        <span class="token-str">'https://notify-api.line.me/api/notify'</span>,
-        <span class="token-var">headers</span>={<span class="token-str">'Authorization'</span>: <span class="token-str">f'Bearer {LINE_TOKEN}'</span>},
-        <span class="token-var">data</span>={<span class="token-str">'message'</span>: <span class="token-str">f'値下がり！現在価格: ¥{price:,}'</span>}
-    )</code></pre>
-</section>
+    history.<span class="fn">append</span>({
+        <span class="str">"date"</span>: datetime.<span class="fn">now</span>().<span class="fn">strftime</span>(<span class="str">"%Y-%m-%d"</span>),
+        **prices
+    })
+    <span class="cm"># 90日分を保持</span>
+    history_file.<span class="fn">write_text</span>(json.<span class="fn">dumps</span>(history[-<span class="num">90</span>:], ensure_ascii=<span class="kw">False</span>))
 
-<!-- USE CASES -->
-<section class="section">
-  <div class="section-title">解決できること</div>
-  <div class="use-cases">
-    <div class="use-case">
-      <div class="use-case-icon">📉</div>
-      <h3>値下がり自動通知</h3>
-      <p>指定商品が設定金額を下回った瞬間にLINE・メールで通知。手動チェック不要。</p>
-    </div>
-    <div class="use-case">
-      <div class="use-case-icon">📊</div>
-      <h3>価格履歴の蓄積</h3>
-      <p>時系列で価格を記録しスプレッドシートに保存。最安値タイミングを可視化。</p>
-    </div>
-    <div class="use-case">
-      <div class="use-case-icon">🛒</div>
-      <h3>複数サイト横断監視</h3>
-      <p>Amazon・楽天・ヤフーなど複数ECを同時監視し最安値を比較。</p>
-    </div>
-    <div class="use-case">
-      <div class="use-case-icon">⏱️</div>
-      <h3>定期自動実行</h3>
-      <p>cron・タスクスケジューラと連携して24時間365日自動監視を実現。</p>
+<span class="kw">def</span> <span class="fn">send_alert_email</span>(product: dict, current_price: int, site: str):
+    <span class="str">"""アラートメールを送信"""</span>
+    msg = MIMEMultipart()
+    msg[<span class="str">"Subject"</span>] = <span class="str">f"🔔 価格アラート: {product['name']} が安くなりました！"</span>
+    msg[<span class="str">"From"</span>] = <span class="str">"pricebot@nagi-works.com"</span>
+    msg[<span class="str">"To"</span>] = <span class="str">"you@example.com"</span>
+
+    body = <span class="str">f"""
+商品名: {product['name']}
+現在価格: ¥{current_price:,} ({site})
+設定しきい値: ¥{product['alert_price']:,}
+
+→ すぐに確認する: {product['amazon_url']}
+"""</span>
+    msg.<span class="fn">attach</span>(MIMEText(body, <span class="str">"plain"</span>))
+
+    <span class="kw">with</span> smtplib.<span class="fn">SMTP_SSL</span>(<span class="str">"smtp.gmail.com"</span>, <span class="num">465</span>) <span class="kw">as</span> server:
+        server.<span class="fn">login</span>(<span class="str">"you@gmail.com"</span>, <span class="str">"APP_PASSWORD"</span>)
+        server.<span class="fn">send_message</span>(msg)
+    <span class="fn">print</span>(<span class="str">f"✅ アラートメール送信: {product['name']} ¥{current_price:,}"</span>)
+
+<span class="kw">def</span> <span class="fn">run_monitor</span>():
+    <span class="str">"""全商品を巡回して価格を収集・アラートチェック"""</span>
+    <span class="fn">print</span>(<span class="str">f"[{datetime.now():%Y-%m-%d %H:%M}] 価格監視スタート"</span>)
+
+    <span class="kw">for</span> product <span class="kw">in</span> PRODUCTS:
+        prices = {}
+        amazon_price = <span class="fn">scrape_amazon_price</span>(product[<span class="str">"amazon_url"</span>])
+        <span class="kw">if</span> amazon_price:
+            prices[<span class="str">"amazon"</span>] = amazon_price
+            <span class="kw">if</span> amazon_price <= product[<span class="str">"alert_price"</span>]:
+                <span class="fn">send_alert_email</span>(product, amazon_price, <span class="str">"Amazon"</span>)
+
+        <span class="fn">save_price_history</span>(product[<span class="str">"name"</span>], prices)
+        time.<span class="fn">sleep</span>(<span class="num">2</span>)  <span class="cm"># サーバー負荷対策</span>
+
+    <span class="fn">print</span>(<span class="str">"✅ 価格監視完了"</span>)
+
+<span class="cm"># cron: 毎朝9時に自動実行</span>
+<span class="cm"># 0 9 * * * /usr/bin/python3 /home/user/price_monitor.py</span>
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="fn">run_monitor</span>()</code></pre>
     </div>
   </div>
-</section>
+</div>
+
+<!-- USE CASES TAB -->
+<div id="usecases" class="tab-content">
+  <div class="content-area">
+    <div class="usecase-grid">
+      <div class="usecase-card">
+        <div class="usecase-icon">🛒</div>
+        <div class="usecase-name">EC事業者・せどり</div>
+        <div class="usecase-desc">仕入れ先と販売先の価格差を毎日自動チェック。差益が出た瞬間にアラートメール → 在庫購入の判断を即座に下せる。</div>
+        <span class="usecase-tag">仕入れ機会 逃さない</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">🏪</div>
+        <div class="usecase-name">小売・卸売業</div>
+        <div class="usecase-desc">競合他社が値下げした際に即時検知。自社の価格戦略を迅速に見直し、競争力を維持するための情報を自動収集。</div>
+        <span class="usecase-tag">競合監視 自動化</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">📊</div>
+        <div class="usecase-name">バイヤー・調達担当</div>
+        <div class="usecase-desc">原材料・備品の価格を複数サイトで監視。最安値更新を自動検知し、購買部門の意思決定スピードを大幅向上。</div>
+        <span class="usecase-tag">調達コスト 最適化</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">🏠</div>
+        <div class="usecase-name">不動産・賃貸</div>
+        <div class="usecase-desc">競合物件の家賃相場変動を自動収集。エリア別・間取り別の価格推移をグラフ化し、適正賃料設定の根拠データに。</div>
+        <span class="usecase-tag">市場動向 可視化</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">✈️</div>
+        <div class="usecase-name">旅行・出張管理</div>
+        <div class="usecase-desc">航空券・ホテルの価格を毎日監視。出発日が近づくにつれた価格変動をグラフ化し、最適な予約タイミングを可視化。</div>
+        <span class="usecase-tag">予約最適化</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">💡</div>
+        <div class="usecase-name">監視対象のカスタマイズ</div>
+        <div class="usecase-desc">任意のECサイト・情報サイトに対応。スクレイピング可否の事前確認から実装・定期実行の設定まで一括対応。</div>
+        <span class="usecase-tag">クラウドワークスで依頼</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p class="footer-label">このデモについて</p>
+  <p class="footer-title">このような自動化、クラウドワークスでご依頼いただけます</p>
+  <a href="https://crowdworks.jp/public/employees/6119556" target="_blank" rel="noopener noreferrer" class="cta-btn">
+    クラウドワークスで依頼する →
+  </a>
+</footer>
+
+<div class="toast" id="toast"></div>
 
 <script>
-const PRICE_DATA = [4980, 4980, 4500, 4500, 3980, 4200, 3980];
-const LABELS = ['4/24', '4/25', '4/26', '4/27', '4/28', '4/29', '4/30'];
-const LOGS = [
-  'HTTP GET リクエスト送信中...',
-  'レスポンス受信 (200 OK)',
-  'BeautifulSoup でパース中...',
-  '価格セレクター: .price-box .value',
-  '価格テキスト取得: "¥3,980"',
-  '数値変換完了: 3980',
-  '履歴と比較: 前回 ¥4,200 → 今回 ¥3,980',
-  '値下がり検知！ (-¥220 / -5.2%)',
+// -------------------------------------------------------
+// PRODUCT DATA
+// -------------------------------------------------------
+const PRODUCTS = [
+  { id:1, name:'ワイヤレスイヤホン A10',  cat:'オーディオ', amz:9800,  rak:10200, yah:9500,  prev_min:9500,  alert:8000 },
+  { id:2, name:'USB-C充電器 65W',          cat:'充電器',     amz:3480,  rak:3980,  yah:3680,  prev_min:3480,  alert:2800 },
+  { id:3, name:'メカニカルキーボード K3',  cat:'周辺機器',   amz:14800, rak:15200, yah:null,  prev_min:14800, alert:12000 },
+  { id:4, name:'Webカメラ 4K',             cat:'カメラ',     amz:11500, rak:12800, yah:11200, prev_min:11200, alert:9000 },
+  { id:5, name:'PCスタンド 折りたたみ',    cat:'周辺機器',   amz:2980,  rak:3200,  yah:2980,  prev_min:3100,  alert:2500 },
+  { id:6, name:'ポータブルSSD 1TB',        cat:'ストレージ', amz:8900,  rak:9400,  yah:8700,  prev_min:8700,  alert:7500 },
+  { id:7, name:'モニターライト LED',        cat:'デスク用品', amz:5480,  rak:5980,  yah:5280,  prev_min:5480,  alert:4500 },
 ];
 
-let logTimer, progTimer, logIdx = 0, prog = 0;
-
-function startMonitor() {
-  const btn = document.getElementById('start-btn');
-  btn.disabled = true;
-  btn.textContent = '監視中...';
-
-  document.getElementById('progress-wrap').style.display = 'block';
-  document.getElementById('result-card').classList.remove('show');
-  document.getElementById('progress-log').textContent = '';
-  logIdx = 0; prog = 0;
-
-  progTimer = setInterval(() => {
-    prog = Math.min(prog + 3, 100);
-    document.getElementById('progress-bar').style.width = prog + '%';
-  }, 80);
-
-  logTimer = setInterval(() => {
-    if (logIdx < LOGS.length) {
-      document.getElementById('progress-log').textContent = '> ' + LOGS[logIdx++];
-    } else {
-      clearInterval(logTimer);
-      clearInterval(progTimer);
-      document.getElementById('progress-bar').style.width = '100%';
-      setTimeout(showResult, 300);
-    }
-  }, 350);
-}
-
-function showResult() {
-  const name = document.getElementById('product-name').value || 'ワイヤレスイヤホン XM5';
-  const cur = PRICE_DATA[PRICE_DATA.length - 1];
-  const prev = PRICE_DATA[PRICE_DATA.length - 2];
-  const diff = cur - prev;
-  const pct = ((diff / prev) * 100).toFixed(1);
-
-  document.getElementById('res-name').textContent = name;
-  document.getElementById('res-price').textContent = '¥' + cur.toLocaleString();
-
-  const el = document.getElementById('res-diff');
-  if (diff < 0) {
-    el.textContent = `前回比 -¥${Math.abs(diff).toLocaleString()}（↓${Math.abs(pct)}%）`;
-    el.className = 'price-diff down';
-  } else if (diff > 0) {
-    el.textContent = `前回比 +¥${diff.toLocaleString()}（↑${pct}%）`;
-    el.className = 'price-diff up';
-  } else {
-    el.textContent = '前回と同額';
-    el.className = 'price-diff same';
+// 30日分の模擬価格履歴を生成
+function generateHistory(base, noise) {
+  const days = 30;
+  const res = [];
+  let v = base;
+  for (let i = days; i >= 0; i--) {
+    v = Math.max(base * 0.85, Math.min(base * 1.12, v + (Math.random() - 0.5) * noise));
+    res.push(Math.round(v / 100) * 100);
   }
-
-  document.getElementById('result-card').classList.add('show');
-  drawChart();
-  document.getElementById('start-btn').disabled = false;
-  document.getElementById('start-btn').textContent = '再取得';
+  return res;
 }
 
-function drawChart() {
+let selectedProduct = null;
+
+function getPriceClass(product, price, site) {
+  if (!price) return '';
+  const prices = [product.amz, product.rak, product.yah].filter(Boolean);
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  if (price === min) return 'cheapest';
+  if (price === max) return 'priciest';
+  return 'mid';
+}
+
+function renderPriceTable() {
+  const tbody = document.getElementById('price-body');
+  tbody.innerHTML = PRODUCTS.map(p => {
+    const prices = [p.amz, p.rak, p.yah].filter(Boolean);
+    const minPrice = Math.min(...prices);
+    const prevChange = minPrice - p.prev_min;
+    const changeHtml = prevChange < 0
+      ? `<span class="change-badge change-down">▼ ¥${Math.abs(prevChange).toLocaleString()}</span>`
+      : prevChange > 0
+      ? `<span class="change-badge change-up">▲ ¥${prevChange.toLocaleString()}</span>`
+      : `<span class="change-badge change-same">— 変動なし</span>`;
+
+    const isSelected = selectedProduct && selectedProduct.id === p.id;
+
+    return `
+      <tr class="${isSelected ? 'selected' : ''}" onclick="selectProduct(${p.id})">
+        <td>
+          <div class="product-name">${p.name}</div>
+          <div class="product-cat">${p.cat}</div>
+        </td>
+        <td class="price-cell ${getPriceClass(p, p.amz, 'amz')}">¥${p.amz.toLocaleString()}</td>
+        <td class="price-cell ${getPriceClass(p, p.rak, 'rak')}">¥${p.rak.toLocaleString()}</td>
+        <td class="price-cell ${getPriceClass(p, p.yah, 'yah')}">${p.yah ? '¥' + p.yah.toLocaleString() : '<span class="price-na">—</span>'}</td>
+        <td class="price-cell cheapest" style="font-size:14px">¥${minPrice.toLocaleString()}</td>
+        <td style="text-align:center">${changeHtml}</td>
+        <td>
+          <button class="row-btn ${isSelected ? 'active' : ''}" onclick="event.stopPropagation(); selectProduct(${p.id})">
+            ${isSelected ? '▲ 閉じる' : '📈 推移'}
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function selectProduct(id) {
+  const p = PRODUCTS.find(p => p.id === id);
+  if (selectedProduct && selectedProduct.id === id) {
+    selectedProduct = null;
+    document.getElementById('chart-section').classList.remove('visible');
+  } else {
+    selectedProduct = p;
+    document.getElementById('chart-section').classList.add('visible');
+    document.getElementById('chart-title').textContent = `📈 ${p.name} — 30日間価格推移`;
+    setTimeout(() => drawPriceChart(p), 50);
+  }
+  renderPriceTable();
+}
+
+function drawPriceChart(product) {
   const canvas = document.getElementById('price-chart');
-  canvas.width = canvas.parentElement.clientWidth || 700;
   const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = 160;
-  const pad = { top: 20, right: 20, bottom: 30, left: 60 };
-  const cw = W - pad.left - pad.right;
-  const ch = H - pad.top - pad.bottom;
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.parentElement.clientWidth - 32;
+  const H = 200;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+
+  const amzData  = generateHistory(product.amz, 400);
+  const rakData  = generateHistory(product.rak, 500);
+  const yahData  = product.yah ? generateHistory(product.yah, 350) : null;
+
+  const allVals = [...amzData, ...rakData, ...(yahData || [])];
+  const minVal = Math.min(...allVals) * 0.97;
+  const maxVal = Math.max(...allVals) * 1.03;
+  const n = amzData.length;
+
+  const padL = 62, padR = 16, padT = 20, padB = 36;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
 
   ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = '#161b22';
-  ctx.fillRect(0, 0, W, H);
 
-  const min = Math.min(...PRICE_DATA) - 300;
-  const max = Math.max(...PRICE_DATA) + 300;
-
-  const xScale = i => pad.left + (i / (PRICE_DATA.length - 1)) * cw;
-  const yScale = v => pad.top + ch - ((v - min) / (max - min)) * ch;
-
-  // grid
-  ctx.strokeStyle = '#30363d';
-  ctx.lineWidth = 1;
-  [0, .25, .5, .75, 1].forEach(t => {
-    const y = pad.top + ch * t;
-    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cw, y); ctx.stroke();
-    const val = Math.round(min + (max - min) * (1 - t));
+  // Grid
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + chartH - (chartH / 4 * i);
+    ctx.strokeStyle = 'rgba(48,54,61,0.9)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    ctx.setLineDash([]);
+    const v = minVal + (maxVal - minVal) / 4 * i;
     ctx.fillStyle = '#8b949e';
-    ctx.font = '10px sans-serif';
+    ctx.font = '9px system-ui';
     ctx.textAlign = 'right';
-    ctx.fillText('¥' + val.toLocaleString(), pad.left - 6, y + 3);
-  });
+    ctx.fillText('¥' + Math.round(v / 100) * 100, padL - 4, y + 4);
+  }
 
-  // x labels
-  ctx.textAlign = 'center';
-  LABELS.forEach((l, i) => {
-    ctx.fillStyle = '#8b949e';
-    ctx.font = '10px sans-serif';
-    ctx.fillText(l, xScale(i), H - 8);
-  });
+  // Alert threshold line
+  if (product.alert >= minVal && product.alert <= maxVal) {
+    const alertY = padT + chartH - ((product.alert - minVal) / (maxVal - minVal)) * chartH;
+    ctx.strokeStyle = 'rgba(240,136,62,0.6)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath(); ctx.moveTo(padL, alertY); ctx.lineTo(W - padR, alertY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#f0883e';
+    ctx.font = 'bold 9px system-ui';
+    ctx.textAlign = 'left';
+    ctx.fillText('🔔 アラート ¥' + product.alert.toLocaleString(), padL + 4, alertY - 3);
+  }
 
-  // area fill
-  ctx.beginPath();
-  ctx.moveTo(xScale(0), yScale(PRICE_DATA[0]));
-  PRICE_DATA.forEach((v, i) => ctx.lineTo(xScale(i), yScale(v)));
-  ctx.lineTo(xScale(PRICE_DATA.length - 1), H - pad.bottom);
-  ctx.lineTo(xScale(0), H - pad.bottom);
-  ctx.closePath();
-  const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
-  grad.addColorStop(0, 'rgba(0,212,255,.25)');
-  grad.addColorStop(1, 'rgba(0,212,255,0)');
-  ctx.fillStyle = grad;
-  ctx.fill();
+  // Draw lines
+  const LINES = [
+    { data: amzData,  color: '#ff9900', name: 'Amazon' },
+    { data: rakData,  color: '#bf0000', name: '楽天' },
+    { data: yahData,  color: '#ff0033', name: 'Yahoo!' },
+  ].filter(l => l.data);
 
-  // line
-  ctx.beginPath();
-  ctx.moveTo(xScale(0), yScale(PRICE_DATA[0]));
-  PRICE_DATA.forEach((v, i) => ctx.lineTo(xScale(i), yScale(v)));
-  ctx.strokeStyle = '#00d4ff';
-  ctx.lineWidth = 2.5;
-  ctx.lineJoin = 'round';
-  ctx.stroke();
+  LINES.forEach(({ data, color }) => {
+    const pts = data.map((v, i) => ({
+      x: padL + (chartW / (n - 1)) * i,
+      y: padT + chartH - ((v - minVal) / (maxVal - minVal)) * chartH
+    }));
 
-  // dots
-  PRICE_DATA.forEach((v, i) => {
     ctx.beginPath();
-    ctx.arc(xScale(i), yScale(v), 4, 0, Math.PI * 2);
-    const isLow = v === Math.min(...PRICE_DATA);
-    ctx.fillStyle = isLow ? '#3fb950' : '#00d4ff';
+    pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Dots at latest
+    const last = pts[pts.length - 1];
+    ctx.beginPath();
+    ctx.arc(last.x, last.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.strokeStyle = '#0d1117';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Min price dot (green highlight)
+    const minIdx = data.indexOf(Math.min(...data));
+    const minPt = pts[minIdx];
+    ctx.beginPath();
+    ctx.arc(minPt.x, minPt.y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#3fb950';
     ctx.fill();
     ctx.strokeStyle = '#0d1117';
     ctx.lineWidth = 2;
     ctx.stroke();
   });
+
+  // X axis dates
+  ctx.fillStyle = '#8b949e';
+  ctx.font = '9px system-ui';
+  ctx.textAlign = 'center';
+  const today = new Date();
+  [0, 7, 14, 21, 28, 30].forEach(offset => {
+    const d = new Date(today);
+    d.setDate(d.getDate() - (30 - offset));
+    const x = padL + (chartW / 30) * offset;
+    ctx.fillText(`${d.getMonth()+1}/${d.getDate()}`, x, H - padB + 14);
+  });
 }
 
-function resetDemo() {
-  clearInterval(logTimer); clearInterval(progTimer);
-  document.getElementById('result-card').classList.remove('show');
-  document.getElementById('progress-wrap').style.display = 'none';
-  document.getElementById('progress-bar').style.width = '0';
-  document.getElementById('progress-log').textContent = '';
-  const btn = document.getElementById('start-btn');
-  btn.disabled = false; btn.textContent = '監視開始';
+function renderAlerts() {
+  document.getElementById('alert-grid').innerHTML = PRODUCTS.slice(0, 4).map(p => `
+    <div class="alert-item">
+      <div class="alert-product">📦 ${p.name}</div>
+      <div class="alert-input-row">
+        <span class="alert-label">しきい値:</span>
+        <input type="number" class="alert-input" id="alert-${p.id}" value="${p.alert}" min="0" step="100">
+        <span class="alert-unit">円以下</span>
+      </div>
+      <button class="test-mail-btn" onclick="showEmailPreview(${p.id})">📧 テストメール送信 (プレビュー)</button>
+      <div class="email-preview-box" id="ep-${p.id}"></div>
+    </div>
+  `).join('');
 }
 
-window.addEventListener('resize', () => {
-  if (document.getElementById('result-card').classList.contains('show')) drawChart();
-});
+function showEmailPreview(pid) {
+  const p = PRODUCTS.find(p => p.id === pid);
+  const threshold = document.getElementById(`alert-${pid}`).value;
+  const box = document.getElementById(`ep-${pid}`);
+
+  const prices = [p.amz, p.rak, p.yah].filter(Boolean);
+  const minPrice = Math.min(...prices);
+
+  box.innerHTML = `
+    <div class="ep-row"><span class="ep-label">To:</span><span class="ep-val">you@example.com</span></div>
+    <div class="ep-row"><span class="ep-label">件名:</span><span class="ep-val">🔔 価格アラート: ${p.name} が安くなりました！</span></div>
+    <div class="ep-body">商品名: ${p.name}<br>現在価格: ¥${minPrice.toLocaleString()} (最安値)<br>設定しきい値: ¥${parseInt(threshold).toLocaleString()}<br><br>→ すぐに確認する: https://amazon.co.jp/...</div>
+  `;
+  box.classList.toggle('visible');
+  if (box.classList.contains('visible')) {
+    showToast('📧 メールプレビューを表示しました');
+  }
+}
+
+function refreshPrices() {
+  PRODUCTS.forEach(p => {
+    const delta = Math.floor(Math.random() * 201) - 100;
+    p.amz = Math.max(100, p.amz + delta);
+    const d2 = Math.floor(Math.random() * 201) - 100;
+    p.rak = Math.max(100, p.rak + d2);
+  });
+  renderPriceTable();
+  if (selectedProduct) {
+    const updated = PRODUCTS.find(p => p.id === selectedProduct.id);
+    drawPriceChart(updated);
+  }
+  showToast('🔄 価格情報を更新しました');
+}
+
+function copyCode() {
+  const code = document.getElementById('py-code').innerText;
+  navigator.clipboard.writeText(code).then(() => showToast('コードをコピーしました'));
+}
+
+function showTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// Init
+renderPriceTable();
+renderAlerts();
 </script>
 </body>
 </html>

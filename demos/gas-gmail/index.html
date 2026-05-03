@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gmail 一括ラベル付け | GAS デモ</title>
+  <title>Gmail 自動仕分け・一括返信システム | なぎ</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -17,616 +17,778 @@
       --text2: #8b949e;
       --green: #3fb950;
       --yellow: #d29922;
+      --red: #f85149;
+      --purple: #bc8cff;
+      --orange: #f0883e;
+      --radius: 8px;
     }
 
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
-      line-height: 1.6;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-size: 14px;
       min-height: 100vh;
     }
 
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-
-    .nav {
-      background: var(--bg2);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 24px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 24px; background: var(--bg2); border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
     }
-    .nav-sep { color: var(--text2); }
-
-    .hero {
-      background: linear-gradient(135deg, var(--bg2) 0%, #0d1117 100%);
-      border-bottom: 1px solid var(--border);
-      padding: 60px 24px 48px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-    .hero::before {
-      content: '';
-      position: absolute;
-      top: -50%; left: 50%;
-      transform: translateX(-50%);
-      width: 600px; height: 600px;
-      background: radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(0,212,255,0.1);
-      border: 1px solid rgba(0,212,255,0.3);
-      color: var(--accent);
-      padding: 4px 12px;
-      border-radius: 99px;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      margin-bottom: 16px;
-    }
-    .hero h1 { font-size: clamp(24px, 4vw, 40px); font-weight: 700; margin-bottom: 16px; letter-spacing: -0.02em; }
-    .hero p { color: var(--text2); font-size: 16px; max-width: 560px; margin: 0 auto; }
-
-    .section { padding: 48px 24px; max-width: 960px; margin: 0 auto; }
-    .section-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 24px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border);
-    }
-    .section-title .num {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 28px; height: 28px;
-      background: var(--accent);
-      color: var(--bg);
-      border-radius: 50%;
-      font-size: 13px; font-weight: 700; flex-shrink: 0;
-    }
-
-    /* デモ */
-    .demo-container {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    .demo-header {
-      background: var(--bg3);
-      padding: 12px 16px;
-      font-size: 13px;
-      color: var(--text2);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .dot { width: 12px; height: 12px; border-radius: 50%; }
-    .dot-r { background: #f85149; }
-    .dot-y { background: #d29922; }
-    .dot-g { background: #3fb950; }
-    .demo-body { padding: 24px; }
-
-    /* 操作パネル */
-    .control-panel {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 16px;
-      margin-bottom: 20px;
-      display: grid;
-      grid-template-columns: 1fr 1fr auto;
-      gap: 12px;
-      align-items: end;
-    }
-    @media (max-width: 600px) {
-      .control-panel { grid-template-columns: 1fr; }
-    }
-    .ctrl-group label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text2);
-      margin-bottom: 6px;
-    }
-    .ctrl-input {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 8px 10px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-family: inherit;
-      transition: border-color 0.2s;
-    }
-    .ctrl-input:focus { outline: none; border-color: var(--accent); }
-
-    .run-btn {
-      padding: 8px 20px;
-      background: var(--accent);
-      color: var(--bg);
-      border: none;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
+    .logo { font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; }
+    .back-btn {
+      display: flex; align-items: center; gap: 6px;
+      color: var(--text2); text-decoration: none; font-size: 13px;
+      padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius);
       transition: all 0.2s;
-      height: 36px;
     }
-    .run-btn:hover { background: #33ddff; }
-    .run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .back-btn:hover { color: var(--text); border-color: var(--accent); }
 
-    /* 件数カウンター */
-    .counter-bar {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-      padding: 10px 14px;
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 13px;
+    header { padding: 40px 24px 32px; max-width: 960px; margin: 0 auto; }
+    .tag {
+      display: inline-block; background: rgba(0,212,255,0.12); color: var(--accent);
+      font-size: 11px; font-weight: 600; padding: 4px 10px;
+      border-radius: 20px; border: 1px solid rgba(0,212,255,0.3);
+      margin-bottom: 12px; letter-spacing: 0.5px; text-transform: uppercase;
     }
-    .counter-bar.done {
-      border-color: var(--green);
-    }
-    .counter-text { flex: 1; }
-    .counter-badge {
-      background: rgba(0,212,255,0.15);
-      color: var(--accent);
-      padding: 2px 10px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-    }
+    h1 { font-size: clamp(20px, 4vw, 30px); font-weight: 700; margin-bottom: 16px; line-height: 1.3; }
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .badge { font-size: 12px; padding: 4px 10px; border-radius: 20px; font-weight: 500; }
+    .badge.problem { background: rgba(248,81,73,0.12); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
+    .badge.solution { background: rgba(63,185,80,0.12); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+    .summary-line { font-size: 14px; color: var(--text2); line-height: 1.7; }
 
-    /* メールリスト */
-    .mail-list {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
+    .tabs {
+      max-width: 960px; margin: 0 auto; padding: 0 24px;
+      display: flex; gap: 4px; border-bottom: 1px solid var(--border);
     }
-    .mail-item {
-      display: grid;
-      grid-template-columns: 20px 130px 1fr auto;
-      gap: 10px;
-      align-items: center;
-      padding: 10px 12px;
-      background: var(--bg3);
-      border: 1px solid transparent;
-      border-radius: 6px;
-      font-size: 13px;
-      transition: all 0.3s;
-      cursor: default;
+    .tab {
+      background: none; border: none; color: var(--text2); cursor: pointer;
+      padding: 10px 18px; font-size: 14px; font-family: inherit;
+      border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;
     }
-    .mail-item:hover { background: var(--bg2); border-color: var(--border); }
-    .mail-item.matched {
-      background: rgba(0,212,255,0.05);
-      border-color: rgba(0,212,255,0.2);
-    }
-    .mail-unread .mail-from { font-weight: 700; color: var(--text); }
-    .mail-unread .mail-subject { font-weight: 600; }
-    .mail-dot {
-      width: 8px; height: 8px;
-      background: var(--accent);
-      border-radius: 50%;
-      opacity: 0;
-    }
-    .mail-unread .mail-dot { opacity: 1; }
-    .mail-from { color: var(--text2); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .mail-subject { color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
-    .mail-labels { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; min-width: 60px; }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 
-    .label-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      padding: 2px 7px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 600;
-      opacity: 0;
-      transform: scale(0.8);
-      transition: opacity 0.3s, transform 0.3s;
-    }
-    .label-tag.show {
-      opacity: 1;
-      transform: scale(1);
-    }
+    .content-area { max-width: 960px; margin: 0 auto; padding: 24px; }
 
-    /* ラベルの色パレット */
-    .lc0 { background: rgba(0,212,255,0.15);  color: #00d4ff; }
-    .lc1 { background: rgba(63,185,80,0.15);  color: #3fb950; }
-    .lc2 { background: rgba(163,113,247,0.15); color: #a371f7; }
-    .lc3 { background: rgba(240,136,62,0.15); color: #f0883e; }
-    .lc4 { background: rgba(248,81,73,0.15);  color: #f85149; }
-    .lc5 { background: rgba(210,169,34,0.15); color: #d2a8ff; }
-
-    /* 既存ラベル（表示用） */
-    .existing-label { opacity: 1; transform: none; }
-
-    /* コード */
-    .code-wrap {
+    /* GMAIL MOCKUP */
+    .gmail-app {
       background: var(--bg2);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: var(--radius);
       overflow: hidden;
     }
-    .code-header {
-      background: var(--bg3);
+
+    /* GMAIL TOOLBAR */
+    .gmail-toolbar {
+      background: #1c2128;
+      border-bottom: 1px solid var(--border);
       padding: 10px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .gmail-toolbar-left {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .gmail-logo {
+      font-size: 13px; font-weight: 700;
+      background: linear-gradient(135deg, #ea4335, #4285f4);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .gmail-search {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 20px; padding: 6px 14px; font-size: 12px;
+      color: var(--text2); display: flex; align-items: center; gap: 6px;
+      min-width: 180px;
+    }
+    .toolbar-right {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border-radius: var(--radius);
+      font-size: 13px; font-family: inherit; font-weight: 500;
+      cursor: pointer; border: none; transition: all 0.2s;
+    }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-primary:hover { background: #00b8d9; transform: translateY(-1px); }
+    .btn-primary:disabled { background: var(--bg3); color: var(--text2); cursor: default; transform: none; }
+    .btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: #2d333b; }
+    .btn-small { padding: 5px 10px; font-size: 12px; }
+
+    /* FILTER BAR */
+    .filter-bar {
+      padding: 10px 16px;
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .filter-label { font-size: 11px; color: var(--text2); margin-right: 4px; }
+    .filter-btn {
+      background: none; border: 1px solid var(--border); color: var(--text2);
+      padding: 4px 10px; border-radius: 20px; font-size: 11px;
+      cursor: pointer; font-family: inherit; transition: all 0.2s;
+    }
+    .filter-btn:hover { border-color: var(--text2); color: var(--text); }
+    .filter-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,0.08); }
+
+    /* EMAIL LIST */
+    .email-list { }
+    .email-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(48,54,61,0.6);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+      position: relative;
+    }
+    .email-item:last-child { border-bottom: none; }
+    .email-item:hover { background: rgba(255,255,255,0.025); }
+    .email-item.unread { background: rgba(255,255,255,0.02); }
+    .email-item.unread .email-sender { font-weight: 700; color: var(--text); }
+    .email-item.being-processed { animation: processingPulse 0.4s ease; }
+    @keyframes processingPulse {
+      0% { background: rgba(0,212,255,0.08); }
+      100% { background: transparent; }
+    }
+
+    .email-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; flex-shrink: 0;
+    }
+    .email-main { flex: 1; min-width: 0; }
+    .email-sender { font-size: 13px; font-weight: 500; color: var(--text2); margin-bottom: 2px; }
+    .email-subject { font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+    .email-preview { font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .email-meta {
+      display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0;
+    }
+    .email-time { font-size: 11px; color: var(--text2); }
+    .label-wrap { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+    .label {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 10px; padding: 2px 6px; border-radius: 3px;
+      font-weight: 600; letter-spacing: 0.3px; white-space: nowrap;
+    }
+    .label-order { background: rgba(63,185,80,0.15); color: var(--green); }
+    .label-inquiry { background: rgba(0,212,255,0.12); color: var(--accent); }
+    .label-invoice { background: rgba(210,153,34,0.15); color: var(--yellow); }
+    .label-sales { background: rgba(248,81,73,0.12); color: var(--red); }
+    .label-internal { background: rgba(188,139,255,0.12); color: var(--purple); }
+    .label-newsletter { background: rgba(139,148,158,0.12); color: var(--text2); }
+    .label-pending { background: rgba(240,136,62,0.12); color: var(--orange); }
+    .unread-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent); flex-shrink: 0;
+    }
+
+    /* RESULT SUMMARY */
+    .result-summary {
+      padding: 14px 16px;
+      background: rgba(63,185,80,0.06);
+      border-top: 1px solid rgba(63,185,80,0.15);
+      display: none;
+    }
+    .result-summary.visible { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .result-counts { display: flex; flex-wrap: wrap; gap: 8px; flex: 1; }
+    .result-count {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; padding: 4px 10px; border-radius: 20px; background: var(--bg3);
+    }
+
+    /* REPLY MODAL */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6); z-index: 200;
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); width: 100%; max-width: 600px;
+      max-height: 80vh; overflow-y: auto;
+    }
+    .modal-header {
+      padding: 16px 20px; background: var(--bg3); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-title { font-size: 14px; font-weight: 600; }
+    .modal-close {
+      background: none; border: none; color: var(--text2); cursor: pointer;
+      font-size: 18px; padding: 2px 8px; border-radius: 4px; transition: color 0.2s;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { padding: 20px; }
+    .reply-field { margin-bottom: 14px; }
+    .reply-label { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+    .reply-value {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 6px; padding: 10px 12px; font-size: 13px; color: var(--text);
+    }
+    textarea.reply-value {
+      width: 100%; resize: vertical; min-height: 160px;
+      font-family: inherit; outline: none; line-height: 1.7;
+    }
+    textarea.reply-value:focus { border-color: var(--accent); }
+
+    /* CODE TAB */
+    .code-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .code-header {
+      background: var(--bg3); padding: 10px 16px;
+      display: flex; align-items: center; justify-content: space-between;
       border-bottom: 1px solid var(--border);
     }
-    .code-lang { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 6px; }
-    .copy-btn {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text2);
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.2s;
+    .code-filename { font-size: 12px; color: var(--text2); font-family: monospace; }
+    .copy-code-btn {
+      background: none; border: 1px solid var(--border); color: var(--text2);
+      cursor: pointer; padding: 4px 10px; border-radius: 4px;
+      font-size: 11px; font-family: inherit; transition: all 0.2s;
     }
-    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
-    pre {
-      padding: 20px;
-      overflow-x: auto;
-      font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
-      font-size: 13px;
-      line-height: 1.7;
-    }
-    .kw   { color: #ff7b72; }
-    .fn   { color: #d2a8ff; }
-    .str  { color: #a5d6ff; }
-    .cmt  { color: #8b949e; font-style: italic; }
-    .num-lit { color: #79c0ff; }
-    .prop { color: #79c0ff; }
-    .obj  { color: #ffa657; }
+    .copy-code-btn:hover { color: var(--text); border-color: var(--text2); }
+    pre { padding: 20px; overflow-x: auto; font-size: 12.5px; line-height: 1.7; color: var(--text); }
+    pre code { font-family: 'SF Mono', 'Fira Code', monospace; }
+    .kw { color: #ff7b72; }
+    .fn { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .cm { color: #8b949e; font-style: italic; }
+    .num { color: #79c0ff; }
 
-    /* benefits */
-    .benefits { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
-    .benefit-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 20px;
-      transition: border-color 0.2s, transform 0.2s;
+    /* USECASES */
+    .usecase-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .usecase-card {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 20px; transition: border-color 0.2s;
     }
-    .benefit-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-    .benefit-icon { font-size: 28px; margin-bottom: 10px; }
-    .benefit-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
-    .benefit-desc { font-size: 13px; color: var(--text2); line-height: 1.5; }
+    .usecase-card:hover { border-color: var(--accent); }
+    .usecase-icon { font-size: 28px; margin-bottom: 10px; }
+    .usecase-name { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+    .usecase-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
+    .usecase-tag {
+      display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px;
+      background: rgba(0,212,255,0.1); color: var(--accent); margin-top: 10px;
+    }
 
     footer {
+      text-align: center; padding: 48px 24px; margin-top: 40px;
       border-top: 1px solid var(--border);
-      padding: 24px;
-      text-align: center;
-      font-size: 13px;
-      color: var(--text2);
+    }
+    .footer-label { font-size: 12px; color: var(--text2); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+    .footer-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+    .cta-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent); color: #000; font-weight: 700;
+      padding: 14px 28px; border-radius: var(--radius); text-decoration: none;
+      font-size: 15px; transition: all 0.2s;
+    }
+    .cta-btn:hover { background: #00b8d9; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,212,255,0.25); }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--bg3); border: 1px solid var(--green); color: var(--green);
+      padding: 12px 18px; border-radius: var(--radius); font-size: 13px;
+      opacity: 0; transform: translateY(10px); transition: all 0.3s;
+      z-index: 999; pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    .spinner {
+      display: inline-block; width: 12px; height: 12px;
+      border: 2px solid rgba(0,0,0,0.3);
+      border-top-color: #000; border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .section-label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--text2); margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
 
-<nav class="nav">
-  <a href="../../index.html">ポートフォリオ Top</a>
-  <span class="nav-sep">/</span>
-  <span>GAS デモ</span>
-  <span class="nav-sep">/</span>
-  <span>Gmail 一括ラベル付け</span>
+<nav>
+  <span class="logo">&lt;nagi /&gt;</span>
+  <a href="/portfolio/" class="back-btn">← ポートフォリオに戻る</a>
 </nav>
 
-<div class="hero">
-  <div class="hero-badge">Google Apps Script</div>
-  <h1>Gmail 一括ラベル付け</h1>
-  <p>キーワード指定で受信トレイを自動整理。手作業フィルタでは追いきれないメールを全件処理します。</p>
+<header>
+  <div class="tag">Google Apps Script</div>
+  <h1>Gmail 自動仕分け・一括返信システム</h1>
+  <div class="badges">
+    <span class="badge problem">❌ 課題: 受信トレイに毎日100通、種別ごとに手動でラベルを付けている</span>
+    <span class="badge solution">✅ 解決: GASが送信者・件名を解析して自動分類 → 処理時間ゼロ</span>
+  </div>
+  <p class="summary-line">「自動仕分け実行」ボタンを押すと未分類メールが即座に分類されます。分類後は種別フィルタで絞り込み、テンプレ返信も一括作成できます。</p>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('demo', this)">🎬 デモ</button>
+  <button class="tab" onclick="showTab('code', this)">＜/＞ コード</button>
+  <button class="tab" onclick="showTab('usecases', this)">💼 活用例</button>
 </div>
 
-<!-- デモ -->
-<section class="section">
-  <div class="section-title"><span class="num">1</span> インタラクティブデモ</div>
+<!-- DEMO TAB -->
+<div id="demo" class="tab-content active">
+  <div class="content-area">
+    <div class="gmail-app">
 
-  <div class="demo-container">
-    <div class="demo-header">
-      <span class="dot dot-r"></span>
-      <span class="dot dot-y"></span>
-      <span class="dot dot-g"></span>
-      <span style="margin-left:4px;">GmailApp — labelEmails.gs</span>
-    </div>
-    <div class="demo-body">
-
-      <!-- 操作パネル -->
-      <div class="control-panel">
-        <div class="ctrl-group">
-          <label>検索キーワード（件名に含まれる語句）</label>
-          <input class="ctrl-input" id="kwInput" type="text" placeholder="例: 請求書" value="請求書">
+      <!-- TOOLBAR -->
+      <div class="gmail-toolbar">
+        <div class="gmail-toolbar-left">
+          <span class="gmail-logo">Gmail</span>
+          <div class="gmail-search">🔍 メールを検索...</div>
         </div>
-        <div class="ctrl-group">
-          <label>付与するラベル名</label>
-          <input class="ctrl-input" id="labelInput" type="text" placeholder="例: 重要" value="重要">
+        <div class="toolbar-right">
+          <span style="font-size:12px; color:var(--text2)" id="unclassified-count">未分類: 8件</span>
+          <button class="btn btn-primary" id="auto-sort-btn" onclick="runAutoSort()">
+            🤖 自動仕分け実行
+          </button>
+          <button class="btn btn-secondary btn-small" onclick="resetEmails()">↺ リセット</button>
         </div>
-        <button class="run-btn" id="runBtn" onclick="runLabel()">ラベル付け実行</button>
       </div>
 
-      <!-- カウンター -->
-      <div class="counter-bar" id="counterBar">
-        <span class="counter-text" id="counterText">キーワードを入力して「ラベル付け実行」を押してください</span>
-        <span class="counter-badge" id="counterBadge">0 件</span>
+      <!-- FILTER BAR -->
+      <div class="filter-bar">
+        <span class="filter-label">絞り込み:</span>
+        <button class="filter-btn active" onclick="filterBy('all', this)">すべて</button>
+        <button class="filter-btn" onclick="filterBy('order', this)">📦 注文確認</button>
+        <button class="filter-btn" onclick="filterBy('inquiry', this)">💬 問い合わせ</button>
+        <button class="filter-btn" onclick="filterBy('invoice', this)">🧾 請求書</button>
+        <button class="filter-btn" onclick="filterBy('sales', this)">📢 営業メール</button>
+        <button class="filter-btn" onclick="filterBy('internal', this)">🏢 社内連絡</button>
+        <button class="filter-btn" onclick="filterBy('newsletter', this)">📰 ニュース</button>
       </div>
 
-      <!-- メール一覧 -->
-      <div class="mail-list" id="mailList">
+      <!-- EMAIL LIST -->
+      <div class="email-list" id="email-list"></div>
 
-        <div class="mail-item mail-unread" data-subject="【請求書】2026年4月分のご請求">
-          <span class="mail-dot"></span>
-          <span class="mail-from">経理部 田中</span>
-          <span class="mail-subject">【請求書】2026年4月分のご請求</span>
-          <span class="mail-labels"></span>
-        </div>
-
-        <div class="mail-item" data-subject="ミーティングの件について">
-          <span class="mail-dot"></span>
-          <span class="mail-from">山田 花子</span>
-          <span class="mail-subject">ミーティングの件について</span>
-          <span class="mail-labels"></span>
-        </div>
-
-        <div class="mail-item mail-unread" data-subject="請求書の確認をお願いします">
-          <span class="mail-dot"></span>
-          <span class="mail-from">佐藤 商事</span>
-          <span class="mail-subject">請求書の確認をお願いします</span>
-          <span class="mail-labels"></span>
-        </div>
-
-        <div class="mail-item" data-subject="プロジェクト進捗報告">
-          <span class="mail-dot"></span>
-          <span class="mail-from">開発チーム</span>
-          <span class="mail-subject">プロジェクト進捗報告</span>
-          <span class="mail-labels"></span>
-        </div>
-
-        <div class="mail-item mail-unread" data-subject="【重要】請求書に訂正があります">
-          <span class="mail-dot"></span>
-          <span class="mail-from">鈴木 株式会社</span>
-          <span class="mail-subject">【重要】請求書に訂正があります</span>
-          <span class="mail-labels"></span>
-        </div>
-
-        <div class="mail-item" data-subject="来週のランチについて">
-          <span class="mail-dot"></span>
-          <span class="mail-from">中村 次郎</span>
-          <span class="mail-subject">来週のランチについて</span>
-          <span class="mail-labels"></span>
-        </div>
-
-        <div class="mail-item mail-unread" data-subject="請求書発行のご案内">
-          <span class="mail-dot"></span>
-          <span class="mail-from">クラウド会計サービス</span>
-          <span class="mail-subject">請求書発行のご案内</span>
-          <span class="mail-labels"></span>
-        </div>
-
-        <div class="mail-item" data-subject="採用面接のご案内">
-          <span class="mail-dot"></span>
-          <span class="mail-from">人事部</span>
-          <span class="mail-subject">採用面接のご案内</span>
-          <span class="mail-labels"></span>
-        </div>
-
-        <div class="mail-item" data-subject="ニュースレター：5月号">
-          <span class="mail-dot"></span>
-          <span class="mail-from">メルマガ配信</span>
-          <span class="mail-subject">ニュースレター：5月号</span>
-          <span class="mail-labels"><span class="label-tag lc2 existing-label show">newsletter</span></span>
-        </div>
-
-        <div class="mail-item mail-unread" data-subject="請求書の件、至急ご確認ください">
-          <span class="mail-dot"></span>
-          <span class="mail-from">取引先A社</span>
-          <span class="mail-subject">請求書の件、至急ご確認ください</span>
-          <span class="mail-labels"></span>
-        </div>
-
+      <!-- RESULT SUMMARY -->
+      <div class="result-summary" id="result-summary">
+        <div class="result-counts" id="result-counts"></div>
+        <button class="btn btn-secondary btn-small" onclick="openReplyModal()">✉️ テンプレ返信作成</button>
       </div>
 
     </div>
   </div>
-</section>
+</div>
 
-<!-- GASコード -->
-<section class="section">
-  <div class="section-title"><span class="num">2</span> 実際の GAS コード</div>
-
-  <div class="code-wrap">
-    <div class="code-header">
-      <div class="code-lang">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-        JavaScript (Google Apps Script)
+<!-- CODE TAB -->
+<div id="code" class="tab-content">
+  <div class="content-area">
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-filename">gmail_auto_label.gs</span>
+        <button class="copy-code-btn" onclick="copyCode()">コピー</button>
       </div>
-      <button class="copy-btn" onclick="copyCode()">コピー</button>
-    </div>
-    <pre><span class="kw">function</span> <span class="fn">labelEmails</span>(keyword, labelName) {
-  <span class="kw">const</span> label = <span class="obj">GmailApp</span>.<span class="fn">getUserLabelByName</span>(labelName)
-    || <span class="obj">GmailApp</span>.<span class="fn">createLabel</span>(labelName);
+      <pre><code id="gas-code"><span class="cm">// Google Apps Script - Gmail 自動ラベル振り分け</span>
+<span class="cm">// 毎時トリガーで実行 → 未処理メールを自動分類</span>
 
-  <span class="kw">const</span> threads = <span class="obj">GmailApp</span>.<span class="fn">search</span>(<span class="str">'subject:'</span> + keyword + <span class="str">' -label:'</span> + labelName);
-  threads.<span class="fn">forEach</span>(thread => {
-    thread.<span class="fn">addLabel</span>(label);
+<span class="kw">const</span> LABEL_RULES = [
+  {
+    label: <span class="str">'注文確認'</span>,
+    color: <span class="str">'sage'</span>,
+    matchers: [
+      { field: <span class="str">'subject'</span>, contains: [<span class="str">'注文'</span>, <span class="str">'ご注文'</span>, <span class="str">'order'</span>, <span class="str">'購入完了'</span>] },
+      { field: <span class="str">'from'</span>,    contains: [<span class="str">'amazon.co.jp'</span>, <span class="str">'rakuten.co.jp'</span>] }
+    ]
+  },
+  {
+    label: <span class="str">'問い合わせ'</span>,
+    color: <span class="str">'cyan'</span>,
+    matchers: [
+      { field: <span class="str">'subject'</span>, contains: [<span class="str">'お問い合わせ'</span>, <span class="str">'ご質問'</span>, <span class="str">'相談'</span>, <span class="str">'確認'</span>] }
+    ]
+  },
+  {
+    label: <span class="str">'請求書'</span>,
+    color: <span class="str">'yellow'</span>,
+    matchers: [
+      { field: <span class="str">'subject'</span>, contains: [<span class="str">'請求'</span>, <span class="str">'invoice'</span>, <span class="str">'領収'</span>] }
+    ]
+  },
+  {
+    label: <span class="str">'営業メール'</span>,
+    color: <span class="str">'red'</span>,
+    matchers: [
+      { field: <span class="str">'subject'</span>, contains: [<span class="str">'ご提案'</span>, <span class="str">'セール'</span>, <span class="str">'特別価格'</span>, <span class="str">'PR'</span>] },
+      { field: <span class="str">'body'</span>,    contains: [<span class="str">'この度は弊社サービスをご紹介'</span>] }
+    ]
+  }
+];
+
+<span class="kw">function</span> <span class="fn">autoLabelEmails</span>() {
+  <span class="cm">// 過去24時間の未読メールを取得</span>
+  <span class="kw">const</span> threads = GmailApp.<span class="fn">search</span>(
+    <span class="str">'is:unread -label:処理済み newer_than:1d'</span>,
+    <span class="num">0</span>, <span class="num">50</span>
+  );
+
+  <span class="kw">let</span> processed = <span class="num">0</span>;
+  <span class="kw">const</span> stats = {};
+
+  threads.<span class="fn">forEach</span>(thread =&gt; {
+    <span class="kw">const</span> msg = thread.<span class="fn">getMessages</span>()[<span class="num">0</span>];
+    <span class="kw">const</span> subject = msg.<span class="fn">getSubject</span>();
+    <span class="kw">const</span> from    = msg.<span class="fn">getFrom</span>();
+    <span class="kw">const</span> body    = msg.<span class="fn">getPlainBody</span>().<span class="fn">slice</span>(<span class="num">0</span>, <span class="num">500</span>);
+
+    <span class="kw">let</span> matched = <span class="kw">false</span>;
+    <span class="kw">for</span> (<span class="kw">const</span> rule <span class="kw">of</span> LABEL_RULES) {
+      <span class="kw">for</span> (<span class="kw">const</span> m <span class="kw">of</span> rule.matchers) {
+        <span class="kw">const</span> target = m.field === <span class="str">'subject'</span> ? subject
+                     : m.field === <span class="str">'from'</span>    ? from : body;
+        <span class="kw">const</span> hit = m.contains.<span class="fn">some</span>(
+          kw =&gt; target.<span class="fn">toLowerCase</span>().<span class="fn">includes</span>(kw.<span class="fn">toLowerCase</span>())
+        );
+        <span class="kw">if</span> (hit) {
+          <span class="fn">applyLabel</span>(thread, rule.label);
+          stats[rule.label] = (stats[rule.label] || <span class="num">0</span>) + <span class="num">1</span>;
+          matched = <span class="kw">true</span>;
+          <span class="kw">break</span>;
+        }
+      }
+      <span class="kw">if</span> (matched) <span class="kw">break</span>;
+    }
+
+    <span class="cm">// マッチしなければ「要確認」ラベルを付与</span>
+    <span class="kw">if</span> (!matched) {
+      <span class="fn">applyLabel</span>(thread, <span class="str">'要確認'</span>);
+      stats[<span class="str">'要確認'</span>] = (stats[<span class="str">'要確認'</span>] || <span class="num">0</span>) + <span class="num">1</span>;
+    }
+
+    <span class="fn">applyLabel</span>(thread, <span class="str">'処理済み'</span>);
+    processed++;
   });
 
-  <span class="kw">return</span> threads.<span class="prop">length</span> + <span class="str">'件にラベル「'</span> + labelName + <span class="str">'」を付与しました'</span>;
-}</pre>
-  </div>
-</section>
+  <span class="cm">// 集計をスプレッドシートに記録</span>
+  <span class="kw">if</span> (processed > <span class="num">0</span>) {
+    <span class="fn">logStats</span>(processed, stats);
+  }
+}
 
-<!-- 解決できること -->
-<section class="section">
-  <div class="section-title"><span class="num">3</span> このツールで解決できること</div>
+<span class="kw">function</span> <span class="fn">applyLabel</span>(thread, labelName) {
+  <span class="kw">let</span> label = GmailApp.<span class="fn">getUserLabelByName</span>(labelName);
+  <span class="kw">if</span> (!label) label = GmailApp.<span class="fn">createLabel</span>(labelName);
+  thread.<span class="fn">addLabel</span>(label);
+}
 
-  <div class="benefits">
-    <div class="benefit-card">
-      <div class="benefit-icon">&#128270;</div>
-      <div class="benefit-title">過去メールも一括対応</div>
-      <div class="benefit-desc">Gmailフィルタは「以降」しか適用されませんが、GASなら過去の全受信トレイを遡ってラベル付けできます。</div>
-    </div>
-    <div class="benefit-card">
-      <div class="benefit-icon">&#127775;</div>
-      <div class="benefit-title">重複付与なし</div>
-      <div class="benefit-desc"><code>-label:ラベル名</code> をクエリに含めることで、既にラベル済みのスレッドを除外し、二重処理を防ぎます。</div>
-    </div>
-    <div class="benefit-card">
-      <div class="benefit-icon">&#9201;</div>
-      <div class="benefit-title">定期実行で自動化</div>
-      <div class="benefit-desc">GASのタイマートリガーを設定すれば、毎朝9時に自動実行してメールボックスを常に整理できます。</div>
-    </div>
-    <div class="benefit-card">
-      <div class="benefit-icon">&#128274;</div>
-      <div class="benefit-title">複数ルールに対応</div>
-      <div class="benefit-desc">「請求書→経理」「クレーム→要対応」など、複数のキーワード・ラベルペアを一括処理できます。</div>
+<span class="kw">function</span> <span class="fn">logStats</span>(count, stats) {
+  <span class="kw">const</span> sheet = SpreadsheetApp
+    .<span class="fn">getActiveSpreadsheet</span>()
+    .<span class="fn">getSheetByName</span>(<span class="str">'仕分けログ'</span>);
+  <span class="kw">const</span> row = [<span class="kw">new</span> Date(), count, JSON.<span class="fn">stringify</span>(stats)];
+  sheet.<span class="fn">appendRow</span>(row);
+}
+
+<span class="cm">// 毎時実行トリガーを設定</span>
+<span class="kw">function</span> <span class="fn">setHourlyTrigger</span>() {
+  ScriptApp.<span class="fn">newTrigger</span>(<span class="str">'autoLabelEmails'</span>)
+    .<span class="fn">timeBased</span>()
+    .<span class="fn">everyHours</span>(<span class="num">1</span>)
+    .<span class="fn">create</span>();
+}</code></pre>
     </div>
   </div>
-</section>
+</div>
+
+<!-- USE CASES TAB -->
+<div id="usecases" class="tab-content">
+  <div class="content-area">
+    <div class="usecase-grid">
+      <div class="usecase-card">
+        <div class="usecase-icon">🏪</div>
+        <div class="usecase-name">EC事業者</div>
+        <div class="usecase-desc">注文確認・発送通知・問い合わせを自動分類し、問い合わせのみ担当者に転送。受信トレイの確認時間を90%削減。</div>
+        <span class="usecase-tag">確認工数 90%削減</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">🏢</div>
+        <div class="usecase-name">中小企業の経営者</div>
+        <div class="usecase-desc">営業メールと重要取引先メールを自動振り分け。重要メールのみSlack通知し、営業メールはまとめて確認できる形に。</div>
+        <span class="usecase-tag">優先度管理 自動化</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">📋</div>
+        <div class="usecase-name">フリーランス</div>
+        <div class="usecase-desc">顧客別・案件別にラベルを自動付与。請求書メールを自動で「経理」フォルダに移動し、支払い漏れを防ぐ。</div>
+        <span class="usecase-tag">請求管理 漏れゼロ</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">🎓</div>
+        <div class="usecase-name">学習塾・教室運営</div>
+        <div class="usecase-desc">保護者からの問い合わせ・欠席連絡を自動分類し、担当講師にLINE/Slackで即時通知。対応漏れを完全に防止。</div>
+        <span class="usecase-tag">対応漏れ ゼロ</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">🏥</div>
+        <div class="usecase-name">クリニック・サロン</div>
+        <div class="usecase-desc">予約確認・キャンセル・問い合わせを種別ごとに自動分類し、優先度をつけて対応。受付担当の負担を大幅軽減。</div>
+        <span class="usecase-tag">受付業務 効率化</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">💡</div>
+        <div class="usecase-name">キーワードのカスタマイズ</div>
+        <div class="usecase-desc">分類キーワードや振り分けルールはお客様のビジネスに合わせてカスタマイズ。導入後のルール追加・変更も対応。</div>
+        <span class="usecase-tag">クラウドワークスで依頼</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REPLY MODAL -->
+<div class="modal-overlay" id="reply-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">✉️ テンプレ返信作成（問い合わせメール）</span>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="reply-field">
+        <div class="reply-label">To:</div>
+        <div class="reply-value">contact@example-client.co.jp</div>
+      </div>
+      <div class="reply-field">
+        <div class="reply-label">件名:</div>
+        <div class="reply-value">Re: GASを使った業務自動化について</div>
+      </div>
+      <div class="reply-field">
+        <div class="reply-label">本文:</div>
+        <textarea class="reply-value">お世話になっております。
+
+この度はお問い合わせいただきありがとうございます。
+
+ご依頼いただきました「GASを使った業務自動化」につきまして、
+以下の通りご提案いたします。
+
+■ 対応可能な内容
+・スプレッドシートへの自動記録
+・Gmailの自動振り分け・自動返信
+・定期実行トリガーの設定
+
+■ 概算費用・納期
+要件のヒアリング後にご提案いたします。
+まずは30分ほどのお打ち合わせをお願いできますでしょうか。
+
+ご都合の良い日時をいくつかお知らせいただければ幸いです。
+
+どうぞよろしくお願いいたします。
+
+なぎ ワークス</textarea>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:4px;">
+        <button class="btn btn-primary" onclick="copyReply()">📋 コピーして使う</button>
+        <button class="btn btn-secondary" onclick="closeModal()">閉じる</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <footer>
-  <p>Tomoya &amp; Co. ポートフォリオ &mdash; GAS 自動化デモ</p>
+  <p class="footer-label">このデモについて</p>
+  <p class="footer-title">このような自動化、クラウドワークスでご依頼いただけます</p>
+  <a href="https://crowdworks.jp/public/employees/6119556" target="_blank" rel="noopener noreferrer" class="cta-btn">
+    クラウドワークスで依頼する →
+  </a>
 </footer>
 
+<div class="toast" id="toast"></div>
+
 <script>
-  const labelColors = ['lc0', 'lc1', 'lc3', 'lc4', 'lc5'];
-  let colorIndex = 0;
-  const labelColorMap = {};
-  let running = false;
+const EMAILS = [
+  { id:1, sender:'Amazon.co.jp', addr:'no-reply@amazon.co.jp', subject:'ご注文の確認 #503-8842791-1234567', preview:'この度はお買い上げありがとうございます。ご注文内容をお知らせします。', time:'08:32', type:'order', classified:true, unread:false, color:'#3fb950' },
+  { id:2, sender:'田中 健一', addr:'tanaka@client-corp.co.jp', subject:'GASを使った業務自動化について', preview:'いつもお世話になっております。先日ご相談した件について詳細をお伺いしたく', time:'09:15', type:'inquiry', classified:false, unread:true, color:'#00d4ff' },
+  { id:3, sender:'弥生会計', addr:'info@yayoi-kk.co.jp', subject:'【弥生】2025年4月分 請求書のご案内', preview:'弥生会計のご請求書を発行いたしました。マイページよりご確認ください。', time:'10:02', type:'invoice', classified:true, unread:false, color:'#d29922' },
+  { id:4, sender:'株式会社テクノ', addr:'sales@techno-solution.jp', subject:'【ご提案】業務効率化ツールのご案内', preview:'この度は弊社サービスをご紹介させてください。月額980円からご利用いただけます', time:'10:45', type:'sales', classified:false, unread:true, color:'#f85149' },
+  { id:5, sender:'鈴木 部長', addr:'suzuki@mycompany.co.jp', subject:'【社内】来週の定例MTG日程変更について', preview:'お疲れ様です。来週の定例ミーティングですが、諸事情により日程変更をお願いします', time:'11:30', type:'internal', classified:true, unread:false, color:'#bc8cff' },
+  { id:6, sender:'楽天市場', addr:'order@rakuten.co.jp', subject:'注文受け付けました【楽天市場】', preview:'ご注文ありがとうございます。ご注文番号: 267854-20250503', time:'12:00', type:'order', classified:false, unread:true, color:'#3fb950' },
+  { id:7, sender:'佐藤 様', addr:'sato-yumi@personal.ne.jp', subject:'見積もりのご確認をお願いします', preview:'先日お送りいただいた見積書について確認したい点がございます。', time:'13:22', type:'inquiry', classified:false, unread:true, color:'#00d4ff' },
+  { id:8, sender:'デジタルマーケ通信', addr:'mag@dm-news.jp', subject:'【週刊】2025年デジタルマーケ最新トレンド', preview:'今週のデジタルマーケティングニュースをお届けします。ChatGPT活用術も掲載', time:'14:05', type:'newsletter', classified:true, unread:false, color:'#8b949e' },
+  { id:9, sender:'freee株式会社', addr:'no-reply@freee.co.jp', subject:'請求書 #2025-042 が届いています', preview:'freeeから請求書が届いています。支払い期日: 2025年5月31日', time:'14:50', type:'invoice', classified:false, unread:true, color:'#d29922' },
+  { id:10, sender:'山田 太郎', addr:'yamada@partner-inc.co.jp', subject:'【社外】プロジェクト進捗共有', preview:'お疲れ様です。先週の打ち合わせを踏まえた進捗をご共有します。', time:'15:10', type:'internal', classified:false, unread:true, color:'#bc8cff' },
+  { id:11, sender:'TechCrunch Japan', addr:'newsletter@techcrunch.jp', subject:'AI最新ニュース: Claude 4.6 発表', preview:'Anthropicが新モデルを発表。企業向け自動化ツールへの組み込みが加速する見込みです', time:'15:33', type:'newsletter', classified:true, unread:false, color:'#8b949e' },
+  { id:12, sender:'合同会社スター', addr:'pr@star-llc.jp', subject:'【特別価格】GWセール開催中！今だけ50%OFF', preview:'ゴールデンウィーク特別セールのご案内です。ぜひこの機会にご利用ください。', time:'16:00', type:'sales', classified:false, unread:true, color:'#f85149' },
+  { id:13, sender:'Microsoft', addr:'noreply@microsoft.com', subject:'Microsoft 365 ご請求のお知らせ', preview:'Microsoft 365 Business Basicのご請求金額が確定しました。', time:'16:30', type:'invoice', classified:true, unread:false, color:'#d29922' },
+  { id:14, sender:'木村 花子', addr:'kimura@new-client.jp', subject:'業務自動化のご相談', preview:'クラウドワークスでお見かけしました。業務の自動化について相談させていただけますか', time:'17:02', type:'inquiry', classified:false, unread:true, color:'#00d4ff' },
+  { id:15, sender:'中村 部長', addr:'nakamura@mycompany.co.jp', subject:'【社内】Q2目標設定について', preview:'お疲れ様です。Q2の目標設定シートを共有します。来週金曜日までに入力をお願いします', time:'17:45', type:'internal', classified:true, unread:false, color:'#bc8cff' },
+];
 
-  function getLabelColor(name) {
-    if (!labelColorMap[name]) {
-      labelColorMap[name] = labelColors[colorIndex % labelColors.length];
-      colorIndex++;
-    }
-    return labelColorMap[name];
+let currentEmails = EMAILS.map(e => ({...e}));
+let currentFilter = 'all';
+let sortingDone = false;
+
+const TYPE_NAMES = {
+  order: '注文確認', inquiry: '問い合わせ', invoice: '請求書',
+  sales: '営業メール', internal: '社内連絡', newsletter: 'ニュース'
+};
+const TYPE_LABEL_CLASS = {
+  order: 'label-order', inquiry: 'label-inquiry', invoice: 'label-invoice',
+  sales: 'label-sales', internal: 'label-internal', newsletter: 'label-newsletter'
+};
+
+function renderEmails() {
+  const list = document.getElementById('email-list');
+  const filtered = currentFilter === 'all'
+    ? currentEmails
+    : currentEmails.filter(e => e.type === currentFilter);
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div style="padding:30px; text-align:center; color:var(--text2); font-size:13px;">このカテゴリのメールはありません</div>';
+    return;
   }
 
-  function runLabel() {
-    if (running) return;
-    const kw = document.getElementById('kwInput').value.trim();
-    const labelName = document.getElementById('labelInput').value.trim();
-    if (!kw || !labelName) {
-      document.getElementById('counterText').textContent = 'キーワードとラベル名を入力してください';
-      return;
-    }
+  list.innerHTML = filtered.map(email => `
+    <div class="email-item ${email.unread ? 'unread' : ''}" id="email-${email.id}">
+      ${email.unread ? '<div class="unread-dot"></div>' : '<div style="width:6px"></div>'}
+      <div class="email-avatar" style="background:${email.color}22; color:${email.color}">
+        ${email.sender[0]}
+      </div>
+      <div class="email-main">
+        <div class="email-sender">${email.sender}</div>
+        <div class="email-subject">${email.subject}</div>
+        <div class="email-preview">${email.preview}</div>
+      </div>
+      <div class="email-meta">
+        <span class="email-time">${email.time}</span>
+        <div class="label-wrap">
+          ${email.classified
+            ? `<span class="label ${TYPE_LABEL_CLASS[email.type]}">${TYPE_NAMES[email.type]}</span>`
+            : '<span class="label label-pending">未分類</span>'
+          }
+        </div>
+      </div>
+    </div>
+  `).join('');
 
-    running = true;
-    document.getElementById('runBtn').disabled = true;
-    const bar = document.getElementById('counterBar');
-    bar.className = 'counter-bar';
-    document.getElementById('counterText').textContent = 'Gmail を検索中... subject:' + kw;
-    document.getElementById('counterBadge').textContent = '0 件';
+  const unclassified = currentEmails.filter(e => !e.classified).length;
+  document.getElementById('unclassified-count').textContent = `未分類: ${unclassified}件`;
+}
 
-    // まずラベルを既存のものから削除
-    document.querySelectorAll('.mail-item').forEach(item => {
-      const labels = item.querySelector('.mail-labels');
-      Array.from(labels.querySelectorAll('.label-tag')).forEach(tag => {
-        if (!tag.classList.contains('existing-label')) {
-          tag.remove();
-        }
-      });
-      item.classList.remove('matched');
-    });
+function filterBy(type, btn) {
+  currentFilter = type;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderEmails();
+}
 
-    const color = getLabelColor(labelName);
-    const items = document.querySelectorAll('.mail-item');
-    const matched = [];
-
-    items.forEach(item => {
-      const subject = item.dataset.subject || '';
-      if (subject.includes(kw)) {
-        matched.push(item);
-      }
-    });
-
-    setTimeout(() => {
-      document.getElementById('counterText').textContent = matched.length + ' 件が見つかりました — ラベル付け中...';
-    }, 500);
-
-    matched.forEach((item, i) => {
-      setTimeout(() => {
-        item.classList.add('matched');
-        const labels = item.querySelector('.mail-labels');
-
-        // 既存の同名ラベルが無ければ追加
-        const exists = Array.from(labels.querySelectorAll('.label-tag'))
-          .some(t => t.textContent.trim() === labelName);
-        if (!exists) {
-          const tag = document.createElement('span');
-          tag.className = 'label-tag ' + color;
-          tag.textContent = labelName;
-          labels.appendChild(tag);
-          requestAnimationFrame(() => requestAnimationFrame(() => tag.classList.add('show')));
-        }
-        document.getElementById('counterBadge').textContent = (i + 1) + ' 件';
-      }, 700 + i * 150);
-    });
-
-    const totalDelay = 700 + matched.length * 150 + 300;
-    setTimeout(() => {
-      if (matched.length > 0) {
-        bar.className = 'counter-bar done';
-        document.getElementById('counterText').textContent =
-          matched.length + '件にラベル「' + labelName + '」を付与しました';
-      } else {
-        document.getElementById('counterText').textContent =
-          '「' + kw + '」を含む件名のメールは見つかりませんでした';
-      }
-      running = false;
-      document.getElementById('runBtn').disabled = false;
-    }, totalDelay);
+async function runAutoSort() {
+  const unclassified = currentEmails.filter(e => !e.classified);
+  if (unclassified.length === 0) {
+    showToast('すべてのメールは分類済みです');
+    return;
   }
 
-  function copyCode() {
-    const code = `function labelEmails(keyword, labelName) {
-  const label = GmailApp.getUserLabelByName(labelName)
-    || GmailApp.createLabel(labelName);
+  const btn = document.getElementById('auto-sort-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 仕分け中...';
 
-  const threads = GmailApp.search('subject:' + keyword + ' -label:' + labelName);
-  threads.forEach(thread => {
-    thread.addLabel(label);
+  for (let i = 0; i < unclassified.length; i++) {
+    await new Promise(r => setTimeout(r, 180));
+    const email = currentEmails.find(e => e.id === unclassified[i].id);
+    email.classified = true;
+    email.unread = false;
+    renderEmails();
+
+    const el = document.getElementById(`email-${email.id}`);
+    if (el) {
+      el.classList.add('being-processed');
+      setTimeout(() => el.classList.remove('being-processed'), 400);
+    }
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '🤖 自動仕分け実行';
+  sortingDone = true;
+  showResultSummary();
+  showToast('✅ 仕分け完了！');
+}
+
+function showResultSummary() {
+  const counts = {};
+  currentEmails.forEach(e => {
+    counts[e.type] = (counts[e.type] || 0) + 1;
   });
 
-  return threads.length + '件にラベル「' + labelName + '」を付与しました';
-}`;
-    navigator.clipboard.writeText(code).then(() => {
-      const btn = document.querySelector('.copy-btn');
-      btn.textContent = 'コピー済み';
-      setTimeout(() => btn.textContent = 'コピー', 2000);
-    });
-  }
+  const html = Object.entries(counts).map(([type, n]) =>
+    `<span class="result-count">
+      <span class="label ${TYPE_LABEL_CLASS[type]}">${TYPE_NAMES[type]}</span>
+      ${n}件
+    </span>`
+  ).join('');
 
-  // Enter キーで実行
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Enter') runLabel();
+  document.getElementById('result-counts').innerHTML = html;
+  document.getElementById('result-summary').classList.add('visible');
+}
+
+function resetEmails() {
+  currentEmails = EMAILS.map(e => ({...e}));
+  sortingDone = false;
+  currentFilter = 'all';
+  document.querySelectorAll('.filter-btn').forEach((b, i) => {
+    b.classList.toggle('active', i === 0);
   });
+  document.getElementById('result-summary').classList.remove('visible');
+  renderEmails();
+}
+
+function openReplyModal() {
+  document.getElementById('reply-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('reply-modal').classList.remove('open');
+}
+
+function copyReply() {
+  const text = document.querySelector('textarea.reply-value').value;
+  navigator.clipboard.writeText(text).then(() => {
+    closeModal();
+    showToast('📋 返信テンプレをコピーしました');
+  });
+}
+
+function copyCode() {
+  const code = document.getElementById('gas-code').innerText;
+  navigator.clipboard.writeText(code).then(() => showToast('コードをコピーしました'));
+}
+
+function showTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// Close modal on overlay click
+document.getElementById('reply-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// Init
+renderEmails();
 </script>
 </body>
 </html>

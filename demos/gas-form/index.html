@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>フォーム→スプレッドシート自動仕分け | GAS デモ</title>
+  <title>お問い合わせフォーム 自動処理システム | なぎ</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -13,642 +13,884 @@
       --bg3: #21262d;
       --border: #30363d;
       --accent: #00d4ff;
+      --accent2: #0099bb;
       --text: #e6edf3;
       --text2: #8b949e;
       --green: #3fb950;
-      --cat-inquiry: #58a6ff;
-      --cat-order: #3fb950;
-      --cat-claim: #f85149;
+      --yellow: #d29922;
+      --red: #f85149;
+      --purple: #bc8cff;
+      --slack: #4a154b;
+      --radius: 8px;
     }
 
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
-      line-height: 1.6;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-size: 14px;
       min-height: 100vh;
     }
 
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-
-    .nav {
-      background: var(--bg2);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 24px;
+    nav {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 14px;
+      justify-content: space-between;
+      padding: 12px 24px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
       position: sticky;
       top: 0;
       z-index: 100;
     }
-    .nav-sep { color: var(--text2); }
+    .logo { font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; }
+    .back-btn {
+      display: flex; align-items: center; gap: 6px;
+      color: var(--text2); text-decoration: none; font-size: 13px;
+      padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius);
+      transition: all 0.2s;
+    }
+    .back-btn:hover { color: var(--text); border-color: var(--accent); }
 
-    .hero {
-      background: linear-gradient(135deg, var(--bg2) 0%, #0d1117 100%);
-      border-bottom: 1px solid var(--border);
-      padding: 60px 24px 48px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
+    header {
+      padding: 40px 24px 32px;
+      max-width: 960px;
+      margin: 0 auto;
     }
-    .hero::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 600px;
-      height: 600px;
-      background: radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%);
-      pointer-events: none;
+    .tag {
+      display: inline-block;
+      background: rgba(0,212,255,0.12); color: var(--accent);
+      font-size: 11px; font-weight: 600; padding: 4px 10px;
+      border-radius: 20px; border: 1px solid rgba(0,212,255,0.3);
+      margin-bottom: 12px; letter-spacing: 0.5px; text-transform: uppercase;
     }
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(0,212,255,0.1);
-      border: 1px solid rgba(0,212,255,0.3);
-      color: var(--accent);
-      padding: 4px 12px;
-      border-radius: 99px;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      margin-bottom: 16px;
-    }
-    .hero h1 { font-size: clamp(24px, 4vw, 40px); font-weight: 700; margin-bottom: 16px; letter-spacing: -0.02em; }
-    .hero p { color: var(--text2); font-size: 16px; max-width: 560px; margin: 0 auto; }
+    h1 { font-size: clamp(20px, 4vw, 30px); font-weight: 700; margin-bottom: 16px; line-height: 1.3; }
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .badge { font-size: 12px; padding: 4px 10px; border-radius: 20px; font-weight: 500; }
+    .badge.problem { background: rgba(248,81,73,0.12); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
+    .badge.solution { background: rgba(63,185,80,0.12); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+    .summary-line { font-size: 14px; color: var(--text2); line-height: 1.7; }
 
-    .section { padding: 48px 24px; max-width: 960px; margin: 0 auto; }
-    .section-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 24px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border);
+    .tabs {
+      max-width: 960px; margin: 0 auto; padding: 0 24px;
+      display: flex; gap: 4px; border-bottom: 1px solid var(--border);
     }
-    .section-title .num {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 28px; height: 28px;
-      background: var(--accent);
-      color: var(--bg);
-      border-radius: 50%;
-      font-size: 13px; font-weight: 700; flex-shrink: 0;
+    .tab {
+      background: none; border: none; color: var(--text2); cursor: pointer;
+      padding: 10px 18px; font-size: 14px; font-family: inherit;
+      border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .content-area { max-width: 960px; margin: 0 auto; padding: 24px; }
+
+    /* DEMO LAYOUT */
+    .demo-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 680px) {
+      .demo-layout { grid-template-columns: 1fr; }
     }
 
-    /* デモレイアウト */
-    .demo-container {
+    /* FORM PANEL */
+    .form-panel {
       background: var(--bg2);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: var(--radius);
       overflow: hidden;
     }
-    .demo-header {
+    .panel-header {
+      padding: 14px 18px;
       background: var(--bg3);
-      padding: 12px 16px;
-      font-size: 13px;
-      color: var(--text2);
       border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text2);
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    .dot { width: 12px; height: 12px; border-radius: 50%; }
-    .dot-r { background: #f85149; }
-    .dot-y { background: #d29922; }
-    .dot-g { background: #3fb950; }
-    .demo-body { padding: 24px; }
+    .panel-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot-red { background: #f85149; }
+    .dot-yellow { background: #d29922; }
+    .dot-green { background: #3fb950; }
 
-    .demo-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-      align-items: start;
-    }
-    @media (max-width: 640px) {
-      .demo-grid { grid-template-columns: 1fr; }
-    }
-
-    /* フォーム */
-    .form-card {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      overflow: hidden;
-    }
-    .form-card-header {
-      background: var(--bg2);
-      border-bottom: 1px solid var(--border);
-      padding: 10px 16px;
+    .form-body { padding: 20px; }
+    .form-group { margin-bottom: 16px; }
+    label {
+      display: block;
       font-size: 12px;
       font-weight: 600;
       color: var(--text2);
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      margin-bottom: 6px;
+      letter-spacing: 0.3px;
     }
-    .form-card-body { padding: 16px; }
-    .form-group { margin-bottom: 14px; }
-    .form-label { font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--text2); display: block; }
-    .form-input, .form-select, .form-textarea {
+    .required { color: var(--red); margin-left: 3px; }
+    input[type="text"], input[type="email"], select, textarea {
       width: 100%;
-      background: var(--bg);
+      background: var(--bg3);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 8px 10px;
-      border-radius: 6px;
-      font-size: 13px;
       font-family: inherit;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      font-size: 13px;
+      padding: 9px 12px;
+      border-radius: 6px;
+      transition: border-color 0.2s;
       outline: none;
+    }
+    input[type="text"]:focus, input[type="email"]:focus, select:focus, textarea:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(0,212,255,0.1);
     }
-    .form-select option { background: var(--bg3); }
-    .form-textarea { resize: vertical; min-height: 70px; }
-
-    /* カテゴリラジオ */
-    .radio-group { display: flex; flex-direction: column; gap: 6px; }
-    .radio-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 10px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 13px;
-    }
-    .radio-item:hover { border-color: var(--text2); }
-    .radio-item.selected-inquiry { border-color: var(--cat-inquiry); background: rgba(88,166,255,0.08); }
-    .radio-item.selected-order   { border-color: var(--cat-order);   background: rgba(63,185,80,0.08); }
-    .radio-item.selected-claim   { border-color: var(--cat-claim);   background: rgba(248,81,73,0.08); }
-
-    .radio-dot {
-      width: 14px; height: 14px;
-      border: 2px solid var(--border);
-      border-radius: 50%;
-      flex-shrink: 0;
-      transition: all 0.2s;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .radio-dot::after {
-      content: '';
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: transparent;
-      transition: all 0.2s;
-    }
-    .radio-item.selected-inquiry .radio-dot { border-color: var(--cat-inquiry); }
-    .radio-item.selected-inquiry .radio-dot::after { background: var(--cat-inquiry); }
-    .radio-item.selected-order   .radio-dot { border-color: var(--cat-order); }
-    .radio-item.selected-order   .radio-dot::after { background: var(--cat-order); }
-    .radio-item.selected-claim   .radio-dot { border-color: var(--cat-claim); }
-    .radio-item.selected-claim   .radio-dot::after { background: var(--cat-claim); }
-
-    .badge-inquiry { background: rgba(88,166,255,0.15); color: var(--cat-inquiry); }
-    .badge-order   { background: rgba(63,185,80,0.15);  color: var(--cat-order); }
-    .badge-claim   { background: rgba(248,81,73,0.15);  color: var(--cat-claim); }
-
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 600;
-    }
-
+    select option { background: var(--bg2); }
+    textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
     .submit-btn {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       background: var(--accent);
-      color: var(--bg);
+      color: #000;
       border: none;
       border-radius: 6px;
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
+      font-family: inherit;
       transition: all 0.2s;
       margin-top: 4px;
     }
-    .submit-btn:hover { background: #33ddff; }
-    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .submit-btn:hover { background: #00b8d9; }
+    .submit-btn:disabled { background: var(--bg3); color: var(--text2); cursor: default; }
 
-    /* 矢印アニメ */
-    .arrow-anim {
+    /* RESULT PANEL */
+    .result-panel {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      color: var(--text2);
-      transition: color 0.3s;
-      padding: 8px 0;
+      flex-direction: column;
+      gap: 12px;
     }
-    .arrow-anim.active { color: var(--accent); }
 
-    /* シートパネル */
-    .sheets-panel { display: flex; flex-direction: column; gap: 10px; }
-    .sheet-box {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      transition: border-color 0.3s, box-shadow 0.3s;
-    }
-    .sheet-box.flash-inquiry { border-color: var(--cat-inquiry); box-shadow: 0 0 10px rgba(88,166,255,0.25); }
-    .sheet-box.flash-order   { border-color: var(--cat-order);   box-shadow: 0 0 10px rgba(63,185,80,0.25); }
-    .sheet-box.flash-claim   { border-color: var(--cat-claim);   box-shadow: 0 0 10px rgba(248,81,73,0.25); }
-
-    .sheet-box-header {
-      padding: 6px 12px;
-      font-size: 11px;
-      font-weight: 600;
-      border-bottom: 1px solid var(--border);
+    .result-empty {
       background: var(--bg2);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .sh-inquiry { color: var(--cat-inquiry); }
-    .sh-order   { color: var(--cat-order); }
-    .sh-claim   { color: var(--cat-claim); }
-    .sheet-row-count { font-size: 10px; color: var(--text2); }
-
-    .sheet-rows { min-height: 32px; }
-    .data-row {
-      display: grid;
-      grid-template-columns: 80px 1fr;
-      padding: 4px 12px;
-      font-size: 11px;
-      border-bottom: 1px solid rgba(48,54,61,0.4);
-      opacity: 0;
-      transform: translateX(8px);
-      transition: opacity 0.3s, transform 0.3s;
-    }
-    .data-row:last-child { border-bottom: none; }
-    .data-row.show { opacity: 1; transform: none; }
-    .data-row .d-name { color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .data-row .d-msg  { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-    .status-bar {
-      margin-top: 16px;
-      padding: 10px 14px;
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 13px;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 40px 20px;
+      text-align: center;
       color: var(--text2);
-      min-height: 40px;
+    }
+    .result-empty-icon { font-size: 32px; margin-bottom: 10px; }
+    .result-empty-text { font-size: 13px; line-height: 1.6; }
+
+    .result-step {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .result-step.visible { opacity: 1; transform: translateY(0); }
+
+    .step-header {
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 700;
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    .status-bar.ok { border-color: var(--green); color: var(--green); }
+    .step-header.sheet { background: rgba(63,185,80,0.12); color: var(--green); border-bottom: 1px solid rgba(63,185,80,0.2); }
+    .step-header.email { background: rgba(0,212,255,0.1); color: var(--accent); border-bottom: 1px solid rgba(0,212,255,0.2); }
+    .step-header.slack { background: rgba(74,21,75,0.3); color: #e8a0d0; border-bottom: 1px solid rgba(188,139,255,0.2); }
 
-    /* コード */
-    .code-wrap {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
+    .step-body { padding: 14px 16px; }
+
+    /* SPREADSHEET ROW ANIMATION */
+    .sheet-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .sheet-table th {
+      background: var(--bg3); padding: 5px 8px; text-align: left;
+      color: var(--text2); font-weight: 600; border-bottom: 1px solid var(--border);
+    }
+    .sheet-table td { padding: 5px 8px; border-bottom: 1px solid rgba(48,54,61,0.5); }
+    .new-row td { animation: rowAppear 0.5s ease forwards; }
+    @keyframes rowAppear {
+      from { background: rgba(63,185,80,0.2); }
+      to { background: transparent; }
+    }
+
+    /* EMAIL PREVIEW */
+    .email-preview {
+      background: var(--bg3);
+      border-radius: 6px;
+      padding: 14px;
+      font-size: 12px;
+    }
+    .email-field {
+      display: flex;
+      gap: 8px;
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(48,54,61,0.5);
+    }
+    .email-field:last-child { border-bottom: none; }
+    .email-label { color: var(--text2); min-width: 36px; flex-shrink: 0; }
+    .email-value { color: var(--text); line-height: 1.5; }
+    .email-body-area {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      line-height: 1.8;
+      color: var(--text);
+      font-size: 12px;
+      white-space: pre-line;
+    }
+
+    /* SLACK PREVIEW */
+    .slack-preview { }
+    .slack-workspace {
+      background: #1a1a2e;
+      border-radius: 6px;
       overflow: hidden;
     }
-    .code-header {
-      background: var(--bg3);
-      padding: 10px 16px;
+    .slack-topbar {
+      background: #350d36;
+      padding: 8px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #e0d0e0;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--border);
+      gap: 6px;
     }
-    .code-lang { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 6px; }
-    .copy-btn {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text2);
-      padding: 4px 10px;
-      border-radius: 6px;
+    .slack-msg {
+      padding: 12px 14px;
+      display: flex;
+      gap: 10px;
+    }
+    .slack-avatar {
+      width: 32px; height: 32px; border-radius: 6px;
+      background: linear-gradient(135deg, #00d4ff, #bc8cff);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; color: #000;
+      flex-shrink: 0;
+    }
+    .slack-msg-body { flex: 1; }
+    .slack-sender { font-size: 13px; font-weight: 700; color: #e0d0e0; }
+    .slack-ts { font-size: 11px; color: #8b949e; margin-left: 6px; }
+    .slack-text { font-size: 12.5px; color: #d0d0d0; line-height: 1.6; margin-top: 3px; }
+    .slack-attachment {
+      background: rgba(0,212,255,0.08);
+      border-left: 3px solid var(--accent);
+      padding: 8px 10px;
+      border-radius: 0 4px 4px 0;
+      margin-top: 6px;
+      font-size: 11.5px;
+    }
+    .slack-att-title { font-weight: 700; color: var(--accent); margin-bottom: 4px; font-size: 12px; }
+    .slack-att-field { color: #c0c0c0; line-height: 1.6; }
+
+    /* STATUS BAR */
+    .status-bar {
+      background: rgba(63,185,80,0.1);
+      border: 1px solid rgba(63,185,80,0.2);
+      border-radius: var(--radius);
+      padding: 10px 14px;
       font-size: 12px;
+      color: var(--green);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.4s, transform 0.4s;
+    }
+    .status-bar.visible { opacity: 1; transform: translateY(0); }
+    .reset-btn {
+      margin-left: auto;
+      background: none;
+      border: 1px solid rgba(63,185,80,0.3);
+      color: var(--green);
+      padding: 4px 10px;
+      border-radius: 4px;
       cursor: pointer;
+      font-size: 11px;
+      font-family: inherit;
       transition: all 0.2s;
     }
-    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
-    pre {
-      padding: 20px;
-      overflow-x: auto;
-      font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
-      font-size: 13px;
-      line-height: 1.7;
+    .reset-btn:hover { background: rgba(63,185,80,0.1); }
+
+    /* HISTORY TABLE */
+    .history-section { margin-top: 24px; }
+    .section-label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--text2); margin-bottom: 10px;
     }
+    .history-table-wrap {
+      border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+    }
+    .history-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .history-table th {
+      background: var(--bg3); padding: 8px 12px; text-align: left;
+      color: var(--text2); font-weight: 600; border-bottom: 1px solid var(--border);
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .history-table td { padding: 8px 12px; border-bottom: 1px solid rgba(48,54,61,0.5); }
+    .history-table tr:last-child td { border-bottom: none; }
+    .type-badge {
+      display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 600;
+    }
+    .type-price { background: rgba(0,212,255,0.1); color: var(--accent); }
+    .type-deadline { background: rgba(63,185,80,0.1); color: var(--green); }
+    .type-tech { background: rgba(188,139,255,0.1); color: var(--purple); }
+    .type-other { background: rgba(139,148,158,0.1); color: var(--text2); }
+
+    /* CODE */
+    .code-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .code-header {
+      background: var(--bg3); padding: 10px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .code-filename { font-size: 12px; color: var(--text2); font-family: monospace; }
+    .copy-code-btn {
+      background: none; border: 1px solid var(--border); color: var(--text2);
+      cursor: pointer; padding: 4px 10px; border-radius: 4px;
+      font-size: 11px; font-family: inherit; transition: all 0.2s;
+    }
+    .copy-code-btn:hover { color: var(--text); border-color: var(--text2); }
+    pre { padding: 20px; overflow-x: auto; font-size: 12.5px; line-height: 1.7; color: var(--text); }
+    pre code { font-family: 'SF Mono', 'Fira Code', monospace; }
     .kw { color: #ff7b72; }
     .fn { color: #d2a8ff; }
     .str { color: #a5d6ff; }
-    .cmt { color: #8b949e; font-style: italic; }
-    .num-lit { color: #79c0ff; }
-    .prop { color: #79c0ff; }
-    .obj { color: #ffa657; }
+    .cm { color: #8b949e; font-style: italic; }
+    .num { color: #79c0ff; }
 
-    /* benefits */
-    .benefits {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
+    /* USECASES */
+    .usecase-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .usecase-card {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 20px; transition: border-color 0.2s;
     }
-    .benefit-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 20px;
-      transition: border-color 0.2s, transform 0.2s;
+    .usecase-card:hover { border-color: var(--accent); }
+    .usecase-icon { font-size: 28px; margin-bottom: 10px; }
+    .usecase-name { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+    .usecase-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
+    .usecase-tag {
+      display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px;
+      background: rgba(0,212,255,0.1); color: var(--accent); margin-top: 10px;
     }
-    .benefit-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-    .benefit-icon { font-size: 28px; margin-bottom: 10px; }
-    .benefit-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
-    .benefit-desc { font-size: 13px; color: var(--text2); line-height: 1.5; }
 
     footer {
+      text-align: center; padding: 48px 24px; margin-top: 40px;
       border-top: 1px solid var(--border);
-      padding: 24px;
-      text-align: center;
-      font-size: 13px;
-      color: var(--text2);
     }
+    .footer-label { font-size: 12px; color: var(--text2); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+    .footer-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+    .cta-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent); color: #000; font-weight: 700;
+      padding: 14px 28px; border-radius: var(--radius); text-decoration: none;
+      font-size: 15px; transition: all 0.2s;
+    }
+    .cta-btn:hover { background: #00b8d9; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,212,255,0.25); }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--bg3); border: 1px solid var(--green); color: var(--green);
+      padding: 12px 18px; border-radius: var(--radius); font-size: 13px;
+      opacity: 0; transform: translateY(10px); transition: all 0.3s;
+      z-index: 999; pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(0,0,0,0.3);
+      border-top-color: #000; border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
-<nav class="nav">
-  <a href="../../index.html">ポートフォリオ Top</a>
-  <span class="nav-sep">/</span>
-  <span>GAS デモ</span>
-  <span class="nav-sep">/</span>
-  <span>フォーム自動仕分け</span>
+<nav>
+  <span class="logo">&lt;nagi /&gt;</span>
+  <a href="/portfolio/" class="back-btn">← ポートフォリオに戻る</a>
 </nav>
 
-<div class="hero">
-  <div class="hero-badge">Google Apps Script</div>
-  <h1>フォーム → スプレッドシート自動仕分け</h1>
-  <p>Googleフォームの送信内容をカテゴリ別シートに自動振り分け。対応漏れ・担当者混乱をなくします。</p>
+<header>
+  <div class="tag">Google Apps Script</div>
+  <h1>お問い合わせフォーム 自動処理システム</h1>
+  <div class="badges">
+    <span class="badge problem">❌ 課題: 手動でスプレッドシート記録＋返信メール作成に30分/件</span>
+    <span class="badge solution">✅ 解決: GASで受信即時に記録・返信・Slack通知を自動化</span>
+  </div>
+  <p class="summary-line">フォームを送信すると — ①スプレッドシートに自動記録 ②自動返信メール送信 ③Slackへ通知 — の3ステップが即時実行されます。</p>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('demo', this)">🎬 デモ</button>
+  <button class="tab" onclick="showTab('code', this)">＜/＞ コード</button>
+  <button class="tab" onclick="showTab('usecases', this)">💼 活用例</button>
 </div>
 
-<!-- デモ -->
-<section class="section">
-  <div class="section-title"><span class="num">1</span> インタラクティブデモ</div>
-
-  <div class="demo-container">
-    <div class="demo-header">
-      <span class="dot dot-r"></span>
-      <span class="dot dot-y"></span>
-      <span class="dot dot-g"></span>
-      <span style="margin-left:4px;">onFormSubmit trigger — formRouter.gs</span>
-    </div>
-    <div class="demo-body">
-
-      <div class="demo-grid">
-
-        <!-- 左: フォーム -->
-        <div>
-          <div class="form-card">
-            <div class="form-card-header">
-              &#128196; Google フォーム（模擬）
+<!-- DEMO TAB -->
+<div id="demo" class="tab-content active">
+  <div class="content-area">
+    <div class="demo-layout">
+      <!-- LEFT: FORM -->
+      <div>
+        <div class="form-panel">
+          <div class="panel-header">
+            <div class="panel-dot dot-red"></div>
+            <div class="panel-dot dot-yellow"></div>
+            <div class="panel-dot dot-green"></div>
+            &nbsp;お問い合わせフォーム
+          </div>
+          <div class="form-body">
+            <div class="form-group">
+              <label>お名前 <span class="required">*</span></label>
+              <input type="text" id="f-name" placeholder="山田 太郎" value="">
             </div>
-            <div class="form-card-body">
-              <div class="form-group">
-                <label class="form-label">お名前</label>
-                <input class="form-input" id="inputName" type="text" placeholder="例：田中 太郎">
+            <div class="form-group">
+              <label>メールアドレス <span class="required">*</span></label>
+              <input type="email" id="f-email" placeholder="example@company.co.jp" value="">
+            </div>
+            <div class="form-group">
+              <label>会社名</label>
+              <input type="text" id="f-company" placeholder="株式会社〇〇">
+            </div>
+            <div class="form-group">
+              <label>お問い合わせ種別 <span class="required">*</span></label>
+              <select id="f-type">
+                <option value="">選択してください</option>
+                <option value="料金確認">料金確認</option>
+                <option value="納期確認">納期確認</option>
+                <option value="技術相談">技術相談</option>
+                <option value="その他">その他</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>お問い合わせ内容 <span class="required">*</span></label>
+              <textarea id="f-message" placeholder="ご依頼の内容や要件をご記入ください。"></textarea>
+            </div>
+            <button class="submit-btn" id="submit-btn" onclick="submitForm()">
+              送信する →
+            </button>
+          </div>
+        </div>
+
+        <!-- HISTORY -->
+        <div class="history-section">
+          <p class="section-label">スプレッドシート記録履歴</p>
+          <div class="history-table-wrap">
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th>日時</th>
+                  <th>名前</th>
+                  <th>種別</th>
+                  <th>ステータス</th>
+                </tr>
+              </thead>
+              <tbody id="history-body">
+                <tr>
+                  <td>04/28 14:23</td>
+                  <td>佐藤 美咲</td>
+                  <td><span class="type-badge type-tech">技術相談</span></td>
+                  <td style="color:var(--green)">✓ 返信済</td>
+                </tr>
+                <tr>
+                  <td>04/29 09:11</td>
+                  <td>田中 商事</td>
+                  <td><span class="type-badge type-price">料金確認</span></td>
+                  <td style="color:var(--green)">✓ 返信済</td>
+                </tr>
+                <tr>
+                  <td>04/30 16:45</td>
+                  <td>鈴木 一郎</td>
+                  <td><span class="type-badge type-deadline">納期確認</span></td>
+                  <td style="color:var(--yellow)">⏳ 対応中</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: RESULTS -->
+      <div>
+        <div class="result-panel" id="result-panel">
+          <!-- Empty state -->
+          <div class="result-empty" id="result-empty">
+            <div class="result-empty-icon">📬</div>
+            <div class="result-empty-text">
+              左のフォームに入力して<br>「送信する」を押してみてください<br><br>
+              <strong style="color:var(--text)">3つの処理が自動実行されます</strong>
+            </div>
+          </div>
+
+          <!-- Step 1: Spreadsheet -->
+          <div class="result-step" id="step-sheet">
+            <div class="step-header sheet">📊 ① スプレッドシートに記録</div>
+            <div class="step-body">
+              <table class="sheet-table">
+                <thead>
+                  <tr>
+                    <th>日時</th><th>名前</th><th>メール</th><th>種別</th><th>内容(冒頭)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="color:var(--text2)">04/28 14:23</td>
+                    <td>佐藤 美咲</td>
+                    <td style="color:var(--text2)">sato@...</td>
+                    <td><span class="type-badge type-tech">技術</span></td>
+                    <td style="color:var(--text2)">APIの連携について...</td>
+                  </tr>
+                  <tr class="new-row" id="new-sheet-row" style="display:none">
+                    <td id="sr-date" style="color:var(--green)"></td>
+                    <td id="sr-name" style="color:var(--green)"></td>
+                    <td id="sr-email" style="color:var(--text2)"></td>
+                    <td id="sr-type"></td>
+                    <td id="sr-msg" style="color:var(--text2)"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Step 2: Email -->
+          <div class="result-step" id="step-email">
+            <div class="step-header email">📧 ② 自動返信メール（差し込み済み）</div>
+            <div class="step-body">
+              <div class="email-preview">
+                <div class="email-field">
+                  <span class="email-label">To:</span>
+                  <span class="email-value" id="em-to"></span>
+                </div>
+                <div class="email-field">
+                  <span class="email-label">From:</span>
+                  <span class="email-value">自動返信 &lt;noreply@nagi-works.com&gt;</span>
+                </div>
+                <div class="email-field">
+                  <span class="email-label">件名:</span>
+                  <span class="email-value" id="em-subject"></span>
+                </div>
+                <div class="email-body-area" id="em-body"></div>
               </div>
-              <div class="form-group">
-                <label class="form-label">カテゴリ</label>
-                <div class="radio-group" id="radioGroup">
-                  <div class="radio-item" data-cat="問合せ" onclick="selectCat(this, 'inquiry')">
-                    <span class="radio-dot"></span>
-                    <span class="badge badge-inquiry">問合せ</span>
-                    <span style="margin-left:4px;font-size:12px;color:var(--text2);">製品・サービスについて</span>
-                  </div>
-                  <div class="radio-item" data-cat="注文" onclick="selectCat(this, 'order')">
-                    <span class="radio-dot"></span>
-                    <span class="badge badge-order">注文</span>
-                    <span style="margin-left:4px;font-size:12px;color:var(--text2);">購入・発注申込み</span>
-                  </div>
-                  <div class="radio-item" data-cat="クレーム" onclick="selectCat(this, 'claim')">
-                    <span class="radio-dot"></span>
-                    <span class="badge badge-claim">クレーム</span>
-                    <span style="margin-left:4px;font-size:12px;color:var(--text2);">苦情・返品・改善要望</span>
+            </div>
+          </div>
+
+          <!-- Step 3: Slack -->
+          <div class="result-step" id="step-slack">
+            <div class="step-header slack">💬 ③ Slack通知</div>
+            <div class="step-body">
+              <div class="slack-workspace">
+                <div class="slack-topbar">🔷 nagi-works &nbsp;›&nbsp; #お問い合わせ</div>
+                <div class="slack-msg">
+                  <div class="slack-avatar">N</div>
+                  <div class="slack-msg-body">
+                    <span class="slack-sender">なぎBot</span>
+                    <span class="slack-ts" id="sl-ts"></span>
+                    <div class="slack-text">📬 新しいお問い合わせが届きました</div>
+                    <div class="slack-attachment">
+                      <div class="slack-att-title" id="sl-title"></div>
+                      <div class="slack-att-field" id="sl-body"></div>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div class="form-group">
-                <label class="form-label">内容</label>
-                <textarea class="form-textarea" id="inputMsg" placeholder="メッセージを入力してください..."></textarea>
-              </div>
-              <button class="submit-btn" id="submitBtn" onclick="submitForm()" disabled>送信</button>
             </div>
           </div>
 
-          <div class="status-bar" id="statusBar">
-            カテゴリを選択して「送信」を押してください
+          <!-- Status bar -->
+          <div class="status-bar" id="status-bar">
+            <span>✅ 3つの処理が完了しました（所要時間: ~1.2秒）</span>
+            <button class="reset-btn" onclick="resetDemo()">もう一度試す</button>
           </div>
         </div>
-
-        <!-- 右: シート振り分け -->
-        <div>
-          <div class="sheets-panel">
-
-            <div class="sheet-box" id="boxInquiry">
-              <div class="sheet-box-header">
-                <span class="sh-inquiry">&#128203; 問合せシート</span>
-                <span class="sheet-row-count" id="cnt-inquiry">0 件</span>
-              </div>
-              <div class="sheet-rows" id="rows-inquiry">
-                <div style="padding:8px 12px;font-size:11px;color:var(--text2);">データなし</div>
-              </div>
-            </div>
-
-            <div class="sheet-box" id="boxOrder">
-              <div class="sheet-box-header">
-                <span class="sh-order">&#128722; 注文シート</span>
-                <span class="sheet-row-count" id="cnt-order">0 件</span>
-              </div>
-              <div class="sheet-rows" id="rows-order">
-                <div style="padding:8px 12px;font-size:11px;color:var(--text2);">データなし</div>
-              </div>
-            </div>
-
-            <div class="sheet-box" id="boxClaim">
-              <div class="sheet-box-header">
-                <span class="sh-claim">&#128680; クレームシート</span>
-                <span class="sheet-row-count" id="cnt-claim">0 件</span>
-              </div>
-              <div class="sheet-rows" id="rows-claim">
-                <div style="padding:8px 12px;font-size:11px;color:var(--text2);">データなし</div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
       </div>
     </div>
   </div>
-</section>
+</div>
 
-<!-- GASコード -->
-<section class="section">
-  <div class="section-title"><span class="num">2</span> 実際の GAS コード</div>
-
-  <div class="code-wrap">
-    <div class="code-header">
-      <div class="code-lang">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-        JavaScript (Google Apps Script) — フォーム送信トリガー
+<!-- CODE TAB -->
+<div id="code" class="tab-content">
+  <div class="content-area">
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-filename">form_handler.gs</span>
+        <button class="copy-code-btn" onclick="copyCode()">コピー</button>
       </div>
-      <button class="copy-btn" onclick="copyCode()">コピー</button>
-    </div>
-    <pre><span class="kw">function</span> <span class="fn">onFormSubmit</span>(<span class="prop">e</span>) {
-  <span class="kw">const</span> ss = <span class="obj">SpreadsheetApp</span>.<span class="fn">getActiveSpreadsheet</span>();
-  <span class="kw">const</span> responses = e.<span class="prop">values</span>;
-  <span class="kw">const</span> category = responses[<span class="num-lit">2</span>]; <span class="cmt">// カテゴリ列</span>
+      <pre><code id="gas-code"><span class="cm">// Google Apps Script - フォーム自動処理</span>
+<span class="cm">// Googleフォームの「送信時」トリガーに設定</span>
 
-  <span class="kw">const</span> targetSheet = ss.<span class="fn">getSheetByName</span>(category)
-    || ss.<span class="fn">insertSheet</span>(category);
-  targetSheet.<span class="fn">appendRow</span>(responses);
-}</pre>
-  </div>
-</section>
+<span class="kw">function</span> <span class="fn">onFormSubmit</span>(e) {
+  <span class="kw">const</span> responses = e.namedValues;
+  <span class="kw">const</span> name    = responses[<span class="str">'お名前'</span>][<span class="num">0</span>];
+  <span class="kw">const</span> email   = responses[<span class="str">'メールアドレス'</span>][<span class="num">0</span>];
+  <span class="kw">const</span> company = responses[<span class="str">'会社名'</span>][<span class="num">0</span>] || <span class="str">'未入力'</span>;
+  <span class="kw">const</span> type    = responses[<span class="str">'お問い合わせ種別'</span>][<span class="num">0</span>];
+  <span class="kw">const</span> message = responses[<span class="str">'お問い合わせ内容'</span>][<span class="num">0</span>];
+  <span class="kw">const</span> now     = <span class="kw">new</span> Date();
 
-<!-- 解決できること -->
-<section class="section">
-  <div class="section-title"><span class="num">3</span> このツールで解決できること</div>
+  <span class="cm">// ① スプレッドシートに記録</span>
+  <span class="fn">recordToSpreadsheet</span>({ name, email, company, type, message, now });
 
-  <div class="benefits">
-    <div class="benefit-card">
-      <div class="benefit-icon">&#128228;</div>
-      <div class="benefit-title">対応漏れをゼロに</div>
-      <div class="benefit-desc">全件が1つのシートに混在していた状態から、カテゴリ別に整理。担当者がすぐ確認できます。</div>
-    </div>
-    <div class="benefit-card">
-      <div class="benefit-icon">&#9889;</div>
-      <div class="benefit-title">リアルタイム振り分け</div>
-      <div class="benefit-desc">フォーム送信と同時にトリガーが起動。手作業フィルタリングが完全に不要になります。</div>
-    </div>
-    <div class="benefit-card">
-      <div class="benefit-icon">&#128200;</div>
-      <div class="benefit-title">カテゴリは自由に拡張</div>
-      <div class="benefit-desc">「問合せ/注文/クレーム」以外のカテゴリも、コード変更なしで自動的に新シートが作成されます。</div>
-    </div>
-    <div class="benefit-card">
-      <div class="benefit-icon">&#128276;</div>
-      <div class="benefit-title">通知連携も追加可能</div>
-      <div class="benefit-desc">クレーム受信時にSlack/Gmail通知を即時送信する処理も追加対応できます。</div>
-    </div>
-  </div>
-</section>
+  <span class="cm">// ② 自動返信メール送信</span>
+  <span class="fn">sendAutoReply</span>({ name, email, type });
 
-<footer>
-  <p>Tomoya &amp; Co. ポートフォリオ &mdash; GAS 自動化デモ</p>
-</footer>
+  <span class="cm">// ③ Slack通知</span>
+  <span class="fn">notifySlack</span>({ name, company, type, message });
+}
 
-<script>
-  let selectedCat = null;
-  let selectedCatJa = null;
-  const counts = { inquiry: 0, order: 0, claim: 0 };
-  const catMap = {
-    inquiry: { ja: '問合せ', box: 'boxInquiry', rows: 'rows-inquiry', cnt: 'cnt-inquiry', cls: 'flash-inquiry' },
-    order:   { ja: '注文',   box: 'boxOrder',   rows: 'rows-order',   cnt: 'cnt-order',   cls: 'flash-order' },
-    claim:   { ja: 'クレーム', box: 'boxClaim', rows: 'rows-claim',   cnt: 'cnt-claim',   cls: 'flash-claim' },
+<span class="kw">function</span> <span class="fn">recordToSpreadsheet</span>({ name, email, company, type, message, now }) {
+  <span class="kw">const</span> sheet = SpreadsheetApp
+    .<span class="fn">getActiveSpreadsheet</span>()
+    .<span class="fn">getSheetByName</span>(<span class="str">'お問い合わせ一覧'</span>);
+
+  sheet.<span class="fn">appendRow</span>([
+    Utilities.<span class="fn">formatDate</span>(now, <span class="str">'Asia/Tokyo'</span>, <span class="str">'yyyy/MM/dd HH:mm'</span>),
+    name, email, company, type, message, <span class="str">'未対応'</span>
+  ]);
+}
+
+<span class="kw">function</span> <span class="fn">sendAutoReply</span>({ name, email, type }) {
+  <span class="kw">const</span> templates = {
+    <span class="str">'料金確認'</span>: <span class="str">`料金表をお送りしますので、ご確認ください。`</span>,
+    <span class="str">'納期確認'</span>: <span class="str">`ご要件をお聞かせいただいた後、お見積もりいたします。`</span>,
+    <span class="str">'技術相談'</span>: <span class="str">`詳細についてヒアリングのお時間をいただけますか。`</span>,
+    <span class="str">'その他'</span>:   <span class="str">`内容を確認の上、担当者よりご連絡いたします。`</span>
   };
 
-  function selectCat(el, cat) {
-    document.querySelectorAll('.radio-item').forEach(r => {
-      r.className = 'radio-item';
-    });
-    el.classList.add('selected-' + cat);
-    selectedCat = cat;
-    selectedCatJa = catMap[cat].ja;
-    document.getElementById('submitBtn').disabled = false;
-  }
+  <span class="kw">const</span> body = [
+    <span class="str">`</span>${name}<span class="str"> 様`</span>,
+    <span class="str">``</span>,
+    <span class="str">`お問い合わせありがとうございます。`</span>,
+    <span class="str">`【</span>${type}<span class="str">】のご質問について：`</span>,
+    templates[type] || templates[<span class="str">'その他'</span>],
+    <span class="str">``</span>,
+    <span class="str">`通常1営業日以内にご連絡いたします。`</span>,
+    <span class="str">``</span>,
+    <span class="str">`なぎ ワークス`</span>
+  ].<span class="fn">join</span>(<span class="str">'\n'</span>);
 
-  function submitForm() {
-    const name = document.getElementById('inputName').value.trim() || '匿名';
-    const msg  = document.getElementById('inputMsg').value.trim() || '（内容なし）';
-    if (!selectedCat) return;
+  GmailApp.<span class="fn">sendEmail</span>(email, <span class="str">`【自動返信】</span>${type}<span class="str">のお問い合わせを受け付けました`</span>, body);
+}
 
-    document.getElementById('submitBtn').disabled = true;
+<span class="kw">function</span> <span class="fn">notifySlack</span>({ name, company, type, message }) {
+  <span class="kw">const</span> webhookUrl = PropertiesService
+    .<span class="fn">getScriptProperties</span>()
+    .<span class="fn">getProperty</span>(<span class="str">'SLACK_WEBHOOK_URL'</span>);
 
-    const cfg = catMap[selectedCat];
+  <span class="kw">const</span> payload = {
+    text: <span class="str">`📬 新しいお問い合わせ`</span>,
+    attachments: [{
+      color: <span class="str">'#00d4ff'</span>,
+      fields: [
+        { title: <span class="str">'名前'</span>, value: name, short: <span class="kw">true</span> },
+        { title: <span class="str">'会社'</span>, value: company, short: <span class="kw">true</span> },
+        { title: <span class="str">'種別'</span>, value: type, short: <span class="kw">true</span> },
+        { title: <span class="str">'内容'</span>, value: message.<span class="fn">slice</span>(<span class="num">0</span>, <span class="num">100</span>) }
+      ]
+    }]
+  };
 
-    // 送信アニメ
-    const status = document.getElementById('statusBar');
-    status.className = 'status-bar';
-    status.textContent = 'フォーム送信中...';
+  UrlFetchApp.<span class="fn">fetch</span>(webhookUrl, {
+    method: <span class="str">'post'</span>,
+    contentType: <span class="str">'application/json'</span>,
+    payload: JSON.<span class="fn">stringify</span>(payload)
+  });
+}</code></pre>
+    </div>
+  </div>
+</div>
 
-    setTimeout(() => {
-      status.textContent = 'GAS トリガー起動 — onFormSubmit 実行中...';
-    }, 400);
+<!-- USE CASES TAB -->
+<div id="usecases" class="tab-content">
+  <div class="content-area">
+    <div class="usecase-grid">
+      <div class="usecase-card">
+        <div class="usecase-icon">💼</div>
+        <div class="usecase-name">採用応募フォーム</div>
+        <div class="usecase-desc">職種別に自動振り分け、採用担当にSlack通知、応募者へ受付確認メールを即時送信。応募管理をゼロ工数に。</div>
+        <span class="usecase-tag">採用工数 70%削減</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">📅</div>
+        <div class="usecase-name">予約フォーム連携</div>
+        <div class="usecase-desc">Googleフォームで受け付けた予約を顧客管理スプレッドシートに記録し、リマインドメールを予約日前日に自動送信。</div>
+        <span class="usecase-tag">リマインド 完全自動</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">📊</div>
+        <div class="usecase-name">アンケート自動集計</div>
+        <div class="usecase-desc">回答と同時に集計・グラフ更新し、指定メールアドレスに集計サマリーを自動送信。毎週/毎月のレポートも不要に。</div>
+        <span class="usecase-tag">集計 完全自動化</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">🎓</div>
+        <div class="usecase-name">研修申し込み管理</div>
+        <div class="usecase-desc">申し込みフォーム → 受付確認メール → 担当者通知 → 定員チェック → 満員時は自動で締め切り案内を送信。</div>
+        <span class="usecase-tag">定員管理 自動化</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">🛍️</div>
+        <div class="usecase-name">注文受付自動化</div>
+        <div class="usecase-desc">小規模ECの注文フォームと在庫管理を連携。在庫切れ時はフォームを自動閉鎖、注文者に在庫確保メールを送信。</div>
+        <span class="usecase-tag">在庫連携 自動化</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">💡</div>
+        <div class="usecase-name">既存フォームへの対応</div>
+        <div class="usecase-desc">今お使いのGoogleフォームにGASを後付けで連携可能。フォームの作り直し不要で自動化を導入できます。</div>
+        <span class="usecase-tag">クラウドワークスで依頼</span>
+      </div>
+    </div>
+  </div>
+</div>
 
-    setTimeout(() => {
-      // シートをハイライト
-      const box = document.getElementById(cfg.box);
-      box.classList.add(cfg.cls);
+<footer>
+  <p class="footer-label">このデモについて</p>
+  <p class="footer-title">このような自動化、クラウドワークスでご依頼いただけます</p>
+  <a href="https://crowdworks.jp/public/employees/6119556" target="_blank" rel="noopener noreferrer" class="cta-btn">
+    クラウドワークスで依頼する →
+  </a>
+</footer>
 
-      // "データなし"を削除（初回のみ）
-      const rowsEl = document.getElementById(cfg.rows);
-      const placeholder = rowsEl.querySelector('div[style]');
-      if (placeholder) placeholder.remove();
+<div class="toast" id="toast"></div>
 
-      // 行を追加
-      const row = document.createElement('div');
-      row.className = 'data-row';
-      row.innerHTML = `<span class="d-name">${escHtml(name)}</span><span class="d-msg">${escHtml(msg)}</span>`;
-      rowsEl.appendChild(row);
-      requestAnimationFrame(() => requestAnimationFrame(() => row.classList.add('show')));
+<script>
+function showTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
 
-      // カウント更新
-      counts[selectedCat]++;
-      document.getElementById(cfg.cnt).textContent = counts[selectedCat] + ' 件';
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
 
-      status.className = 'status-bar ok';
-      status.textContent = cfg.ja + 'シートに振り分けました！（' + counts[selectedCat] + '件目）';
+function now12() {
+  const d = new Date();
+  return `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
 
-      setTimeout(() => box.classList.remove(cfg.cls), 1200);
+const TYPE_CLASS = {
+  '料金確認': 'type-price',
+  '納期確認': 'type-deadline',
+  '技術相談': 'type-tech',
+  'その他': 'type-other'
+};
 
-      // フォームリセット（カテゴリ保持）
-      document.getElementById('inputName').value = '';
-      document.getElementById('inputMsg').value = '';
-      document.getElementById('submitBtn').disabled = false;
-    }, 900);
-  }
+const AUTO_REPLY = {
+  '料金確認': '料金表をお送りしますので、ご確認ください。通常1営業日以内にご連絡いたします。',
+  '納期確認': 'ご要件をお聞かせいただいた後、お見積もりいたします。通常1営業日以内にご連絡いたします。',
+  '技術相談': '詳細についてヒアリングのお時間をいただけますか。通常1営業日以内にご連絡いたします。',
+  'その他':   '内容を確認の上、担当者よりご連絡いたします。通常1営業日以内にご連絡いたします。'
+};
 
-  function escHtml(s) {
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
+function submitForm() {
+  const name = document.getElementById('f-name').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const type = document.getElementById('f-type').value;
+  const message = document.getElementById('f-message').value.trim();
 
-  function copyCode() {
-    const code = `function onFormSubmit(e) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const responses = e.values;
-  const category = responses[2]; // カテゴリ列
+  if (!name) { showToast('お名前を入力してください'); return; }
+  if (!email || !email.includes('@')) { showToast('正しいメールアドレスを入力してください'); return; }
+  if (!type) { showToast('お問い合わせ種別を選択してください'); return; }
+  if (!message) { showToast('お問い合わせ内容を入力してください'); return; }
 
-  const targetSheet = ss.getSheetByName(category)
-    || ss.insertSheet(category);
-  targetSheet.appendRow(responses);
-}`;
-    navigator.clipboard.writeText(code).then(() => {
-      const btn = document.querySelector('.copy-btn');
-      btn.textContent = 'コピー済み';
-      setTimeout(() => btn.textContent = 'コピー', 2000);
-    });
-  }
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 処理中...';
+
+  document.getElementById('result-empty').style.display = 'none';
+
+  const company = document.getElementById('f-company').value.trim() || '未入力';
+  const ts = now12();
+
+  setTimeout(() => showStep1(name, email, company, type, message, ts), 600);
+  setTimeout(() => showStep2(name, email, type), 1400);
+  setTimeout(() => showStep3(name, company, type, message, ts), 2200);
+  setTimeout(() => {
+    document.getElementById('status-bar').classList.add('visible');
+    addHistoryRow(name, type, ts);
+    btn.disabled = false;
+    btn.innerHTML = '送信する →';
+    showToast('✅ 3つの処理が完了しました');
+  }, 3000);
+}
+
+function showStep1(name, email, company, type, message, ts) {
+  const row = document.getElementById('new-sheet-row');
+  document.getElementById('sr-date').textContent = ts;
+  document.getElementById('sr-name').textContent = name;
+  document.getElementById('sr-email').textContent = email.split('@')[0] + '@...';
+  document.getElementById('sr-type').innerHTML = `<span class="type-badge ${TYPE_CLASS[type]||'type-other'}">${type.slice(0,2)}</span>`;
+  document.getElementById('sr-msg').textContent = message.slice(0, 15) + '...';
+  row.style.display = '';
+  document.getElementById('step-sheet').classList.add('visible');
+}
+
+function showStep2(name, email, type) {
+  document.getElementById('em-to').textContent = email;
+  document.getElementById('em-subject').textContent = `【自動返信】${type}のお問い合わせを受け付けました`;
+  document.getElementById('em-body').textContent =
+    `${name} 様\n\nお問い合わせありがとうございます。\n【${type}】のご質問について：\n${AUTO_REPLY[type]||AUTO_REPLY['その他']}\n\nなぎ ワークス`;
+  document.getElementById('step-email').classList.add('visible');
+}
+
+function showStep3(name, company, type, message, ts) {
+  document.getElementById('sl-ts').textContent = 'Today at ' + ts.split(' ')[1];
+  document.getElementById('sl-title').textContent = `【${type}】${name} (${company})`;
+  document.getElementById('sl-body').innerHTML =
+    `名前: ${name}<br>会社: ${company}<br>種別: ${type}<br>内容: ${message.slice(0,60)}...`;
+  document.getElementById('step-slack').classList.add('visible');
+}
+
+function addHistoryRow(name, type, ts) {
+  const tbody = document.getElementById('history-body');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${ts}</td>
+    <td>${name}</td>
+    <td><span class="type-badge ${TYPE_CLASS[type]||'type-other'}">${type}</span></td>
+    <td style="color:var(--accent)">⚡ 新規</td>
+  `;
+  tr.style.animation = 'rowAppear 1s ease';
+  tbody.insertBefore(tr, tbody.firstChild);
+}
+
+function resetDemo() {
+  ['step-sheet','step-email','step-slack','status-bar'].forEach(id => {
+    document.getElementById(id).classList.remove('visible');
+  });
+  document.getElementById('new-sheet-row').style.display = 'none';
+  document.getElementById('result-empty').style.display = '';
+
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-email').value = '';
+  document.getElementById('f-company').value = '';
+  document.getElementById('f-type').value = '';
+  document.getElementById('f-message').value = '';
+}
+
+function copyCode() {
+  const code = document.getElementById('gas-code').innerText;
+  navigator.clipboard.writeText(code).then(() => showToast('コードをコピーしました'));
+}
 </script>
 </body>
 </html>

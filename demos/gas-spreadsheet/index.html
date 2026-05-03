@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>スプレッドシート自動集計ツール | GAS デモ</title>
+  <title>月次売上レポート 自動集計ツール | なぎ</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -18,307 +18,359 @@
       --text2: #8b949e;
       --green: #3fb950;
       --yellow: #d29922;
-      --purple: #a371f7;
       --red: #f85149;
+      --purple: #bc8cff;
+      --radius: 8px;
     }
 
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
-      line-height: 1.6;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-size: 14px;
       min-height: 100vh;
     }
 
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-
-    /* ナビ */
-    .nav {
-      background: var(--bg2);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 24px;
+    /* NAV */
+    nav {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 14px;
+      justify-content: space-between;
+      padding: 12px 24px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
       position: sticky;
       top: 0;
       z-index: 100;
     }
-    .nav-sep { color: var(--text2); }
-
-    /* ヒーロー */
-    .hero {
-      background: linear-gradient(135deg, var(--bg2) 0%, #0d1117 100%);
-      border-bottom: 1px solid var(--border);
-      padding: 60px 24px 48px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
+    .logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.5px;
     }
-    .hero::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 600px;
-      height: 600px;
-      background: radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    .hero-badge {
-      display: inline-flex;
+    .back-btn {
+      display: flex;
       align-items: center;
       gap: 6px;
-      background: rgba(0,212,255,0.1);
-      border: 1px solid rgba(0,212,255,0.3);
-      color: var(--accent);
-      padding: 4px 12px;
-      border-radius: 99px;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      margin-bottom: 16px;
-    }
-    .hero h1 {
-      font-size: clamp(24px, 4vw, 40px);
-      font-weight: 700;
-      margin-bottom: 16px;
-      letter-spacing: -0.02em;
-    }
-    .hero p {
       color: var(--text2);
-      font-size: 16px;
-      max-width: 560px;
+      text-decoration: none;
+      font-size: 13px;
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      transition: all 0.2s;
+    }
+    .back-btn:hover { color: var(--text); border-color: var(--accent); }
+
+    /* HEADER */
+    header {
+      padding: 40px 24px 32px;
+      max-width: 900px;
       margin: 0 auto;
     }
-
-    /* セクション共通 */
-    .section { padding: 48px 24px; max-width: 960px; margin: 0 auto; }
-    .section-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 20px;
+    .tag {
+      display: inline-block;
+      background: rgba(0,212,255,0.12);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(0,212,255,0.3);
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    h1 {
+      font-size: clamp(22px, 4vw, 32px);
       font-weight: 700;
-      margin-bottom: 24px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+      line-height: 1.3;
     }
-    .section-title .num {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 28px;
-      height: 28px;
-      background: var(--accent);
-      color: var(--bg);
-      border-radius: 50%;
-      font-size: 13px;
-      font-weight: 700;
-      flex-shrink: 0;
-    }
-
-    /* デモエリア */
-    .demo-container {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    .demo-header {
-      background: var(--bg3);
-      padding: 12px 16px;
-      font-size: 13px;
-      color: var(--text2);
-      border-bottom: 1px solid var(--border);
+    .badges {
       display: flex;
-      align-items: center;
+      flex-wrap: wrap;
       gap: 8px;
-    }
-    .dot { width: 12px; height: 12px; border-radius: 50%; }
-    .dot-r { background: #f85149; }
-    .dot-y { background: #d29922; }
-    .dot-g { background: #3fb950; }
-    .demo-body { padding: 24px; }
-
-    /* シートグリッド */
-    .sheets-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
       margin-bottom: 20px;
     }
-    @media (max-width: 640px) {
-      .sheets-row { grid-template-columns: 1fr; }
-    }
-
-    .sheet-card {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      transition: border-color 0.3s, box-shadow 0.3s;
-    }
-    .sheet-card.active {
-      border-color: var(--accent);
-      box-shadow: 0 0 12px rgba(0,212,255,0.2);
-    }
-    .sheet-tab {
-      padding: 6px 12px;
+    .badge {
       font-size: 12px;
-      font-weight: 600;
-      background: var(--bg2);
-      border-bottom: 1px solid var(--border);
-    }
-    .sheet-tab-a { color: #3fb950; }
-    .sheet-tab-b { color: #a371f7; }
-    .sheet-tab-c { color: #f0883e; }
-    .sheet-tab-s { color: var(--accent); }
-
-    table.mini {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 11px;
-    }
-    table.mini th {
-      background: rgba(255,255,255,0.04);
-      color: var(--text2);
-      padding: 4px 8px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 20px;
       font-weight: 500;
     }
-    table.mini td {
-      padding: 3px 8px;
-      border-bottom: 1px solid rgba(48,54,61,0.5);
-      font-variant-numeric: tabular-nums;
-    }
-    table.mini tr:last-child td { border-bottom: none; }
-    table.mini .num-cell { text-align: right; color: var(--accent); }
-
-    /* 下矢印 & 集計エリア */
-    .arrow-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      margin: 8px 0;
+    .badge.problem { background: rgba(248,81,73,0.12); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
+    .badge.solution { background: rgba(63,185,80,0.12); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+    .summary-line {
+      font-size: 14px;
       color: var(--text2);
-      font-size: 22px;
-    }
-    .particle {
-      position: absolute;
-      width: 4px;
-      height: 4px;
-      background: var(--accent);
-      border-radius: 50%;
-      pointer-events: none;
-      opacity: 0;
+      line-height: 1.7;
     }
 
-    .output-area {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      position: relative;
+    /* TABS */
+    .tabs {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--border);
     }
-    .output-header {
+    .tab {
+      background: none;
+      border: none;
+      color: var(--text2);
+      cursor: pointer;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-family: inherit;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all 0.2s;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* TAB CONTENT */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .content-area {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    /* TABLE SECTION */
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text2);
+      margin-bottom: 12px;
+    }
+
+    .table-controls {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px 12px;
-      background: var(--bg2);
-      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
     }
-    .output-label {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--accent);
-    }
-    .output-count {
-      font-size: 11px;
-      color: var(--text2);
-    }
+    .table-actions { display: flex; gap: 8px; }
 
-    .result-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr 80px;
-      padding: 5px 12px;
-      font-size: 11px;
-      border-bottom: 1px solid rgba(48,54,61,0.4);
-      opacity: 0;
-      transform: translateX(-8px);
-      transition: opacity 0.25s ease, transform 0.25s ease;
-    }
-    .result-row.show {
-      opacity: 1;
-      transform: translateX(0);
-    }
-    .result-row.header {
-      background: rgba(255,255,255,0.03);
-      color: var(--text2);
-      font-weight: 500;
-      opacity: 1;
-      transform: none;
-    }
-    .result-row.header.show { opacity: 1; }
-    .result-row .tag {
-      display: inline-block;
-      padding: 1px 6px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 600;
-    }
-    .tag-a { background: rgba(63,185,80,0.15); color: #3fb950; }
-    .tag-b { background: rgba(163,113,247,0.15); color: #a371f7; }
-    .tag-c { background: rgba(240,136,62,0.15); color: #f0883e; }
-    .result-row .amount { text-align: right; color: var(--accent); font-weight: 600; }
-
-    /* ボタン */
-    .btn-row { display: flex; justify-content: center; margin: 20px 0 4px; gap: 12px; }
     .btn {
-      padding: 10px 28px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-family: inherit;
+      font-weight: 500;
       cursor: pointer;
       border: none;
       transition: all 0.2s;
-      position: relative;
-      overflow: hidden;
     }
     .btn-primary {
       background: var(--accent);
-      color: var(--bg);
+      color: #000;
     }
-    .btn-primary:hover { background: #33ddff; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,212,255,0.3); }
-    .btn-primary:active { transform: translateY(0); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-    .btn-reset {
-      background: transparent;
-      color: var(--text2);
+    .btn-primary:hover { background: #00b8d9; transform: translateY(-1px); }
+    .btn-secondary {
+      background: var(--bg3);
+      color: var(--text);
       border: 1px solid var(--border);
     }
-    .btn-reset:hover { border-color: var(--text2); color: var(--text); }
-
-    .status-msg {
-      text-align: center;
-      font-size: 13px;
-      min-height: 20px;
-      color: var(--text2);
-      margin-top: 8px;
+    .btn-secondary:hover { background: #2d333b; border-color: var(--text2); }
+    .btn-danger {
+      background: rgba(248,81,73,0.12);
+      color: var(--red);
+      border: 1px solid rgba(248,81,73,0.2);
     }
-    .status-msg.success { color: var(--green); }
+    .btn-danger:hover { background: rgba(248,81,73,0.2); }
+    .btn-small { padding: 5px 10px; font-size: 12px; }
 
-    /* コードブロック */
+    .data-table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+    }
+    th {
+      background: var(--bg3);
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    td {
+      padding: 9px 12px;
+      border-bottom: 1px solid rgba(48,54,61,0.6);
+      color: var(--text);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    td input, td select {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      padding: 3px 6px;
+      border-radius: 4px;
+      width: 100%;
+      transition: border-color 0.2s;
+    }
+    td input:focus, td select:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: var(--bg3);
+    }
+    td select option { background: var(--bg2); }
+    .del-row-btn {
+      background: none;
+      border: none;
+      color: var(--text2);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: color 0.2s;
+    }
+    .del-row-btn:hover { color: var(--red); }
+
+    /* GENERATE BUTTON */
+    .generate-area {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* REPORT OUTPUT */
+    #report-output {
+      margin-top: 28px;
+      display: none;
+    }
+    .report-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .report-title { font-size: 18px; font-weight: 700; }
+
+    /* KPI CARDS */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+    }
+    .kpi-card.blue::before { background: var(--accent); }
+    .kpi-card.green::before { background: var(--green); }
+    .kpi-card.yellow::before { background: var(--yellow); }
+    .kpi-card.purple::before { background: var(--purple); }
+    .kpi-label { font-size: 11px; color: var(--text2); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .kpi-value { font-size: 22px; font-weight: 700; }
+    .kpi-card.blue .kpi-value { color: var(--accent); }
+    .kpi-card.green .kpi-value { color: var(--green); }
+    .kpi-card.yellow .kpi-value { color: var(--yellow); }
+    .kpi-card.purple .kpi-value { color: var(--purple); }
+    .kpi-sub { font-size: 11px; color: var(--text2); margin-top: 4px; }
+
+    /* CHARTS ROW */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 640px) { .charts-row { grid-template-columns: 1fr; } }
+
+    .chart-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .chart-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text2); }
+    canvas { display: block; width: 100% !important; }
+
+    /* RANKING */
+    .ranking-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .ranking-title { font-size: 13px; font-weight: 600; margin-bottom: 14px; color: var(--text2); }
+    .rank-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(48,54,61,0.5);
+    }
+    .rank-item:last-child { border-bottom: none; }
+    .rank-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .rank-num.gold { background: rgba(210,153,34,0.2); color: var(--yellow); }
+    .rank-num.silver { background: rgba(139,148,158,0.2); color: var(--text2); }
+    .rank-num.bronze { background: rgba(188,139,255,0.15); color: var(--purple); }
+    .rank-name { flex: 1; font-weight: 500; }
+    .rank-bar-wrap { flex: 2; }
+    .rank-bar-bg { background: var(--bg3); border-radius: 4px; height: 6px; overflow: hidden; }
+    .rank-bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+    .rank-amount { font-size: 13px; font-weight: 600; color: var(--accent); white-space: nowrap; }
+
+    /* CODE TAB */
     .code-wrap {
       background: var(--bg2);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: var(--radius);
       overflow: hidden;
     }
     .code-header {
@@ -329,343 +381,708 @@
       justify-content: space-between;
       border-bottom: 1px solid var(--border);
     }
-    .code-lang {
-      font-size: 12px;
-      color: var(--text2);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .copy-btn {
-      background: transparent;
+    .code-filename { font-size: 12px; color: var(--text2); font-family: monospace; }
+    .copy-code-btn {
+      background: none;
       border: 1px solid var(--border);
       color: var(--text2);
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 12px;
       cursor: pointer;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: inherit;
       transition: all 0.2s;
     }
-    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
-
+    .copy-code-btn:hover { color: var(--text); border-color: var(--text2); }
     pre {
       padding: 20px;
       overflow-x: auto;
-      font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
-      font-size: 13px;
+      font-size: 12.5px;
       line-height: 1.7;
-      tab-size: 2;
+      color: var(--text);
     }
+    pre code { font-family: 'SF Mono', 'Fira Code', monospace; }
     .kw { color: #ff7b72; }
     .fn { color: #d2a8ff; }
     .str { color: #a5d6ff; }
-    .cmt { color: #8b949e; font-style: italic; }
-    .num-lit { color: #79c0ff; }
-    .prop { color: #79c0ff; }
-    .obj { color: #ffa657; }
+    .cm { color: #8b949e; font-style: italic; }
+    .num { color: #79c0ff; }
+    .op { color: #ff7b72; }
 
-    /* 解決できること */
-    .benefits {
+    /* USE CASES */
+    .usecase-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 16px;
     }
-    .benefit-card {
+    .usecase-card {
       background: var(--bg2);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: var(--radius);
       padding: 20px;
-      transition: border-color 0.2s, transform 0.2s;
+      transition: border-color 0.2s;
     }
-    .benefit-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-    .benefit-icon { font-size: 28px; margin-bottom: 10px; }
-    .benefit-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
-    .benefit-desc { font-size: 13px; color: var(--text2); line-height: 1.5; }
+    .usecase-card:hover { border-color: var(--accent); }
+    .usecase-icon { font-size: 28px; margin-bottom: 10px; }
+    .usecase-name { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+    .usecase-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
+    .usecase-tag {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: rgba(0,212,255,0.1);
+      color: var(--accent);
+      margin-top: 10px;
+    }
 
-    /* フッター */
+    /* FOOTER */
     footer {
-      border-top: 1px solid var(--border);
-      padding: 24px;
       text-align: center;
-      font-size: 13px;
-      color: var(--text2);
+      padding: 48px 24px;
+      margin-top: 40px;
+      border-top: 1px solid var(--border);
     }
+    .footer-label { font-size: 12px; color: var(--text2); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+    .footer-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent);
+      color: #000;
+      font-weight: 700;
+      padding: 14px 28px;
+      border-radius: var(--radius);
+      text-decoration: none;
+      font-size: 15px;
+      transition: all 0.2s;
+    }
+    .cta-btn:hover { background: #00b8d9; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,212,255,0.25); }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--bg3);
+      border: 1px solid var(--green);
+      color: var(--green);
+      padding: 12px 18px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s;
+      z-index: 999;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
   </style>
 </head>
 <body>
 
-<nav class="nav">
-  <a href="../../index.html">ポートフォリオ Top</a>
-  <span class="nav-sep">/</span>
-  <span>GAS デモ</span>
-  <span class="nav-sep">/</span>
-  <span>スプレッドシート自動集計</span>
+<!-- NAV -->
+<nav>
+  <span class="logo">&lt;nagi /&gt;</span>
+  <a href="/portfolio/" class="back-btn">← ポートフォリオに戻る</a>
 </nav>
 
-<div class="hero">
-  <div class="hero-badge">Google Apps Script</div>
-  <h1>スプレッドシート自動集計ツール</h1>
-  <p>複数シートに分散したデータをワンクリックで結合・集計。手作業コピペを完全に排除します。</p>
+<!-- HEADER -->
+<header>
+  <div class="tag">Google Apps Script</div>
+  <h1>月次売上レポート 自動集計ツール</h1>
+  <div class="badges">
+    <span class="badge problem">❌ 課題: 月末のExcel手作業に毎月3時間かかる</span>
+    <span class="badge solution">✅ 解決: GASでボタン1つ → 即完成</span>
+  </div>
+  <p class="summary-line">売上データを入力してレポート生成ボタンを押すだけ。合計・担当者別ランキング・グラフを自動生成します。</p>
+</header>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="showTab('demo', this)">🎬 デモ</button>
+  <button class="tab" onclick="showTab('code', this)">＜/＞ コード</button>
+  <button class="tab" onclick="showTab('usecases', this)">💼 活用例</button>
 </div>
 
-<!-- デモ -->
-<section class="section">
-  <div class="section-title"><span class="num">1</span> インタラクティブデモ</div>
+<!-- DEMO TAB -->
+<div id="demo" class="tab-content active">
+  <div class="content-area">
 
-  <div class="demo-container">
-    <div class="demo-header">
-      <span class="dot dot-r"></span>
-      <span class="dot dot-y"></span>
-      <span class="dot dot-g"></span>
-      <span style="margin-left:4px;">SpreadsheetApp — mergeSheets.gs</span>
+    <div class="table-controls">
+      <p class="section-label">売上データ入力</p>
+      <div class="table-actions">
+        <button class="btn btn-secondary btn-small" onclick="addRow()">＋ 行追加</button>
+        <button class="btn btn-secondary btn-small" onclick="resetTable()">↺ リセット</button>
+      </div>
     </div>
-    <div class="demo-body">
 
-      <!-- 元シート3枚 -->
-      <div class="sheets-row">
-        <!-- シートA -->
-        <div class="sheet-card" id="sheetA">
-          <div class="sheet-tab sheet-tab-a">シートA（1月）</div>
-          <table class="mini">
-            <thead><tr><th>商品名</th><th>カテゴリ</th><th class="num-cell">金額</th></tr></thead>
-            <tbody>
-              <tr><td>商品X</td><td>電子機器</td><td class="num-cell">12,000</td></tr>
-              <tr><td>商品Y</td><td>書籍</td><td class="num-cell">1,800</td></tr>
-              <tr><td>商品Z</td><td>電子機器</td><td class="num-cell">34,000</td></tr>
-              <tr><td>商品W</td><td>食品</td><td class="num-cell">980</td></tr>
-              <tr><td>商品V</td><td>書籍</td><td class="num-cell">2,400</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- シートB -->
-        <div class="sheet-card" id="sheetB">
-          <div class="sheet-tab sheet-tab-b">シートB（2月）</div>
-          <table class="mini">
-            <thead><tr><th>商品名</th><th>カテゴリ</th><th class="num-cell">金額</th></tr></thead>
-            <tbody>
-              <tr><td>商品P</td><td>食品</td><td class="num-cell">1,200</td></tr>
-              <tr><td>商品Q</td><td>電子機器</td><td class="num-cell">28,500</td></tr>
-              <tr><td>商品R</td><td>書籍</td><td class="num-cell">3,200</td></tr>
-              <tr><td>商品S</td><td>食品</td><td class="num-cell">650</td></tr>
-              <tr><td>商品T</td><td>電子機器</td><td class="num-cell">9,800</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- シートC -->
-        <div class="sheet-card" id="sheetC">
-          <div class="sheet-tab sheet-tab-c">シートC（3月）</div>
-          <table class="mini">
-            <thead><tr><th>商品名</th><th>カテゴリ</th><th class="num-cell">金額</th></tr></thead>
-            <tbody>
-              <tr><td>商品M</td><td>電子機器</td><td class="num-cell">56,000</td></tr>
-              <tr><td>商品N</td><td>食品</td><td class="num-cell">450</td></tr>
-              <tr><td>商品O</td><td>書籍</td><td class="num-cell">1,500</td></tr>
-              <tr><td>商品K</td><td>電子機器</td><td class="num-cell">18,000</td></tr>
-              <tr><td>商品L</td><td>食品</td><td class="num-cell">2,800</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- ボタン -->
-      <div class="btn-row">
-        <button class="btn btn-primary" id="runBtn" onclick="runMerge()">集計実行</button>
-        <button class="btn btn-reset" id="resetBtn" onclick="resetDemo()">リセット</button>
-      </div>
-      <p class="status-msg" id="statusMsg">「集計実行」を押すと3シートのデータが下の集計シートに統合されます</p>
-
-      <!-- 矢印 -->
-      <div class="arrow-row" id="arrows" style="opacity:0.2;transition:opacity 0.3s;">
-        &#8595; &nbsp; &#8595; &nbsp; &#8595;
-      </div>
-
-      <!-- 集計シート -->
-      <div class="output-area" id="outputArea">
-        <div class="output-header">
-          <span class="output-label">集計シート（全データ統合済み）</span>
-          <span class="output-count" id="rowCount">0 件</span>
-        </div>
-        <div id="resultBody">
-          <div class="result-row header show">
-            <span>商品名</span><span>カテゴリ</span><span>出所シート</span><span style="text-align:right;">金額</span>
-          </div>
-          <!-- JS で追加 -->
-        </div>
-      </div>
-
+    <div class="data-table-wrap">
+      <table id="sales-table">
+        <thead>
+          <tr>
+            <th>日付</th>
+            <th>商品名</th>
+            <th>カテゴリ</th>
+            <th>数量</th>
+            <th>単価 (円)</th>
+            <th>担当者</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
     </div>
+
+    <div class="generate-area">
+      <button class="btn btn-primary" onclick="generateReport()">
+        📊 レポート生成
+      </button>
+      <button class="btn btn-secondary" id="copy-report-btn" onclick="copyReport()" style="display:none">
+        📋 レポートをコピー
+      </button>
+    </div>
+
+    <!-- REPORT OUTPUT -->
+    <div id="report-output">
+      <hr style="border:none; border-top:1px solid var(--border); margin:28px 0;">
+      <div class="report-header">
+        <div class="report-title" id="report-title">月次売上レポート</div>
+        <span style="font-size:12px; color:var(--text2)" id="report-date"></span>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card blue">
+          <div class="kpi-label">総売上</div>
+          <div class="kpi-value" id="kpi-total">--</div>
+          <div class="kpi-sub">当月合計</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-label">件数</div>
+          <div class="kpi-value" id="kpi-count">--</div>
+          <div class="kpi-sub">取引件数</div>
+        </div>
+        <div class="kpi-card yellow">
+          <div class="kpi-label">平均単価</div>
+          <div class="kpi-value" id="kpi-avg">--</div>
+          <div class="kpi-sub">1件あたり</div>
+        </div>
+        <div class="kpi-card purple">
+          <div class="kpi-label">最高額取引</div>
+          <div class="kpi-value" id="kpi-max">--</div>
+          <div class="kpi-sub">単一取引</div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-title">商品カテゴリ別売上</div>
+          <canvas id="bar-chart" height="180"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">日次売上トレンド</div>
+          <canvas id="line-chart" height="180"></canvas>
+        </div>
+      </div>
+
+      <div class="ranking-card">
+        <div class="ranking-title">担当者別売上ランキング</div>
+        <div id="ranking-list"></div>
+      </div>
+
+    </div><!-- /report-output -->
   </div>
-</section>
+</div>
 
-<!-- GASコード -->
-<section class="section">
-  <div class="section-title"><span class="num">2</span> 実際の GAS コード</div>
-
-  <div class="code-wrap">
-    <div class="code-header">
-      <div class="code-lang">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-        JavaScript (Google Apps Script)
+<!-- CODE TAB -->
+<div id="code" class="tab-content">
+  <div class="content-area">
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-filename">monthly_report.gs</span>
+        <button class="copy-code-btn" onclick="copyCode()">コピー</button>
       </div>
-      <button class="copy-btn" onclick="copyCode()">コピー</button>
-    </div>
-    <pre id="codeBlock"><span class="kw">function</span> <span class="fn">mergeSheets</span>() {
-  <span class="kw">const</span> ss = <span class="obj">SpreadsheetApp</span>.<span class="fn">getActiveSpreadsheet</span>();
-  <span class="kw">const</span> sheets = [<span class="str">'シートA'</span>, <span class="str">'シートB'</span>, <span class="str">'シートC'</span>];
-  <span class="kw">const</span> output = ss.<span class="fn">getSheetByName</span>(<span class="str">'集計'</span>) || ss.<span class="fn">insertSheet</span>(<span class="str">'集計'</span>);
-  output.<span class="fn">clearContents</span>();
+      <pre><code id="gas-code"><span class="cm">// Google Apps Script - 月次売上レポート自動生成</span>
+<span class="cm">// スプレッドシートのツールバーから実行</span>
 
-  <span class="kw">let</span> allData = [];
-  sheets.<span class="fn">forEach</span>(name => {
-    <span class="kw">const</span> sh = ss.<span class="fn">getSheetByName</span>(name);
-    <span class="kw">if</span> (!sh) <span class="kw">return</span>;
-    <span class="kw">const</span> data = sh.<span class="fn">getDataRange</span>().<span class="fn">getValues</span>();
-    allData = allData.<span class="fn">concat</span>(data.<span class="fn">slice</span>(<span class="num-lit">1</span>)); <span class="cmt">// ヘッダー除く</span>
+<span class="kw">function</span> <span class="fn">generateMonthlyReport</span>() {
+  <span class="kw">const</span> ss = SpreadsheetApp.<span class="fn">getActiveSpreadsheet</span>();
+  <span class="kw">const</span> dataSheet = ss.<span class="fn">getSheetByName</span>(<span class="str">'売上データ'</span>);
+  <span class="kw">const</span> reportSheet = ss.<span class="fn">getSheetByName</span>(<span class="str">'月次レポート'</span>)
+    || ss.<span class="fn">insertSheet</span>(<span class="str">'月次レポート'</span>);
+
+  <span class="kw">const</span> data = dataSheet.<span class="fn">getDataRange</span>().<span class="fn">getValues</span>();
+  <span class="kw">const</span> headers = data[<span class="num">0</span>];
+  <span class="kw">const</span> rows = data.<span class="fn">slice</span>(<span class="num">1</span>).<span class="fn">filter</span>(r =&gt; r[<span class="num">0</span>]); <span class="cm">// 空行を除外</span>
+
+  <span class="cm">// 集計処理</span>
+  <span class="kw">let</span> totalSales = <span class="num">0</span>;
+  <span class="kw">const</span> byPerson = {};
+  <span class="kw">const</span> byCategory = {};
+  <span class="kw">const</span> byDate = {};
+
+  rows.<span class="fn">forEach</span>(row =&gt; {
+    <span class="kw">const</span> [date, product, category, qty, price, person] = row;
+    <span class="kw">const</span> amount = qty * price;
+    totalSales += amount;
+
+    <span class="cm">// 担当者別</span>
+    byPerson[person] = (byPerson[person] || <span class="num">0</span>) + amount;
+
+    <span class="cm">// カテゴリ別</span>
+    byCategory[category] = (byCategory[category] || <span class="num">0</span>) + amount;
+
+    <span class="cm">// 日付別</span>
+    <span class="kw">const</span> dateStr = Utilities.<span class="fn">formatDate</span>(
+      <span class="kw">new</span> Date(date), <span class="str">'Asia/Tokyo'</span>, <span class="str">'MM/dd'</span>
+    );
+    byDate[dateStr] = (byDate[dateStr] || <span class="num">0</span>) + amount;
   });
 
-  output.<span class="fn">getRange</span>(<span class="num-lit">1</span>, <span class="num-lit">1</span>, allData.<span class="prop">length</span>, allData[<span class="num-lit">0</span>].<span class="prop">length</span>).<span class="fn">setValues</span>(allData);
-  <span class="obj">SpreadsheetApp</span>.<span class="fn">getUi</span>().<span class="fn">alert</span>(<span class="str">'集計完了！'</span> + allData.<span class="prop">length</span> + <span class="str">'件のデータを統合しました。'</span>);
-}</pre>
+  <span class="cm">// 担当者ランキング（降順ソート）</span>
+  <span class="kw">const</span> ranking = Object.<span class="fn">entries</span>(byPerson)
+    .<span class="fn">sort</span>((a, b) =&gt; b[<span class="num">1</span>] - a[<span class="num">1</span>])
+    .<span class="fn">slice</span>(<span class="num">0</span>, <span class="num">3</span>);
+
+  <span class="cm">// レポートシートに書き出し</span>
+  reportSheet.<span class="fn">clearContents</span>();
+
+  <span class="kw">const</span> now = Utilities.<span class="fn">formatDate</span>(
+    <span class="kw">new</span> Date(), <span class="str">'Asia/Tokyo'</span>, <span class="str">'yyyy年M月度'</span>
+  );
+  reportSheet.<span class="fn">getRange</span>(<span class="num">1</span>, <span class="num">1</span>).<span class="fn">setValue</span>(<span class="str">`月次レポート - </span>${now}<span class="str">`</span>);
+  reportSheet.<span class="fn">getRange</span>(<span class="num">2</span>, <span class="num">1</span>).<span class="fn">setValue</span>(<span class="str">'総売上'</span>);
+  reportSheet.<span class="fn">getRange</span>(<span class="num">2</span>, <span class="num">2</span>).<span class="fn">setValue</span>(totalSales);
+  reportSheet.<span class="fn">getRange</span>(<span class="num">3</span>, <span class="num">1</span>).<span class="fn">setValue</span>(<span class="str">'件数'</span>);
+  reportSheet.<span class="fn">getRange</span>(<span class="num">3</span>, <span class="num">2</span>).<span class="fn">setValue</span>(rows.length);
+
+  <span class="cm">// ランキング書き出し</span>
+  reportSheet.<span class="fn">getRange</span>(<span class="num">5</span>, <span class="num">1</span>).<span class="fn">setValue</span>(<span class="str">'担当者ランキング'</span>);
+  ranking.<span class="fn">forEach</span>(([ name, amount ], i) =&gt; {
+    reportSheet.<span class="fn">getRange</span>(<span class="num">6</span> + i, <span class="num">1</span>).<span class="fn">setValue</span>(<span class="str">`</span>${i+<span class="num">1</span>}<span class="str">位: </span>${name}<span class="str">`</span>);
+    reportSheet.<span class="fn">getRange</span>(<span class="num">6</span> + i, <span class="num">2</span>).<span class="fn">setValue</span>(amount);
+  });
+
+  <span class="cm">// 完了通知</span>
+  SpreadsheetApp.<span class="fn">getUi</span>().<span class="fn">alert</span>(
+    <span class="str">`✅ レポート生成完了\n総売上: ¥</span>${totalSales.<span class="fn">toLocaleString</span>()}<span class="str">`</span>
+  );
+}
+
+<span class="cm">// 毎月1日 09:00 に自動実行するトリガーを設定</span>
+<span class="kw">function</span> <span class="fn">setMonthlyTrigger</span>() {
+  ScriptApp.<span class="fn">newTrigger</span>(<span class="str">'generateMonthlyReport'</span>)
+    .<span class="fn">timeBased</span>()
+    .<span class="fn">onMonthDay</span>(<span class="num">1</span>)
+    .<span class="fn">atHour</span>(<span class="num">9</span>)
+    .<span class="fn">create</span>();
+  Logger.<span class="fn">log</span>(<span class="str">'毎月1日 9時のトリガーを設定しました'</span>);
+}</code></pre>
+    </div>
   </div>
-</section>
+</div>
 
-<!-- 解決できること -->
-<section class="section">
-  <div class="section-title"><span class="num">3</span> このツールで解決できること</div>
-
-  <div class="benefits">
-    <div class="benefit-card">
-      <div class="benefit-icon">&#128336;</div>
-      <div class="benefit-title">月次集計の時間を 95% 削減</div>
-      <div class="benefit-desc">毎月30分かかっていたシート間のコピペ作業が、ボタン1クリック・数秒で完了します。</div>
-    </div>
-    <div class="benefit-card">
-      <div class="benefit-icon">&#128683;</div>
-      <div class="benefit-title">ヒューマンエラーをゼロに</div>
-      <div class="benefit-desc">コピペ漏れ・行ズレ・上書きミスなど、手作業に付きもののミスを完全排除します。</div>
-    </div>
-    <div class="benefit-card">
-      <div class="benefit-icon">&#128200;</div>
-      <div class="benefit-title">シート数・行数に制限なし</div>
-      <div class="benefit-desc">3シートのサンプルですが、100シート・1万行規模でも同じコードで動作します。</div>
-    </div>
-    <div class="benefit-card">
-      <div class="benefit-icon">&#128736;</div>
-      <div class="benefit-title">カスタマイズで用途を拡張</div>
-      <div class="benefit-desc">集計後に並び替え・重複除去・グラフ自動生成なども追加対応可能です。</div>
+<!-- USE CASES TAB -->
+<div id="usecases" class="tab-content">
+  <div class="content-area">
+    <div class="usecase-grid">
+      <div class="usecase-card">
+        <div class="usecase-icon">🏪</div>
+        <div class="usecase-name">小売業 / 店舗経営</div>
+        <div class="usecase-desc">複数店舗の日次売上をGoogleフォームで入力 → GASが自動集計して店長にメール配信。月末作業が完全ゼロに。</div>
+        <span class="usecase-tag">毎月3時間 → 0分</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">🛒</div>
+        <div class="usecase-name">ECサイト運営</div>
+        <div class="usecase-desc">楽天・Amazon・自社ECのCSVをスプレッドシートに貼るだけで、商品カテゴリ別・チャネル別の比較レポートを自動生成。</div>
+        <span class="usecase-tag">分析時間 80%削減</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">👥</div>
+        <div class="usecase-name">サービス業 / 士業</div>
+        <div class="usecase-desc">担当スタッフ別の売上・件数・平均単価を自動計算。インセンティブ計算も自動化して給与確認工数を削減。</div>
+        <span class="usecase-tag">計算ミスゼロ</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">📦</div>
+        <div class="usecase-name">製造業 / 卸売</div>
+        <div class="usecase-desc">受注データを品番・顧客別に自動集計し、前月比・前年比を自動算出。経営会議用資料を毎月自動生成。</div>
+        <span class="usecase-tag">資料作成 自動化</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">🏢</div>
+        <div class="usecase-name">不動産 / 賃貸管理</div>
+        <div class="usecase-desc">物件別・担当者別の成約件数・仲介手数料を月次集計。複数拠点のデータを一元管理してPDF出力まで自動化。</div>
+        <span class="usecase-tag">月次報告 自動化</span>
+      </div>
+      <div class="usecase-card">
+        <div class="usecase-icon">💡</div>
+        <div class="usecase-name">カスタマイズ対応</div>
+        <div class="usecase-desc">既存のスプレッドシートの構造に合わせてカスタマイズ可能。初回ヒアリングから納品まで最短3日で対応。</div>
+        <span class="usecase-tag">クラウドワークスで依頼</span>
+      </div>
     </div>
   </div>
-</section>
+</div>
 
+<!-- FOOTER -->
 <footer>
-  <p>Tomoya &amp; Co. ポートフォリオ &mdash; GAS 自動化デモ</p>
+  <p class="footer-label">このデモについて</p>
+  <p class="footer-title">このような自動化、クラウドワークスでご依頼いただけます</p>
+  <a href="https://crowdworks.jp/public/employees/6119556" target="_blank" rel="noopener noreferrer" class="cta-btn">
+    クラウドワークスで依頼する →
+  </a>
 </footer>
 
+<div class="toast" id="toast"></div>
+
 <script>
-  const allRows = [
-    { name: '商品X', cat: '電子機器', sheet: 'A', tag: 'tag-a', amount: '12,000' },
-    { name: '商品Y', cat: '書籍',     sheet: 'A', tag: 'tag-a', amount: '1,800' },
-    { name: '商品Z', cat: '電子機器', sheet: 'A', tag: 'tag-a', amount: '34,000' },
-    { name: '商品W', cat: '食品',     sheet: 'A', tag: 'tag-a', amount: '980' },
-    { name: '商品V', cat: '書籍',     sheet: 'A', tag: 'tag-a', amount: '2,400' },
-    { name: '商品P', cat: '食品',     sheet: 'B', tag: 'tag-b', amount: '1,200' },
-    { name: '商品Q', cat: '電子機器', sheet: 'B', tag: 'tag-b', amount: '28,500' },
-    { name: '商品R', cat: '書籍',     sheet: 'B', tag: 'tag-b', amount: '3,200' },
-    { name: '商品S', cat: '食品',     sheet: 'B', tag: 'tag-b', amount: '650' },
-    { name: '商品T', cat: '電子機器', sheet: 'B', tag: 'tag-b', amount: '9,800' },
-    { name: '商品M', cat: '電子機器', sheet: 'C', tag: 'tag-c', amount: '56,000' },
-    { name: '商品N', cat: '食品',     sheet: 'C', tag: 'tag-c', amount: '450' },
-    { name: '商品O', cat: '書籍',     sheet: 'C', tag: 'tag-c', amount: '1,500' },
-    { name: '商品K', cat: '電子機器', sheet: 'C', tag: 'tag-c', amount: '18,000' },
-    { name: '商品L', cat: '食品',     sheet: 'C', tag: 'tag-c', amount: '2,800' },
-  ];
+// 初期データ
+const INITIAL_DATA = [
+  ['2025-04-01', 'ノートPC', 'PC機器', 3, 89800, '田中'],
+  ['2025-04-02', 'ワイヤレスマウス', '周辺機器', 10, 4980, '佐藤'],
+  ['2025-04-03', 'モニター 27インチ', 'PC機器', 2, 52800, '田中'],
+  ['2025-04-05', 'USB-Cハブ', '周辺機器', 8, 6800, '鈴木'],
+  ['2025-04-07', 'キーボード 無線', '周辺機器', 5, 9800, '佐藤'],
+  ['2025-04-10', 'デスクトップPC', 'PC機器', 1, 128000, '田中'],
+  ['2025-04-12', 'Webカメラ HD', '周辺機器', 4, 8900, '鈴木'],
+  ['2025-04-15', 'ノートPCスタンド', 'アクセサリ', 6, 3980, '鈴木'],
+  ['2025-04-18', 'SSD 1TB', 'ストレージ', 5, 12800, '佐藤'],
+  ['2025-04-22', 'タブレット 10インチ', 'タブレット', 2, 48000, '田中'],
+];
 
-  let running = false;
+function buildTable(data) {
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = '';
+  data.forEach((row, i) => {
+    tbody.appendChild(createRow(row));
+  });
+}
 
-  function runMerge() {
-    if (running) return;
-    running = true;
-    document.getElementById('runBtn').disabled = true;
-    document.getElementById('statusMsg').textContent = '集計中...';
-    document.getElementById('statusMsg').className = 'status-msg';
+function createRow(data) {
+  const [date, product, category, qty, price, person] = data || ['', '', '', '', '', ''];
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="date" value="${date}"></td>
+    <td><input type="text" value="${product}" placeholder="商品名"></td>
+    <td><select>
+      <option value="PC機器" ${category==='PC機器'?'selected':''}>PC機器</option>
+      <option value="周辺機器" ${category==='周辺機器'?'selected':''}>周辺機器</option>
+      <option value="アクセサリ" ${category==='アクセサリ'?'selected':''}>アクセサリ</option>
+      <option value="ストレージ" ${category==='ストレージ'?'selected':''}>ストレージ</option>
+      <option value="タブレット" ${category==='タブレット'?'selected':''}>タブレット</option>
+      <option value="その他">その他</option>
+    </select></td>
+    <td><input type="number" value="${qty}" min="1" style="width:60px"></td>
+    <td><input type="number" value="${price}" min="0" style="width:90px"></td>
+    <td><select>
+      <option value="田中" ${person==='田中'?'selected':''}>田中</option>
+      <option value="佐藤" ${person==='佐藤'?'selected':''}>佐藤</option>
+      <option value="鈴木" ${person==='鈴木'?'selected':''}>鈴木</option>
+      <option value="山田">山田</option>
+    </select></td>
+    <td><button class="del-row-btn" onclick="this.closest('tr').remove()" title="削除">×</button></td>
+  `;
+  return tr;
+}
 
-    // シートをハイライト
-    ['sheetA', 'sheetB', 'sheetC'].forEach((id, i) => {
-      setTimeout(() => {
-        document.getElementById(id).classList.add('active');
-      }, i * 200);
-    });
+function addRow() {
+  document.getElementById('table-body').appendChild(createRow(['', '', 'PC機器', 1, 0, '田中']));
+}
 
-    // 矢印アニメ
-    setTimeout(() => {
-      document.getElementById('arrows').style.opacity = '1';
-    }, 700);
+function resetTable() {
+  buildTable(INITIAL_DATA);
+  document.getElementById('report-output').style.display = 'none';
+  document.getElementById('copy-report-btn').style.display = 'none';
+}
 
-    // 行を順番に追加
-    const body = document.getElementById('resultBody');
-    // ヘッダー行をクリア前に保持
-    const header = body.querySelector('.header');
-    // ヘッダー以外を削除
-    Array.from(body.children).forEach(c => { if (!c.classList.contains('header')) c.remove(); });
+function getTableData() {
+  const rows = [];
+  document.querySelectorAll('#table-body tr').forEach(tr => {
+    const inputs = tr.querySelectorAll('input, select');
+    const date = inputs[0].value;
+    const product = inputs[1].value;
+    const category = inputs[2].value;
+    const qty = parseFloat(inputs[3].value) || 0;
+    const price = parseFloat(inputs[4].value) || 0;
+    const person = inputs[5].value;
+    if (product && qty > 0 && price > 0) {
+      rows.push({ date, product, category, qty, price, person, amount: qty * price });
+    }
+  });
+  return rows;
+}
 
-    allRows.forEach((row, i) => {
-      setTimeout(() => {
-        const div = document.createElement('div');
-        div.className = 'result-row';
-        div.innerHTML = `<span>${row.name}</span><span>${row.cat}</span><span><span class="tag ${row.tag}">シート${row.sheet}</span></span><span class="amount">¥${row.amount}</span>`;
-        body.appendChild(div);
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => div.classList.add('show'));
-        });
-        document.getElementById('rowCount').textContent = (i + 1) + ' 件';
-      }, 900 + i * 80);
-    });
+function generateReport() {
+  const rows = getTableData();
+  if (rows.length === 0) { showToast('データを入力してください'); return; }
 
-    setTimeout(() => {
-      document.getElementById('statusMsg').textContent = '集計完了！15件のデータを統合しました。';
-      document.getElementById('statusMsg').className = 'status-msg success';
-      running = false;
-    }, 900 + allRows.length * 80 + 200);
-  }
+  const totalSales = rows.reduce((s, r) => s + r.amount, 0);
+  const avgPrice = Math.round(totalSales / rows.length);
+  const maxAmount = Math.max(...rows.map(r => r.amount));
 
-  function resetDemo() {
-    running = false;
-    document.getElementById('runBtn').disabled = false;
-    ['sheetA', 'sheetB', 'sheetC'].forEach(id => document.getElementById(id).classList.remove('active'));
-    document.getElementById('arrows').style.opacity = '0.2';
-    const body = document.getElementById('resultBody');
-    Array.from(body.children).forEach(c => { if (!c.classList.contains('header')) c.remove(); });
-    document.getElementById('rowCount').textContent = '0 件';
-    document.getElementById('statusMsg').textContent = '「集計実行」を押すと3シートのデータが下の集計シートに統合されます';
-    document.getElementById('statusMsg').className = 'status-msg';
-  }
+  document.getElementById('kpi-total').textContent = '¥' + totalSales.toLocaleString();
+  document.getElementById('kpi-count').textContent = rows.length + '件';
+  document.getElementById('kpi-avg').textContent = '¥' + avgPrice.toLocaleString();
+  document.getElementById('kpi-max').textContent = '¥' + maxAmount.toLocaleString();
 
-  function copyCode() {
-    const code = `function mergeSheets() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheets = ['シートA', 'シートB', 'シートC'];
-  const output = ss.getSheetByName('集計') || ss.insertSheet('集計');
-  output.clearContents();
+  const now = new Date();
+  document.getElementById('report-title').textContent =
+    `${now.getFullYear()}年${now.getMonth()+1}月度 売上レポート`;
+  document.getElementById('report-date').textContent =
+    `生成日時: ${now.toLocaleString('ja-JP')}`;
 
-  let allData = [];
-  sheets.forEach(name => {
-    const sh = ss.getSheetByName(name);
-    if (!sh) return;
-    const data = sh.getDataRange().getValues();
-    allData = allData.concat(data.slice(1));
+  // 担当者別集計
+  const byPerson = {};
+  rows.forEach(r => { byPerson[r.person] = (byPerson[r.person] || 0) + r.amount; });
+  const ranking = Object.entries(byPerson).sort((a,b) => b[1]-a[1]);
+
+  renderRanking(ranking);
+
+  // カテゴリ別集計
+  const byCat = {};
+  rows.forEach(r => { byCat[r.category] = (byCat[r.category] || 0) + r.amount; });
+
+  // 日付別集計
+  const byDate = {};
+  rows.forEach(r => {
+    const d = r.date || '未設定';
+    byDate[d] = (byDate[d] || 0) + r.amount;
   });
 
-  output.getRange(1, 1, allData.length, allData[0].length).setValues(allData);
-  SpreadsheetApp.getUi().alert('集計完了！' + allData.length + '件のデータを統合しました。');
-}`;
-    navigator.clipboard.writeText(code).then(() => {
-      const btn = document.querySelector('.copy-btn');
-      btn.textContent = 'コピー済み';
-      setTimeout(() => btn.textContent = 'コピー', 2000);
-    });
+  setTimeout(() => {
+    drawBarChart(byCat);
+    drawLineChart(byDate);
+  }, 50);
+
+  document.getElementById('report-output').style.display = 'block';
+  document.getElementById('copy-report-btn').style.display = 'inline-flex';
+  showToast('✅ レポートを生成しました');
+}
+
+function renderRanking(ranking) {
+  const maxVal = ranking[0]?.[1] || 1;
+  const colors = ['gold', 'silver', 'bronze'];
+  const medals = ['🥇', '🥈', '🥉'];
+  const html = ranking.map(([name, amt], i) => {
+    const pct = Math.round(amt / maxVal * 100);
+    const cls = colors[i] || 'bronze';
+    return `
+      <div class="rank-item">
+        <div class="rank-num ${cls}">${medals[i] || i+1}</div>
+        <div class="rank-name">${name}</div>
+        <div class="rank-bar-wrap">
+          <div class="rank-bar-bg">
+            <div class="rank-bar-fill" style="width:${pct}%; background:${i===0?'var(--yellow)':i===1?'var(--text2)':'var(--purple)'}"></div>
+          </div>
+        </div>
+        <div class="rank-amount">¥${amt.toLocaleString()}</div>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('ranking-list').innerHTML = html;
+}
+
+function drawBarChart(byCat) {
+  const canvas = document.getElementById('bar-chart');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.parentElement.clientWidth - 32;
+  const H = 180;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+
+  const cats = Object.keys(byCat);
+  const vals = Object.values(byCat);
+  const maxVal = Math.max(...vals);
+  const padL = 60, padR = 16, padT = 16, padB = 40;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+  const barW = Math.min(chartW / cats.length * 0.6, 50);
+  const gap = chartW / cats.length;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid lines
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + chartH - (chartH / 4 * i);
+    ctx.strokeStyle = 'rgba(48,54,61,0.8)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    const label = '¥' + Math.round(maxVal / 4 * i / 10000) + '万';
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '10px system-ui';
+    ctx.textAlign = 'right';
+    ctx.fillText(label, padL - 4, y + 4);
   }
+
+  const colors = ['#00d4ff','#3fb950','#d29922','#bc8cff','#f85149'];
+  cats.forEach((cat, i) => {
+    const barH = (vals[i] / maxVal) * chartH;
+    const x = padL + gap * i + gap / 2 - barW / 2;
+    const y = padT + chartH - barH;
+
+    // Bar gradient
+    const grad = ctx.createLinearGradient(0, y, 0, y + barH);
+    const c = colors[i % colors.length];
+    grad.addColorStop(0, c);
+    grad.addColorStop(1, c + '44');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(x, y, barW, barH, [4, 4, 0, 0]);
+    ctx.fill();
+
+    // Label
+    ctx.fillStyle = '#e6edf3';
+    ctx.font = '10px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText(cat, x + barW / 2, H - padB + 14);
+
+    // Value
+    ctx.fillStyle = c;
+    ctx.font = 'bold 10px system-ui';
+    ctx.fillText('¥' + Math.round(vals[i]/10000) + '万', x + barW / 2, y - 4);
+  });
+}
+
+function drawLineChart(byDate) {
+  const canvas = document.getElementById('line-chart');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.parentElement.clientWidth - 32;
+  const H = 180;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+
+  const dates = Object.keys(byDate).sort();
+  const vals = dates.map(d => byDate[d]);
+  const maxVal = Math.max(...vals);
+  const padL = 56, padR = 16, padT = 16, padB = 40;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + chartH - (chartH / 4 * i);
+    ctx.strokeStyle = 'rgba(48,54,61,0.8)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '10px system-ui';
+    ctx.textAlign = 'right';
+    ctx.fillText('¥' + Math.round(maxVal / 4 * i / 10000) + '万', padL - 4, y + 4);
+  }
+
+  if (dates.length < 2) {
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '12px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('データが2件以上必要です', W/2, H/2);
+    return;
+  }
+
+  // Area fill
+  const pts = dates.map((d, i) => ({
+    x: padL + (chartW / (dates.length - 1)) * i,
+    y: padT + chartH - (vals[i] / maxVal) * chartH
+  }));
+
+  const grad = ctx.createLinearGradient(0, padT, 0, padT + chartH);
+  grad.addColorStop(0, 'rgba(0,212,255,0.25)');
+  grad.addColorStop(1, 'rgba(0,212,255,0.02)');
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, padT + chartH);
+  pts.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.lineTo(pts[pts.length-1].x, padT + chartH);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  pts.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.strokeStyle = '#00d4ff';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Dots
+  pts.forEach((p, i) => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#00d4ff';
+    ctx.fill();
+    ctx.strokeStyle = '#0d1117';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  });
+
+  // X labels (every other)
+  ctx.fillStyle = '#8b949e';
+  ctx.font = '9px system-ui';
+  ctx.textAlign = 'center';
+  dates.forEach((d, i) => {
+    if (i % 2 === 0 || i === dates.length - 1) {
+      const shortDate = d.replace(/^\d{4}-/, '').replace('-', '/');
+      ctx.fillText(shortDate, pts[i].x, H - padB + 14);
+    }
+  });
+}
+
+function copyReport() {
+  const rows = getTableData();
+  const totalSales = rows.reduce((s, r) => s + r.amount, 0);
+  const byPerson = {};
+  rows.forEach(r => { byPerson[r.person] = (byPerson[r.person] || 0) + r.amount; });
+  const ranking = Object.entries(byPerson).sort((a,b) => b[1]-a[1]);
+
+  const text = [
+    `=== 月次売上レポート ===`,
+    `生成日時: ${new Date().toLocaleString('ja-JP')}`,
+    ``,
+    `総売上: ¥${totalSales.toLocaleString()}`,
+    `件数: ${rows.length}件`,
+    `平均: ¥${Math.round(totalSales/rows.length).toLocaleString()}`,
+    ``,
+    `--- 担当者別ランキング ---`,
+    ...ranking.map(([n,a], i) => `${i+1}位 ${n}: ¥${a.toLocaleString()}`),
+    ``,
+    `※ このレポートはGASで自動生成されました`,
+  ].join('\n');
+
+  navigator.clipboard.writeText(text).then(() => showToast('📋 クリップボードにコピーしました'));
+}
+
+function copyCode() {
+  const code = document.getElementById('gas-code').innerText;
+  navigator.clipboard.writeText(code).then(() => showToast('コードをコピーしました'));
+}
+
+function showTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// 初期化
+buildTable(INITIAL_DATA);
 </script>
 </body>
 </html>
