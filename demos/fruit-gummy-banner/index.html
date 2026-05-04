@@ -16,7 +16,11 @@
       justify-content: flex-start;
       padding: 40px 20px;
       font-family: 'Helvetica Neue', Arial, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
     }
+
+    img { pointer-events: none; -webkit-user-drag: none; user-drag: none; }
 
     .page-header {
       text-align: center;
@@ -26,7 +30,31 @@
     .page-header h1 { font-size: 15px; opacity: 0.6; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
     .page-header p { font-size: 12px; opacity: 0.4; }
 
-    /* ===== Instagram縦バナー (1080×1920 → 表示は405×720) ===== */
+    /* ===== SAMPLE Watermark ===== */
+    .sample-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 999;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .sample-overlay::before {
+      content: 'SAMPLE';
+      font-size: clamp(40px, 10vw, 72px);
+      font-weight: 900;
+      color: rgba(255,255,255,0.35);
+      letter-spacing: 8px;
+      transform: rotate(-45deg);
+      text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      border: 4px solid rgba(255,255,255,0.25);
+      padding: 8px 24px;
+      white-space: nowrap;
+    }
+
+    /* ===== バナーグリッド ===== */
     .banner-wrap {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -67,8 +95,8 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: radial-gradient(circle at 30% 40%, rgba(255,200,50,0.25) 0%, transparent 60%),
-                  radial-gradient(circle at 80% 70%, rgba(255,100,150,0.3) 0%, transparent 50%);
+      background: radial-gradient(circle at 30% 40%, rgba(255,200,50,0.2) 0%, transparent 60%),
+                  radial-gradient(circle at 80% 70%, rgba(255,100,150,0.25) 0%, transparent 50%);
     }
 
     /* Fruit particles */
@@ -78,11 +106,11 @@
       opacity: 0.15;
       animation: floatFruit 8s ease-in-out infinite;
     }
-    .fruit-particle:nth-child(1) { top: 5%; left: 8%; animation-delay: 0s; font-size: 40px; }
-    .fruit-particle:nth-child(2) { top: 15%; right: 10%; animation-delay: -2s; font-size: 32px; }
-    .fruit-particle:nth-child(3) { bottom: 20%; left: 5%; animation-delay: -4s; font-size: 36px; }
-    .fruit-particle:nth-child(4) { bottom: 10%; right: 8%; animation-delay: -1s; font-size: 28px; }
-    .fruit-particle:nth-child(5) { top: 45%; left: 2%; animation-delay: -3s; font-size: 24px; }
+    .fruit-particle:nth-child(2) { top: 5%; left: 8%; animation-delay: 0s; font-size: 40px; }
+    .fruit-particle:nth-child(3) { top: 15%; right: 10%; animation-delay: -2s; font-size: 32px; }
+    .fruit-particle:nth-child(4) { bottom: 20%; left: 5%; animation-delay: -4s; font-size: 36px; }
+    .fruit-particle:nth-child(5) { bottom: 10%; right: 8%; animation-delay: -1s; font-size: 28px; }
+    .fruit-particle:nth-child(6) { top: 45%; left: 2%; animation-delay: -3s; font-size: 24px; }
     @keyframes floatFruit {
       0%, 100% { transform: translateY(0) rotate(0deg); }
       50% { transform: translateY(-12px) rotate(10deg); }
@@ -90,7 +118,6 @@
 
     .banner-a-inner { position: relative; z-index: 2; text-align: center; width: 100%; }
 
-    /* NEW badge */
     .new-badge {
       display: inline-block;
       background: linear-gradient(135deg, #ffd700, #ffaa00);
@@ -105,36 +132,38 @@
       box-shadow: 0 4px 12px rgba(255,200,0,0.5);
     }
 
-    /* Product visual */
-    .product-visual {
-      width: 70%;
-      max-width: 220px;
+    /* Product photo */
+    .product-photo {
+      width: 72%;
+      max-width: 240px;
       aspect-ratio: 1;
       margin: 0 auto 20px;
-      background: radial-gradient(circle at 40% 35%, rgba(255,220,80,0.9) 0%, rgba(255,120,40,0.8) 40%, rgba(200,40,80,0.9) 80%);
       border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: clamp(60px, 12vw, 100px);
-      box-shadow: 0 0 60px rgba(255,150,0,0.6), inset 0 -10px 30px rgba(0,0,0,0.3);
+      overflow: hidden;
+      box-shadow: 0 0 60px rgba(255,150,0,0.5), 0 16px 40px rgba(0,0,0,0.4);
       animation: gummyPulse 3s ease-in-out infinite;
       position: relative;
     }
-    .product-visual::after {
+    .product-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
+    .product-photo::after {
       content: '';
       position: absolute;
       top: 8%;
       left: 15%;
-      width: 35%;
-      height: 25%;
-      background: rgba(255,255,255,0.4);
+      width: 30%;
+      height: 20%;
+      background: rgba(255,255,255,0.3);
       border-radius: 50%;
       filter: blur(6px);
     }
     @keyframes gummyPulse {
-      0%, 100% { transform: scale(1); box-shadow: 0 0 60px rgba(255,150,0,0.6), inset 0 -10px 30px rgba(0,0,0,0.3); }
-      50% { transform: scale(1.04); box-shadow: 0 0 80px rgba(255,200,0,0.8), inset 0 -10px 30px rgba(0,0,0,0.3); }
+      0%, 100% { transform: scale(1); box-shadow: 0 0 60px rgba(255,150,0,0.5), 0 16px 40px rgba(0,0,0,0.4); }
+      50% { transform: scale(1.04); box-shadow: 0 0 80px rgba(255,200,0,0.7), 0 16px 40px rgba(0,0,0,0.4); }
     }
 
     .product-name {
@@ -152,7 +181,6 @@
       margin-bottom: 20px;
     }
 
-    /* Shizru tagline */
     .shizru-line {
       display: flex;
       gap: 6px;
@@ -235,29 +263,24 @@
       line-height: 1.6;
     }
 
-    .b-fruit-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
+    /* Hero image for ver.B */
+    .b-hero-img {
+      width: 100%;
+      border-radius: 16px;
+      overflow: hidden;
       margin-bottom: 16px;
       position: relative;
       z-index: 2;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      flex: 1;
+      min-height: 0;
     }
-    .b-fruit-item {
-      background: rgba(255,255,255,0.7);
-      border-radius: 12px;
-      aspect-ratio: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      padding: 8px;
-      backdrop-filter: blur(4px);
-      border: 1px solid rgba(255,150,100,0.3);
+    .b-hero-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
-    .b-fruit-item .icon { font-size: clamp(22px, 4vw, 32px); }
-    .b-fruit-item .name { font-size: 10px; font-weight: 700; color: #8b3a1a; }
 
     .b-cta {
       background: linear-gradient(135deg, #ff3d7f, #ff6b35);
@@ -271,7 +294,6 @@
       letter-spacing: 1px;
       position: relative;
       z-index: 2;
-      margin-top: auto;
     }
 
     /* ===== バナー ver.C (正方形) ===== */
@@ -285,56 +307,65 @@
       align-items: center;
       justify-content: center;
       padding: 24px;
+      gap: 16px;
     }
     .banner-c::before {
       content: '';
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(ellipse at 20% 80%, rgba(255,50,120,0.4) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 20%, rgba(255,140,0,0.3) 0%, transparent 50%);
+        radial-gradient(ellipse at 20% 80%, rgba(255,50,120,0.35) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(255,140,0,0.25) 0%, transparent 50%);
     }
 
     .c-title {
-      font-size: clamp(14px, 2.5vw, 20px);
+      font-size: clamp(12px, 2.2vw, 17px);
       color: rgba(255,200,150,0.8);
-      letter-spacing: 3px;
+      letter-spacing: 4px;
       text-transform: uppercase;
-      margin-bottom: 16px;
       position: relative;
       z-index: 2;
     }
-    .c-gumi {
-      font-size: clamp(70px, 13vw, 110px);
+
+    .c-photo {
+      width: 65%;
+      max-width: 220px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      overflow: hidden;
       position: relative;
       z-index: 2;
-      filter: drop-shadow(0 0 20px rgba(255,100,50,0.8));
+      box-shadow: 0 0 40px rgba(255,80,180,0.6), 0 0 80px rgba(255,140,0,0.3);
       animation: gummyPulse 3s ease-in-out infinite;
-      margin-bottom: 16px;
     }
+    .c-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
     .c-name {
-      font-size: clamp(20px, 4vw, 32px);
+      font-size: clamp(18px, 3.5vw, 28px);
       font-weight: 900;
       color: #fff;
       text-align: center;
       position: relative;
       z-index: 2;
       line-height: 1.2;
-      text-shadow: 0 0 20px rgba(255,100,50,0.6);
-      margin-bottom: 20px;
+      text-shadow: 0 0 20px rgba(255,100,200,0.6);
     }
     .c-price-row {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       position: relative;
       z-index: 2;
     }
     .c-price-chip {
-      background: rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,200,100,0.4);
       color: #ffd700;
-      font-size: clamp(11px, 2vw, 14px);
-      padding: 6px 14px;
+      font-size: clamp(10px, 1.8vw, 13px);
+      padding: 5px 12px;
       border-radius: 20px;
       font-weight: 700;
     }
@@ -354,7 +385,7 @@
 
   <div class="page-header">
     <h1>Portfolio Demo · Fruit Gummy Banner</h1>
-    <p>Instagram投稿バナー 3パターン / 制作: なぎ</p>
+    <p>Instagram投稿バナー 3パターン / 制作: なぎ ※ 受注後に高解像度データを納品</p>
   </div>
 
   <div class="banner-wrap">
@@ -363,6 +394,8 @@
     <div class="banner-card">
       <div class="banner-label">Ver.A – 縦型 (1080×1920) ・ ビビッド系</div>
       <div class="banner-a">
+        <!-- watermark -->
+        <div class="sample-overlay"></div>
         <div class="fruit-particle">🍊</div>
         <div class="fruit-particle">🍓</div>
         <div class="fruit-particle">🍇</div>
@@ -370,7 +403,9 @@
         <div class="fruit-particle">🥭</div>
         <div class="banner-a-inner">
           <div class="new-badge">✦ NEW ✦</div>
-          <div class="product-visual">🍬</div>
+          <div class="product-photo">
+            <img src="img/gummy-a.jpg" alt="フルーツグミ ビビッドカラー">
+          </div>
           <div class="product-name">フルーツグミ<br>Premium</div>
           <div class="product-sub">JUICY FRUIT GUMMY</div>
           <div class="shizru-line">
@@ -387,6 +422,8 @@
     <div class="banner-card">
       <div class="banner-label">Ver.B – 縦型 (1080×1920) ・ ポップ系</div>
       <div class="banner-b">
+        <!-- watermark -->
+        <div class="sample-overlay"></div>
         <div class="b-header">
           <span class="b-brand">FRUIT GUMMY</span>
           <span class="b-new">NEW</span>
@@ -397,13 +434,8 @@
           ジューシーなご褒美グミ。<br>
           新フレーバー 全6種 登場！
         </div>
-        <div class="b-fruit-grid">
-          <div class="b-fruit-item"><span class="icon">🍊</span><span class="name">みかん</span></div>
-          <div class="b-fruit-item"><span class="icon">🍓</span><span class="name">いちご</span></div>
-          <div class="b-fruit-item"><span class="icon">🍇</span><span class="name">ぶどう</span></div>
-          <div class="b-fruit-item"><span class="icon">🥭</span><span class="name">マンゴー</span></div>
-          <div class="b-fruit-item"><span class="icon">🍑</span><span class="name">もも</span></div>
-          <div class="b-fruit-item"><span class="icon">🍋</span><span class="name">れもん</span></div>
+        <div class="b-hero-img">
+          <img src="img/gummy-c.jpg" alt="フルーツグミ ポップ">
         </div>
         <div class="b-cta">🛒 コンビニ・スーパーで発売中！</div>
       </div>
@@ -413,8 +445,12 @@
     <div class="banner-card">
       <div class="banner-label">Ver.C – 正方形 (1080×1080) ・ プレミアム系</div>
       <div class="banner-c">
+        <!-- watermark -->
+        <div class="sample-overlay"></div>
         <div class="c-title">New Arrival</div>
-        <div class="c-gumi">🍬</div>
+        <div class="c-photo">
+          <img src="img/gummy-b.jpg" alt="フルーツグミ プレミアム">
+        </div>
         <div class="c-name">Premium<br>Fruit Gummy</div>
         <div class="c-price-row">
           <span class="c-price-chip">全6フレーバー</span>
@@ -427,7 +463,18 @@
 
   <div class="credit">
     制作デモ by <span>なぎ</span> · <a href="https://nagilife0426-cyber.github.io/portfolio/" style="color:rgba(255,200,100,0.6);">ポートフォリオを見る</a>
+    <br><span style="font-size:10px;opacity:0.5;margin-top:4px;display:block;">※ 画像・デザインの無断転用・保存を禁じます。受注後に高解像度データを納品いたします。</span>
   </div>
 
+  <script>
+    // 右クリック・ドラッグ・長押し禁止
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('dragstart', e => e.preventDefault());
+    document.addEventListener('selectstart', e => e.preventDefault());
+    // iOS長押し保存禁止
+    document.addEventListener('touchstart', function(e) {
+      if (e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
+  </script>
 </body>
 </html>
