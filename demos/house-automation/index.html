@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>社内業務自動化ダッシュボード｜叩き台デモ</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0e1a; --bg2: #111827; --bg3: #1f2937; --bg4: #374151;
+      --border: #374151; --text: #f9fafb; --text2: #9ca3af; --text3: #6b7280;
+      --green: #10b981; --yellow: #f59e0b; --red: #ef4444;
+      --blue: #3b82f6; --purple: #8b5cf6; --orange: #f97316;
+      --accent: #06b6d4; --r: 10px;
+    }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.5; }
+
+    nav { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 24px; position: sticky; top: 0; z-index: 200; display: flex; align-items: stretch; }
+    .nav-logo { font-size: 15px; font-weight: 700; color: var(--accent); padding: 14px 0; display: flex; align-items: center; gap: 8px; }
+    .nav-tabs { display: flex; margin-left: 32px; }
+    .nav-tab { background: none; border: none; color: var(--text2); cursor: pointer; font-family: inherit; font-size: 13px; padding: 14px 18px; border-bottom: 2px solid transparent; transition: all .15s; }
+    .nav-tab:hover { color: var(--text); }
+    .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .live-badge { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--green); }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: blink 1.8s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .demo-badge { background: rgba(6,182,212,.15); color: var(--accent); border: 1px solid rgba(6,182,212,.3); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+
+    .page { display: none; max-width: 1100px; margin: 0 auto; padding: 24px; }
+    .page.active { display: block; }
+
+    .kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
+    .kpi { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: 18px 20px; }
+    .kpi-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
+    .kpi-value { font-size: 28px; font-weight: 800; line-height: 1; }
+    .kpi-value.green{color:var(--green)} .kpi-value.yellow{color:var(--yellow)} .kpi-value.blue{color:var(--blue)} .kpi-value.red{color:var(--red)}
+    .kpi-sub { font-size: 11px; margin-top: 6px; color: var(--text2); }
+    .up{color:var(--green)} .down{color:var(--red)}
+
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 16px; }
+    .card-head { padding: 13px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg3); }
+    .card-title { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+    .card-body { padding: 18px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+    .tag { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 20px; }
+    .tag-green{background:rgba(16,185,129,.12);color:var(--green)} .tag-amber{background:rgba(245,158,11,.12);color:var(--yellow)}
+    .tag-blue{background:rgba(59,130,246,.12);color:var(--blue)} .tag-red{background:rgba(239,68,68,.12);color:var(--red)}
+    .tag-cyan{background:rgba(6,182,212,.12);color:var(--accent)} .tag-purple{background:rgba(139,92,246,.12);color:var(--purple)}
+
+    .tbl { width: 100%; border-collapse: collapse; }
+    .tbl th { padding: 9px 12px; text-align: left; font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .6px; border-bottom: 1px solid var(--border); }
+    .tbl td { padding: 11px 12px; border-bottom: 1px solid rgba(55,65,81,.6); vertical-align: middle; font-size: 13px; }
+    .tbl tr:last-child td { border-bottom: none; }
+    .tbl tr:hover td { background: rgba(255,255,255,.02); }
+    .num-r { text-align: right; font-weight: 600; }
+
+    .progress-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .progress-label { width: 120px; font-size: 12px; color: var(--text2); flex-shrink: 0; }
+    .progress-track { flex: 1; height: 7px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+    .progress-bar { height: 100%; border-radius: 4px; }
+    .progress-val { width: 45px; text-align: right; font-size: 12px; font-weight: 600; }
+
+    .alert-list { display: flex; flex-direction: column; gap: 8px; }
+    .alert-item { display: flex; align-items: flex-start; gap: 10px; background: var(--bg3); border-radius: 8px; padding: 11px 14px; border-left: 3px solid transparent; }
+    .alert-item.err{border-left-color:var(--red)} .alert-item.warn{border-left-color:var(--yellow)} .alert-item.ok{border-left-color:var(--green)}
+    .alert-icon { font-size: 16px; flex-shrink: 0; }
+    .alert-text { font-size: 12px; line-height: 1.5; }
+    .alert-time { font-size: 10px; color: var(--text3); margin-top: 3px; }
+
+    .tl { display: flex; flex-direction: column; }
+    .tl-item { display: flex; gap: 14px; position: relative; }
+    .tl-item:not(:last-child)::after { content:''; position:absolute; left:10px; top:22px; bottom:-4px; width:1px; background: var(--border); }
+    .tl-dot { width:20px; height:20px; border-radius:50%; flex-shrink:0; margin-top:2px; display:flex; align-items:center; justify-content:center; font-size:10px; }
+    .tl-done{background:rgba(16,185,129,.2);color:var(--green);border:1px solid var(--green)}
+    .tl-active{background:rgba(6,182,212,.2);color:var(--accent);border:1px solid var(--accent);box-shadow:0 0 8px rgba(6,182,212,.3)}
+    .tl-todo{background:var(--bg3);color:var(--text3);border:1px solid var(--border)}
+    .tl-body { padding-bottom: 16px; flex: 1; }
+    .tl-title { font-size: 13px; font-weight: 500; }
+    .tl-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+    .flow-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+    .flow-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 18px; position: relative; }
+    .flow-num { position:absolute; top:14px; right:14px; width:22px; height:22px; border-radius:50%; background:rgba(6,182,212,.15); color:var(--accent); font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+    .flow-icon { font-size:28px; margin-bottom:10px; }
+    .flow-title { font-size:13px; font-weight:700; margin-bottom:6px; }
+    .flow-desc { font-size:12px; color:var(--text2); line-height:1.6; }
+    .flow-tech { margin-top:10px; display:flex; flex-wrap:wrap; gap:4px; }
+    .tech-chip { font-size:10px; background:var(--bg4); color:var(--text2); padding:2px 7px; border-radius:4px; }
+    .auto-badge { display:inline-block; font-size:10px; background:rgba(16,185,129,.12); color:var(--green); padding:1px 6px; border-radius:4px; margin-top:6px; }
+
+    .code-wrap { background:#0d1117; border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
+    .code-head { background:var(--bg3); padding:10px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+    .code-file { font-family:monospace; font-size:12px; color:var(--text2); }
+    .copy-btn { background:none; border:1px solid var(--border); color:var(--text2); padding:3px 10px; border-radius:5px; cursor:pointer; font-size:11px; font-family:inherit; transition:all .15s; }
+    .copy-btn:hover { color:var(--text); border-color:var(--text2); }
+    pre { padding:20px; overflow-x:auto; font-family:'SF Mono','Fira Code',monospace; font-size:12.5px; line-height:1.75; color:#e6edf3; }
+    .kw{color:#ff7b72} .fn{color:#d2a8ff} .str{color:#a5d6ff} .cm{color:#8b949e;font-style:italic} .num{color:#79c0ff} .var{color:#ffa657}
+
+    .info-panel { background:linear-gradient(135deg,#1a2535,#1a2040); border:1px solid rgba(6,182,212,.3); border-radius:var(--r); padding:28px 32px; margin-bottom:20px; }
+    .info-panel-title { font-size:18px; font-weight:800; color:var(--accent); margin-bottom:6px; }
+    .info-panel-sub { font-size:13px; color:var(--text2); margin-bottom:22px; line-height:1.6; }
+    .info-sections { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .info-section { background:rgba(0,0,0,.25); border:1px solid rgba(6,182,212,.15); border-radius:8px; padding:16px 18px; }
+    .info-section-title { font-size:12px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:.8px; margin-bottom:12px; }
+    .info-item { display:flex; align-items:flex-start; gap:8px; margin-bottom:9px; }
+    .info-check { color:var(--accent); font-size:14px; flex-shrink:0; margin-top:1px; }
+    .info-text { font-size:12px; color:var(--text2); line-height:1.5; }
+    .info-text strong { color:var(--text); }
+    .info-footer { margin-top:18px; background:rgba(6,182,212,.08); border-radius:8px; padding:12px 16px; font-size:12px; color:var(--text2); }
+
+    .toast { position:fixed; bottom:20px; right:20px; background:var(--bg3); border:1px solid var(--green); color:var(--green); padding:10px 16px; border-radius:8px; font-size:13px; opacity:0; transform:translateY(8px); transition:all .3s; pointer-events:none; z-index:999; }
+    .toast.show { opacity:1; transform:translateY(0); }
+
+    .status-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:5px; }
+    .dot-green{background:var(--green)} .dot-yellow{background:var(--yellow)} .dot-red{background:var(--red)} .dot-gray{background:var(--text3)}
+
+    @media(max-width:780px){ .kpi-row,.grid2,.grid3,.flow-grid,.info-sections{grid-template-columns:1fr;} .nav-tabs{display:none;} }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">🏠 社内業務 自動化システム</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('dashboard',this)">📊 ダッシュボード</button>
+    <button class="nav-tab" onclick="showPage('automation',this)">⚙️ 自動化できること</button>
+    <button class="nav-tab" onclick="showPage('code',this)">＜/＞ コードサンプル</button>
+    <button class="nav-tab" onclick="showPage('request',this)">📋 詳細ヒアリング</button>
+  </div>
+  <div class="nav-right">
+    <div class="live-badge"><div class="live-dot"></div>GAS 連携中</div>
+    <span class="demo-badge">叩き台デモ</span>
+  </div>
+</nav>
+
+<!-- ========== PAGE 1: DASHBOARD ========== -->
+<div id="dashboard" class="page active">
+
+  <div class="kpi-row" style="margin-top:20px;">
+    <div class="kpi">
+      <div class="kpi-label">今月の案件数</div>
+      <div class="kpi-value blue" id="kpi-total">0</div>
+      <div class="kpi-sub up">↑ +5件 先月比</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">対応中</div>
+      <div class="kpi-value yellow" id="kpi-active">0</div>
+      <div class="kpi-sub">見積〜施工中</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">今月売上（推計）</div>
+      <div class="kpi-value green" id="kpi-sales">0</div>
+      <div class="kpi-sub up">↑ +12% 先月比</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">未対応問い合わせ</div>
+      <div class="kpi-value red" id="kpi-inquiries">0</div>
+      <div class="kpi-sub down">↑ 要対応</div>
+    </div>
+  </div>
+
+  <!-- 案件一覧 -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-head">
+      <div class="card-title">📋 案件一覧（Googleスプレッドシート連携）</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span style="font-size:11px;color:var(--text3)">GAS 自動更新 | 毎時同期</span>
+        <button class="tag tag-cyan" style="cursor:pointer;border:none;" onclick="refreshJobs()">🔄 更新</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="tbl" id="jobs-table">
+        <thead>
+          <tr>
+            <th>案件名</th>
+            <th>種別</th>
+            <th>顧客名</th>
+            <th style="text-align:right">見積金額</th>
+            <th>担当者</th>
+            <th style="text-align:center">ステータス</th>
+            <th style="text-align:center">期限</th>
+            <th style="text-align:center">アクション</th>
+          </tr>
+        </thead>
+        <tbody id="jobs-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid2">
+
+    <!-- アラート -->
+    <div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">🔔 自動検知アラート</div>
+          <span class="tag tag-red">3件要対応</span>
+        </div>
+        <div class="card-body">
+          <div class="alert-list">
+            <div class="alert-item err">
+              <div class="alert-icon">🚨</div>
+              <div><div class="alert-text"><strong>山田様リフォーム</strong> — 返信から<strong style="color:var(--red)">72時間経過</strong><br>次のアクションが未設定です</div><div class="alert-time">Claude APIで自動検知 | 今日 09:00</div></div>
+            </div>
+            <div class="alert-item warn">
+              <div class="alert-icon">⚠️</div>
+              <div><div class="alert-text"><strong>佐藤様エアコンクリーニング</strong> — 見積書<strong style="color:var(--yellow)">未送付 (3日経過)</strong></div><div class="alert-time">GASトリガー検知 | 今日 09:05</div></div>
+            </div>
+            <div class="alert-item warn">
+              <div class="alert-icon">📅</div>
+              <div><div class="alert-text"><strong>田中様解体工事</strong> — 施工予定日まで<strong style="color:var(--yellow)">残7日</strong><br>最終確認の連絡が未完了</div><div class="alert-time">カレンダー連携 | 今日 09:10</div></div>
+            </div>
+            <div class="alert-item ok">
+              <div class="alert-icon">✅</div>
+              <div><div class="alert-text"><strong>月次売上レポート</strong> — Googleスプレッドシートに自動出力完了</div><div class="alert-time">今日 09:00</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <div class="card-head">
+          <div class="card-title">📊 案件種別 内訳</div>
+        </div>
+        <div class="card-body" id="category-bars"></div>
+      </div>
+    </div>
+
+    <!-- タイムライン -->
+    <div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">🕐 本日の自動処理ログ</div>
+          <span class="tag tag-green">6件 完了</span>
+        </div>
+        <div class="card-body">
+          <div class="tl">
+            <div class="tl-item"><div class="tl-dot tl-done">✓</div><div class="tl-body"><div class="tl-title">Googleフォーム問い合わせを Sheets に自動入力</div><div class="tl-meta">09:00 完了 — 3件新規</div></div></div>
+            <div class="tl-item"><div class="tl-dot tl-done">✓</div><div class="tl-body"><div class="tl-title">返信遅延案件の検知・担当者にSlack通知</div><div class="tl-meta">09:02 完了 — 2件通知</div></div></div>
+            <div class="tl-item"><div class="tl-dot tl-done">✓</div><div class="tl-body"><div class="tl-title">見積書未送付リストを自動生成・メール通知</div><div class="tl-meta">09:05 完了</div></div></div>
+            <div class="tl-item"><div class="tl-dot tl-done">✓</div><div class="tl-body"><div class="tl-title">月次売上集計をスプレッドシートへ自動出力</div><div class="tl-meta">09:06 完了</div></div></div>
+            <div class="tl-item"><div class="tl-dot tl-done">✓</div><div class="tl-body"><div class="tl-title">施工1週間前リマインドをGmailで自動送信</div><div class="tl-meta">09:08 完了 — 3件送信</div></div></div>
+            <div class="tl-item"><div class="tl-dot tl-active">…</div><div class="tl-body"><div class="tl-title">Claude API で問い合わせ内容を自動分類中</div><div class="tl-meta">09:12 処理中...</div></div></div>
+            <div class="tl-item"><div class="tl-dot tl-todo">○</div><div class="tl-body"><div class="tl-title">日次サマリーをSlack / メールへ自動送信</div><div class="tl-meta">18:00 予定</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== PAGE 2: AUTOMATION ========== -->
+<div id="automation" class="page">
+  <div style="margin-top:20px;">
+    <div style="background:linear-gradient(135deg,#111827,#1a2535);border:1px solid var(--border);border-radius:var(--r);padding:24px 28px;margin-bottom:20px;">
+      <div style="font-size:20px;font-weight:800;margin-bottom:6px;">🤖 Claude Code で自動化できること一覧</div>
+      <div style="color:var(--text2);font-size:13px;line-height:1.7;">以下の業務はすべて <strong style="color:var(--accent)">Claude Code + GAS / Python</strong> で自動化可能です。<br>まず「最も時間がかかっている1つ」からプロトタイプを作り、効果確認後に拡張します。</div>
+    </div>
+
+    <div class="flow-grid">
+      <div class="flow-card">
+        <div class="flow-num">1</div>
+        <div class="flow-icon">📝</div>
+        <div class="flow-title">問い合わせ → スプレッドシート自動入力</div>
+        <div class="flow-desc">Googleフォームの問い合わせを受信 → GASでスプレッドシートに自動入力 → 担当者にSlack通知。手入力ゼロへ。</div>
+        <div class="flow-tech"><span class="tech-chip">GAS</span><span class="tech-chip">Googleフォーム</span><span class="tech-chip">Slack API</span></div>
+        <div class="auto-badge">⏱ 削減工数: 1h/日</div>
+      </div>
+      <div class="flow-card">
+        <div class="flow-num">2</div>
+        <div class="flow-icon">📄</div>
+        <div class="flow-title">見積書 AI 自動生成</div>
+        <div class="flow-desc">案件情報をスプレッドシートに入力 → Claude APIで見積書文章を自動生成 → PDFに変換してGmailで自動送付。</div>
+        <div class="flow-tech"><span class="tech-chip">Claude API</span><span class="tech-chip">GAS</span><span class="tech-chip">Gmail API</span></div>
+        <div class="auto-badge">⏱ 削減工数: 30〜45分/件</div>
+      </div>
+      <div class="flow-card">
+        <div class="flow-num">3</div>
+        <div class="flow-icon">🔔</div>
+        <div class="flow-title">進捗管理・リマインド自動化</div>
+        <div class="flow-desc">案件ステータスを監視。返信遅延・見積未送付・施工日近接などを自動検知してSlack/メールで通知。対応漏れゼロ。</div>
+        <div class="flow-tech"><span class="tech-chip">GAS</span><span class="tech-chip">cron</span><span class="tech-chip">Slack API</span></div>
+        <div class="auto-badge">⏱ 削減工数: 45分/日</div>
+      </div>
+      <div class="flow-card">
+        <div class="flow-num">4</div>
+        <div class="flow-icon">💬</div>
+        <div class="flow-title">問い合わせ内容の自動分類・優先度付け</div>
+        <div class="flow-desc">Claude APIで問い合わせ文章を分析。「緊急度」「種別（リフォーム/クリーニング等）」を自動判定してタグ付け。</div>
+        <div class="flow-tech"><span class="tech-chip">Claude API</span><span class="tech-chip">GAS</span><span class="tech-chip">Python</span></div>
+        <div class="auto-badge">⏱ 削減工数: 30分/日</div>
+      </div>
+      <div class="flow-card">
+        <div class="flow-num">5</div>
+        <div class="flow-icon">📊</div>
+        <div class="flow-title">売上・案件レポート自動集計</div>
+        <div class="flow-desc">月次の売上・案件数・種別内訳を自動集計してスプレッドシートに出力。グラフも自動生成。</div>
+        <div class="flow-tech"><span class="tech-chip">GAS</span><span class="tech-chip">Googleシート</span></div>
+        <div class="auto-badge">⏱ 削減工数: 2h/月</div>
+      </div>
+      <div class="flow-card">
+        <div class="flow-num">6</div>
+        <div class="flow-icon">🗂</div>
+        <div class="flow-title">顧客情報の自動整理・検索システム</div>
+        <div class="flow-desc">過去の顧客情報をスプレッドシートで一元管理。Claude APIで「過去に似た案件はある？」を自然言語で検索可能に。</div>
+        <div class="flow-tech"><span class="tech-chip">Claude API</span><span class="tech-chip">GAS</span><span class="tech-chip">Notion</span></div>
+        <div class="auto-badge">⏱ 削減工数: 1h/日</div>
+      </div>
+    </div>
+
+    <!-- ROI マトリクス -->
+    <div class="card" style="margin-top:20px;">
+      <div class="card-head">
+        <div class="card-title">🎯 どれから始めるべきか — ROI 優先度マトリクス</div>
+        <span class="tag tag-amber">推奨スタート順</span>
+      </div>
+      <div class="card-body">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>優先度</th>
+              <th>自動化項目</th>
+              <th style="text-align:right">削減工数/週</th>
+              <th style="text-align:right">実装期間</th>
+              <th style="text-align:center">難易度</th>
+              <th style="text-align:center">ROI</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="tag tag-red" style="font-weight:800;">🥇 1st</span></td><td><strong>問い合わせ → スプレッドシート自動入力</strong><br><span style="font-size:11px;color:var(--text3)">毎日の手入力を完全ゼロに。最も即効性が高い</span></td><td class="num-r" style="color:var(--green)">7h</td><td class="num-r">2〜3日</td><td style="text-align:center"><span class="tag tag-green">低</span></td><td style="text-align:center"><span class="tag tag-red">最高</span></td></tr>
+            <tr><td><span class="tag tag-amber" style="font-weight:800;">🥈 2nd</span></td><td><strong>進捗・リマインド自動化</strong><br><span style="font-size:11px;color:var(--text3)">対応漏れによる機会損失を防ぐ</span></td><td class="num-r" style="color:var(--green)">5h</td><td class="num-r">3〜4日</td><td style="text-align:center"><span class="tag tag-green">低</span></td><td style="text-align:center"><span class="tag tag-red">最高</span></td></tr>
+            <tr><td><span class="tag tag-blue" style="font-weight:800;">🥉 3rd</span></td><td><strong>見積書AI自動生成</strong><br><span style="font-size:11px;color:var(--text3)">Claude APIで品質と速度を両立</span></td><td class="num-r" style="color:var(--green)">4h</td><td class="num-r">4〜5日</td><td style="text-align:center"><span class="tag tag-amber">中</span></td><td style="text-align:center"><span class="tag tag-amber">高</span></td></tr>
+            <tr><td><span class="tag tag-purple">4th</span></td><td><strong>問い合わせ自動分類</strong><br><span style="font-size:11px;color:var(--text3)">AI判定で優先度が一目でわかる</span></td><td class="num-r" style="color:var(--green)">3h</td><td class="num-r">3〜4日</td><td style="text-align:center"><span class="tag tag-amber">中</span></td><td style="text-align:center"><span class="tag tag-amber">高</span></td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:14px;font-size:12px;color:var(--text2);background:var(--bg3);border-radius:8px;padding:12px 16px;">
+          💬 <strong style="color:var(--text)">進め方：</strong>最初の3〜4日で「1st」のプロトタイプだけを動かします。実際に使いながら確認し、問題なければ次へ。一気に全部は作りません。
+        </div>
+      </div>
+    </div>
+
+    <div style="background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.2);border-radius:var(--r);padding:18px 22px;margin-top:16px;font-size:13px;line-height:1.7;">
+      <strong style="color:var(--accent)">💡 GAS × Claude API の組み合わせが最強な理由</strong><br>
+      GAS（Google Apps Script）は<strong>スプレッドシート・Gmail・カレンダー・フォームと直接連携</strong>できるため、既存のGoogle Workspaceをそのまま使えます。そこにClaude APIを組み合わせることで、問い合わせ分類・見積文章生成・優先度判定など「AIでしかできない部分」を追加。新しいツールへの移行コストゼロで自動化できるのが最大のメリットです。
+    </div>
+  </div>
+</div>
+
+<!-- ========== PAGE 3: CODE ========== -->
+<div id="code" class="page">
+  <div style="margin-top:20px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;margin-bottom:12px;">
+    <div style="font-size:13px;font-weight:700;margin-bottom:6px;">📂 コードサンプル一覧</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <span class="tag tag-green">1. GAS 問い合わせ自動入力</span>
+      <span class="tag tag-amber">2. GAS 進捗リマインド</span>
+      <span class="tag tag-purple">3. Claude API 見積書AI生成 ← 差別化</span>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:16px;">
+
+    <div class="code-wrap">
+      <div class="code-head">
+        <span class="code-file">auto_input.gs — Googleフォーム問い合わせの自動入力・Slack通知</span>
+        <button class="copy-btn" onclick="copyCode('code1')">コピー</button>
+      </div>
+      <pre id="code1"><span class="cm">// Googleフォームの送信をトリガーとしてスプレッドシートへ自動入力</span>
+<span class="cm">// GAS（Google Apps Script）で実装 — 新規インストール不要</span>
+
+<span class="kw">const</span> <span class="var">SHEET_NAME</span> = <span class="str">"案件管理"</span>;
+<span class="kw">const</span> <span class="var">SLACK_WEBHOOK</span> = <span class="str">"YOUR_SLACK_WEBHOOK_URL"</span>;
+
+<span class="cm">// フォーム送信時に自動実行されるトリガー関数</span>
+<span class="kw">function</span> <span class="fn">onFormSubmit</span>(e) {
+  <span class="kw">const</span> ss = SpreadsheetApp.<span class="fn">getActiveSpreadsheet</span>();
+  <span class="kw">const</span> sheet = ss.<span class="fn">getSheetByName</span>(<span class="var">SHEET_NAME</span>);
+  <span class="kw">const</span> res = e.namedValues;  <span class="cm">// フォームの回答</span>
+
+  <span class="cm">// スプレッドシートに新しい行を追加</span>
+  <span class="kw">const</span> now = <span class="kw">new</span> <span class="fn">Date</span>();
+  sheet.<span class="fn">appendRow</span>([
+    <span class="fn">Utilities.formatDate</span>(now, <span class="str">"JST"</span>, <span class="str">"yyyy/MM/dd HH:mm"</span>),  <span class="cm">// 受付日時</span>
+    res[<span class="str">"お名前"</span>]?.[<span class="num">0</span>] ?? <span class="str">""</span>,                              <span class="cm">// 顧客名</span>
+    res[<span class="str">"電話番号"</span>]?.[<span class="num">0</span>] ?? <span class="str">""</span>,                            <span class="cm">// 連絡先</span>
+    res[<span class="str">"ご依頼内容"</span>]?.[<span class="num">0</span>] ?? <span class="str">""</span>,                          <span class="cm">// 依頼内容</span>
+    res[<span class="str">"サービス種別"</span>]?.[<span class="num">0</span>] ?? <span class="str">""</span>,                        <span class="cm">// リフォーム/クリーニング等</span>
+    <span class="str">"新規問い合わせ"</span>,                                         <span class="cm">// ステータス</span>
+    <span class="str">""</span>,                                                       <span class="cm">// 担当者（後から入力）</span>
+  ]);
+
+  <span class="cm">// Slackに即時通知</span>
+  <span class="kw">const</span> message = {
+    text: <span class="str">`🔔 *新規問い合わせ*\n`</span>
+        + <span class="str">`お名前: ${res["お名前"]?.[0]}\n`</span>
+        + <span class="str">`内容: ${res["ご依頼内容"]?.[0]}\n`</span>
+        + <span class="str">`種別: ${res["サービス種別"]?.[0]}`</span>
+  };
+  UrlFetchApp.<span class="fn">fetch</span>(<span class="var">SLACK_WEBHOOK</span>, {
+    method: <span class="str">"post"</span>,
+    contentType: <span class="str">"application/json"</span>,
+    payload: JSON.<span class="fn">stringify</span>(message),
+  });
+
+  <span class="fn">Logger.log</span>(<span class="str">"✅ 自動入力 + Slack通知完了"</span>);
+}</pre>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-head">
+        <span class="code-file">reminder.gs — 返信遅延・見積未送付の自動検知・リマインド</span>
+        <button class="copy-btn" onclick="copyCode('code2')">コピー</button>
+      </div>
+      <pre id="code2"><span class="cm">// 毎朝9時に自動実行して、アクションが必要な案件を検知してSlack通知</span>
+<span class="cm">// cron設定: GASのトリガーで「毎日 9:00〜9:30」に設定</span>
+
+<span class="kw">const</span> <span class="var">REMIND_DAYS</span> = <span class="num">2</span>;    <span class="cm">// N日返信なしでアラート</span>
+<span class="kw">const</span> <span class="var">ESTIMATE_DAYS</span> = <span class="num">1</span>;  <span class="cm">// 見積書をN日以内に送付するルール</span>
+<span class="kw">const</span> <span class="var">BEFORE_DAYS</span> = <span class="num">7</span>;    <span class="cm">// 施工N日前にリマインド</span>
+
+<span class="kw">function</span> <span class="fn">dailyCheck</span>() {
+  <span class="kw">const</span> sheet = SpreadsheetApp.<span class="fn">getActiveSpreadsheet</span>()
+                               .<span class="fn">getSheetByName</span>(<span class="str">"案件管理"</span>);
+  <span class="kw">const</span> data = sheet.<span class="fn">getDataRange</span>().<span class="fn">getValues</span>();
+  <span class="kw">const</span> now = <span class="kw">new</span> <span class="fn">Date</span>();
+  <span class="kw">const</span> alerts = [];
+
+  <span class="cm">// ヘッダー行をスキップして各案件を確認</span>
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">1</span>; i &lt; data.length; i++) {
+    <span class="kw">const</span> [recvAt, name, tel, desc, type, status, staff, estimateAt, scheduleAt] = data[i];
+    <span class="kw">if</span> ([<span class="str">"完了"</span>, <span class="str">"辞退"</span>, <span class="str">"キャンセル"</span>].<span class="fn">includes</span>(status)) <span class="kw">continue</span>;
+
+    <span class="kw">const</span> <span class="fn">diffDays</span> = (d) =&gt; Math.<span class="fn">floor</span>((now - <span class="kw">new</span> <span class="fn">Date</span>(d)) / <span class="num">86400000</span>);
+
+    <span class="cm">// 返信遅延チェック</span>
+    <span class="kw">if</span> (recvAt &amp;&amp; <span class="fn">diffDays</span>(recvAt) &gt;= <span class="var">REMIND_DAYS</span> &amp;&amp; status === <span class="str">"新規問い合わせ"</span>) {
+      alerts.<span class="fn">push</span>(<span class="str">`🚨 *${name}様* — 受付から${diffDays(recvAt)}日経過（未対応）`</span>);
+    }
+    <span class="cm">// 見積未送付チェック</span>
+    <span class="kw">if</span> (status === <span class="str">"見積作成中"</span> &amp;&amp; recvAt &amp;&amp; <span class="fn">diffDays</span>(recvAt) &gt; <span class="var">ESTIMATE_DAYS</span>) {
+      alerts.<span class="fn">push</span>(<span class="str">`⚠️ *${name}様* — 見積書 未送付 (${diffDays(recvAt)}日経過)`</span>);
+    }
+    <span class="cm">// 施工日リマインド</span>
+    <span class="kw">if</span> (scheduleAt) {
+      <span class="kw">const</span> daysLeft = -<span class="fn">diffDays</span>(scheduleAt);
+      <span class="kw">if</span> (daysLeft &gt; <span class="num">0</span> &amp;&amp; daysLeft &lt;= <span class="var">BEFORE_DAYS</span>) {
+        alerts.<span class="fn">push</span>(<span class="str">`📅 *${name}様* — 施工まで残${daysLeft}日`</span>);
+      }
+    }
+  }
+
+  <span class="kw">if</span> (alerts.length &gt; <span class="num">0</span>) {
+    UrlFetchApp.<span class="fn">fetch</span>(<span class="var">SLACK_WEBHOOK</span>, {
+      method: <span class="str">"post"</span>, contentType: <span class="str">"application/json"</span>,
+      payload: JSON.<span class="fn">stringify</span>({ text: <span class="str">"🔔 *要対応案件*\n\n"</span> + alerts.<span class="fn">join</span>(<span class="str">"\n"</span>) })
+    });
+  }
+  <span class="fn">Logger.log</span>(<span class="str">`チェック完了: ${alerts.length}件のアラート`</span>);
+}</pre>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-head">
+        <span class="code-file">estimate_ai.gs — Claude API で見積書文章を自動生成 ← 差別化ポイント</span>
+        <button class="copy-btn" onclick="copyCode('code3')">コピー</button>
+      </div>
+      <pre id="code3"><span class="cm">// GASからClaude APIを呼び出して見積書の文章を自動生成</span>
+<span class="cm">// スプレッドシートのボタンを押すだけで見積書ドラフトが完成</span>
+
+<span class="kw">const</span> <span class="var">CLAUDE_API_KEY</span> = <span class="str">"YOUR_ANTHROPIC_API_KEY"</span>;
+<span class="kw">const</span> <span class="var">CLAUDE_MODEL</span>   = <span class="str">"claude-opus-4-5"</span>;
+
+<span class="kw">function</span> <span class="fn">generateEstimate</span>() {
+  <span class="kw">const</span> sheet = SpreadsheetApp.<span class="fn">getActiveSpreadsheet</span>().<span class="fn">getActiveSheet</span>();
+  <span class="kw">const</span> row = sheet.<span class="fn">getActiveRange</span>().<span class="fn">getRow</span>();
+  <span class="kw">const</span> [_, name, tel, desc, type] = sheet.<span class="fn">getRange</span>(row, <span class="num">1</span>, <span class="num">1</span>, <span class="num">5</span>).<span class="fn">getValues</span>()[<span class="num">0</span>];
+
+  <span class="kw">const</span> prompt = <span class="str">`
+あなたは住宅サービス会社のベテラン営業担当です。
+以下の情報をもとに、丁寧でわかりやすい見積書の文章を作成してください。
+
+【顧客名】${name} 様
+【サービス種別】${type}
+【依頼内容】${desc}
+
+以下の形式で出力してください:
+---
+件名: 【ご見積書】○○のご提案
+
+本文: （300文字程度、丁寧語で）
+
+作業内容:
+• 項目1: ○○円
+• 項目2: ○○円
+合計: ○○円（税込）
+
+備考: （工期・注意事項など）
+---
+`</span>;
+
+  <span class="kw">const</span> response = UrlFetchApp.<span class="fn">fetch</span>(<span class="str">"https://api.anthropic.com/v1/messages"</span>, {
+    method: <span class="str">"post"</span>,
+    headers: {
+      <span class="str">"x-api-key"</span>: <span class="var">CLAUDE_API_KEY</span>,
+      <span class="str">"anthropic-version"</span>: <span class="str">"2023-06-01"</span>,
+      <span class="str">"content-type"</span>: <span class="str">"application/json"</span>,
+    },
+    payload: JSON.<span class="fn">stringify</span>({
+      model: <span class="var">CLAUDE_MODEL</span>,
+      max_tokens: <span class="num">1024</span>,
+      messages: [{ role: <span class="str">"user"</span>, content: prompt }],
+    }),
+    muteHttpExceptions: <span class="kw">true</span>,
+  });
+
+  <span class="kw">const</span> result = JSON.<span class="fn">parse</span>(response.<span class="fn">getContentText</span>());
+  <span class="kw">const</span> estimateText = result.content[<span class="num">0</span>].text;
+
+  <span class="cm">// Googleドキュメントに見積書を自動作成</span>
+  <span class="kw">const</span> doc = DocumentApp.<span class="fn">create</span>(<span class="str">`見積書_${name}_${new Date().toLocaleDateString("ja-JP")}`</span>);
+  doc.<span class="fn">getBody</span>().<span class="fn">setText</span>(estimateText);
+
+  <span class="cm">// スプレッドシートにドキュメントURLを記録</span>
+  sheet.<span class="fn">getRange</span>(row, <span class="num">9</span>).<span class="fn">setValue</span>(doc.<span class="fn">getUrl</span>());
+
+  SpreadsheetApp.<span class="fn">getUi</span>().<span class="fn">alert</span>(<span class="str">`✅ 見積書を作成しました！\n${doc.getUrl()}`</span>);
+}</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ========== PAGE 4: REQUEST ========== -->
+<div id="request" class="page">
+  <div style="margin-top:20px;">
+    <div class="info-panel">
+      <div class="info-panel-title">📋 これを教えていただけると、より精密なシステムが作れます</div>
+      <div class="info-panel-sub">
+        このダッシュボードはあくまで<strong>叩き台</strong>です。以下の情報をヒアリングすることで、<br>
+        <strong style="color:var(--text)">実際の業務フローに完全に合致した自動化システム</strong>を最短で構築できます。
+      </div>
+      <div class="info-sections">
+        <div class="info-section">
+          <div class="info-section-title">📋 現在の業務フロー</div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>問い合わせの受付方法</strong>（電話 / フォーム / メール / LINE）<br>→ 自動化の入り口設計に影響</div></div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>現在使っているスプレッドシートのフォーマット</strong><br>→ 既存の形式に合わせて出力します</div></div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>見積書の作成方法</strong>（Word / Excel / 手書き）<br>→ AI生成への移行をサポートします</div></div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>案件の種別</strong>（リフォーム / クリーニング / 解体 など）<br>→ 自動分類のカテゴリ設計に使用</div></div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">😫 一番困っていること</div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>一番時間がかかっている作業</strong>（例: 毎日1時間の手入力）<br>→ 最初にここを自動化します</div></div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>対応漏れが起きやすい業務</strong><br>→ 自動アラートで防ぎます</div></div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>スタッフ間の情報共有方法</strong>（Slack / LINE / 口頭 など）<br>→ 既存ツールに通知を連携</div></div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>顧客管理の現状</strong>（紙 / Excel / なし）<br>→ データ化して検索・分析を可能に</div></div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">🔧 インフラ・環境</div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>Google Workspace の利用状況</strong><br>（Gmail / スプレッドシート / フォーム を使っているか）<br>→ GAS連携の設計に直結</div></div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>通知を受け取りたいチャネル</strong><br>（Slack / LINE / メール）</div></div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>スタッフ数・役割分担</strong><br>→ アクセス権限の設計に使用</div></div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">💡 将来やりたいこと</div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>Notion / kintone などへの移行検討</strong><br>→ データ連携を設計します</div></div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>ホームページからの問い合わせ連携</strong><br>→ フォームと自動入力を直結</div></div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>レポートを誰に・どんな形式で届けたいか</strong><br>（社長向け週次 / スタッフ向け日次）</div></div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>NDA（秘密保持契約）の締結希望</strong><br>→ 対応可能です</div></div>
+        </div>
+      </div>
+      <div class="info-footer">
+        💬 <strong style="color:var(--text)">クラウドワークスのメッセージ</strong>で箇条書きでもOKです。全部答えられなくても大丈夫です。わからない点はこちらから確認しながら進めます。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">🎯 なぜヒアリングが重要なのか</div></div>
+      <div class="card-body">
+        <div class="grid3" style="gap:12px;">
+          <div style="background:var(--bg3);border-radius:8px;padding:16px;">
+            <div style="font-size:20px;margin-bottom:8px;">😓</div>
+            <div style="font-size:12px;font-weight:700;margin-bottom:4px;color:var(--red);">ヒアリングなしで作ると…</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.6;">「業務フローと合わない」が発生して修正に時間がかかる。GASトリガーが業務時間外に発火するなど。</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:16px;">
+            <div style="font-size:20px;margin-bottom:8px;">✅</div>
+            <div style="font-size:12px;font-weight:700;margin-bottom:4px;color:var(--green);">ヒアリング後に作ると…</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.6;">初回から「これ、そのまま使える！」になる確率が大幅UP。継続パートナーへとつながりやすい。</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:16px;">
+            <div style="font-size:20px;margin-bottom:8px;">🚀</div>
+            <div style="font-size:12px;font-weight:700;margin-bottom:4px;color:var(--blue);">このデモの位置づけ</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.6;">「こういうことができます」の証明です。詳細はヒアリングで業務に合わせてカスタマイズします。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const JOBS = [
+  {name:'山田邸 水回りリフォーム', type:'リフォーム', client:'山田 太郎', amount:480000, staff:'田中', status:'交渉中', deadline:'2026-05-20'},
+  {name:'佐藤様エアコンクリーニング', type:'クリーニング', client:'佐藤 花子', amount:18000, staff:'鈴木', status:'見積作成中', deadline:'2026-05-08'},
+  {name:'鈴木邸 外壁塗装', type:'リフォーム', client:'鈴木 一郎', amount:950000, staff:'田中', status:'施工中', deadline:'2026-05-15'},
+  {name:'田中様 解体工事', type:'解体', client:'田中 次郎', amount:320000, staff:'—', status:'契約済み', deadline:'2026-05-12'},
+  {name:'小林様 遺品整理', type:'遺品整理', client:'小林 三郎', amount:75000, staff:'山本', status:'完了', deadline:'2026-05-01'},
+  {name:'高橋邸 害虫駆除', type:'害虫駆除', client:'高橋 四郎', amount:35000, staff:'鈴木', status:'新規問い合わせ', deadline:'2026-05-10'},
+];
+
+const STATUS_STYLE = {
+  '新規問い合わせ': ['tag-cyan', '🆕'],
+  '見積作成中':     ['tag-amber', '📝'],
+  '交渉中':         ['tag-blue', '💬'],
+  '契約済み':       ['tag-green', '✅'],
+  '施工中':         ['tag-purple', '🔨'],
+  '完了':           ['tag-gray', '✅'],
+};
+
+function renderJobs() {
+  const tbody = document.getElementById('jobs-body');
+  tbody.innerHTML = JOBS.map(j => {
+    const [cls, ico] = STATUS_STYLE[j.status] || ['tag-gray','❓'];
+    const dl = new Date(j.deadline);
+    const daysLeft = Math.ceil((dl - new Date()) / 86400000);
+    const dlColor = daysLeft < 3 ? 'var(--red)' : daysLeft < 7 ? 'var(--yellow)' : 'var(--text2)';
+    return `
+    <tr>
+      <td><strong>${j.name}</strong></td>
+      <td><span class="tag tag-cyan" style="font-size:10px;">${j.type}</span></td>
+      <td style="color:var(--text2)">${j.client}</td>
+      <td class="num-r">¥${j.amount.toLocaleString()}</td>
+      <td style="color:var(--text2);text-align:center">${j.staff}</td>
+      <td style="text-align:center"><span class="tag ${cls}">${ico} ${j.status}</span></td>
+      <td style="text-align:center;color:${dlColor};font-size:12px;">${j.deadline}<br><span style="font-size:10px">${daysLeft > 0 ? '残'+daysLeft+'日' : '期限超過'}</span></td>
+      <td style="text-align:center"><button class="tag tag-cyan" style="cursor:pointer;border:none;font-size:11px;" onclick="showToast('🔗 詳細画面はヒアリング後に実装します')">詳細</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderCategoryBars() {
+  const counts = {};
+  JOBS.forEach(j => { counts[j.type] = (counts[j.type]||0) + 1; });
+  const total = JOBS.length;
+  const colors = ['var(--accent)','var(--green)','var(--yellow)','var(--blue)','var(--purple)','var(--orange)'];
+  let i = 0;
+  const el = document.getElementById('category-bars');
+  el.innerHTML = Object.entries(counts).map(([type, cnt]) => {
+    const pct = (cnt / total * 100).toFixed(0);
+    const c = colors[i++ % colors.length];
+    return `
+    <div class="progress-row">
+      <div class="progress-label">${type}</div>
+      <div class="progress-track"><div class="progress-bar" style="width:${pct}%;background:${c}"></div></div>
+      <div class="progress-val" style="color:${c}">${cnt}件</div>
+    </div>`;
+  }).join('');
+}
+
+function refreshJobs() {
+  JOBS.forEach(j => {
+    const statuses = ['新規問い合わせ','見積作成中','交渉中','契約済み','施工中','完了'];
+    // 小さなランダム変化でリアリティを出す
+    if (Math.random() > 0.8) {
+      const idx = statuses.indexOf(j.status);
+      if (idx >= 0 && idx < statuses.length - 1) j.status = statuses[idx + 1];
+    }
+  });
+  renderJobs();
+  showToast('🔄 データを更新しました（GAS シミュレーション）');
+}
+
+function animateKPI(elId, target, prefix, suffix) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const start = performance.now();
+  const isFloat = target % 1 !== 0;
+  function update(now) {
+    const t = Math.min((now - start) / 900, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    const val = target * ease;
+    el.textContent = prefix + (isFloat ? val.toFixed(1) : Math.round(val).toLocaleString()) + suffix;
+    if (t < 1) requestAnimationFrame(update);
+    else el.textContent = prefix + (isFloat ? target.toFixed(1) : target.toLocaleString()) + suffix;
+  }
+  requestAnimationFrame(update);
+}
+
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+function copyCode(id) {
+  navigator.clipboard.writeText(document.getElementById(id).innerText)
+    .then(() => showToast('✅ コードをコピーしました'));
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// Init
+renderJobs();
+renderCategoryBars();
+setTimeout(() => {
+  animateKPI('kpi-total', 24, '', '件');
+  setTimeout(() => animateKPI('kpi-active', 8, '', '件'), 120);
+  setTimeout(() => animateKPI('kpi-sales', 187, '¥', '万'), 240);
+  setTimeout(() => animateKPI('kpi-inquiries', 3, '', '件'), 360);
+}, 200);
+</script>
+</body>
+</html>
