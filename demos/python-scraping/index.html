@@ -3,837 +3,913 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EC価格監視 ダッシュボード | なぎ</title>
+  <title>Amazon EC 運用自動化ダッシュボード｜叩き台デモ</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg: #0d1117;
-      --bg2: #161b22;
-      --bg3: #21262d;
-      --border: #30363d;
-      --accent: #00d4ff;
-      --text: #e6edf3;
-      --text2: #8b949e;
-      --green: #3fb950;
-      --yellow: #d29922;
-      --red: #f85149;
-      --purple: #bc8cff;
-      --orange: #f0883e;
-      --amazon: #ff9900;
-      --rakuten: #bf0000;
-      --yahoo: #ff0033;
-      --radius: 8px;
+      --bg: #0a0e1a; --bg2: #111827; --bg3: #1f2937; --bg4: #374151;
+      --border: #1f2937; --border2: #374151;
+      --accent: #f59e0b; --accent2: #3b82f6; --accent3: #10b981;
+      --text: #f9fafb; --text2: #9ca3af; --text3: #6b7280;
+      --red: #ef4444; --green: #10b981; --yellow: #f59e0b; --blue: #3b82f6; --purple: #8b5cf6;
+      --amazon: #ff9900; --r: 10px;
     }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.5; }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      font-size: 14px;
-      min-height: 100vh;
-    }
+    /* NAV */
+    nav { background: var(--bg2); border-bottom: 1px solid var(--border2); padding: 0 24px; position: sticky; top: 0; z-index: 200; display: flex; align-items: stretch; }
+    .nav-logo { font-size: 15px; font-weight: 700; color: var(--amazon); padding: 14px 0; display: flex; align-items: center; gap: 8px; }
+    .nav-tabs { display: flex; margin-left: 32px; gap: 0; }
+    .nav-tab { background: none; border: none; color: var(--text2); cursor: pointer; font-family: inherit; font-size: 13px; padding: 14px 18px; border-bottom: 2px solid transparent; transition: all .15s; }
+    .nav-tab:hover { color: var(--text); }
+    .nav-tab.active { color: var(--amazon); border-bottom-color: var(--amazon); }
+    .nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .live-badge { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--green); }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: blink 1.8s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .demo-badge { background: rgba(245,158,11,.15); color: var(--amazon); border: 1px solid rgba(245,158,11,.3); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
 
-    nav {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 24px; background: var(--bg2); border-bottom: 1px solid var(--border);
-      position: sticky; top: 0; z-index: 100;
-    }
-    .logo { font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; }
-    .back-btn {
-      display: flex; align-items: center; gap: 6px;
-      color: var(--text2); text-decoration: none; font-size: 13px;
-      padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius);
-      transition: all 0.2s;
-    }
-    .back-btn:hover { color: var(--text); border-color: var(--accent); }
+    /* LAYOUT */
+    .page { display: none; max-width: 1100px; margin: 0 auto; padding: 24px; }
+    .page.active { display: block; }
 
-    header { padding: 40px 24px 32px; max-width: 1000px; margin: 0 auto; }
-    .tag {
-      display: inline-block; background: rgba(0,212,255,0.12); color: var(--accent);
-      font-size: 11px; font-weight: 600; padding: 4px 10px;
-      border-radius: 20px; border: 1px solid rgba(0,212,255,0.3);
-      margin-bottom: 12px; letter-spacing: 0.5px; text-transform: uppercase;
-    }
-    h1 { font-size: clamp(20px, 4vw, 30px); font-weight: 700; margin-bottom: 16px; line-height: 1.3; }
-    .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
-    .badge { font-size: 12px; padding: 4px 10px; border-radius: 20px; font-weight: 500; }
-    .badge.problem { background: rgba(248,81,73,0.12); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
-    .badge.solution { background: rgba(63,185,80,0.12); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
-    .summary-line { font-size: 14px; color: var(--text2); line-height: 1.7; }
+    /* KPI CARDS */
+    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+    .kpi { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r); padding: 18px 20px; position: relative; overflow: hidden; }
+    .kpi::before { content:''; position:absolute; inset:0; border-radius:var(--r); opacity:.06; }
+    .kpi.green::before { background: var(--green); }
+    .kpi.yellow::before { background: var(--yellow); }
+    .kpi.blue::before { background: var(--blue); }
+    .kpi.red::before { background: var(--red); }
+    .kpi-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
+    .kpi-value { font-size: 28px; font-weight: 800; line-height: 1; }
+    .kpi-value.green { color: var(--green); }
+    .kpi-value.yellow { color: var(--yellow); }
+    .kpi-value.blue { color: var(--blue); }
+    .kpi-value.red { color: var(--red); }
+    .kpi-sub { font-size: 11px; margin-top: 6px; }
+    .up { color: var(--green); } .down { color: var(--red); } .flat { color: var(--text2); }
 
-    .tabs {
-      max-width: 1000px; margin: 0 auto; padding: 0 24px;
-      display: flex; gap: 4px; border-bottom: 1px solid var(--border);
-    }
-    .tab {
-      background: none; border: none; color: var(--text2); cursor: pointer;
-      padding: 10px 18px; font-size: 14px; font-family: inherit;
-      border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;
-    }
-    .tab:hover { color: var(--text); }
-    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
+    /* CARDS */
+    .card { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r); overflow: hidden; margin-bottom: 16px; }
+    .card-head { padding: 13px 18px; border-bottom: 1px solid var(--border2); display: flex; align-items: center; justify-content: space-between; background: var(--bg3); }
+    .card-title { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+    .card-body { padding: 18px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
 
-    .content-area { max-width: 1000px; margin: 0 auto; padding: 24px; }
-
-    /* STATUS BAR */
-    .status-bar {
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 10px; margin-bottom: 20px;
-      padding: 10px 16px; background: var(--bg2);
-      border: 1px solid var(--border); border-radius: var(--radius);
-    }
-    .status-left { display: flex; align-items: center; gap: 10px; }
-    .status-dot {
-      width: 8px; height: 8px; border-radius: 50%; background: var(--green);
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-    .status-text { font-size: 12px; color: var(--text2); }
-    .status-text strong { color: var(--green); }
+    /* TAGS */
+    .tag { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 20px; }
+    .tag-amber { background: rgba(245,158,11,.15); color: var(--yellow); }
+    .tag-green { background: rgba(16,185,129,.12); color: var(--green); }
+    .tag-blue { background: rgba(59,130,246,.12); color: var(--blue); }
+    .tag-red { background: rgba(239,68,68,.12); color: var(--red); }
+    .tag-purple { background: rgba(139,92,246,.12); color: var(--purple); }
 
     /* PRODUCT TABLE */
-    .product-table-wrap {
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: var(--radius); overflow: hidden; margin-bottom: 20px;
-    }
-    .product-table-header {
-      padding: 12px 16px; background: var(--bg3);
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 8px;
-    }
-    .table-title { font-size: 13px; font-weight: 600; }
-    .header-right { display: flex; gap: 8px; align-items: center; }
+    .tbl { width: 100%; border-collapse: collapse; }
+    .tbl th { padding: 9px 12px; text-align: left; font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .6px; border-bottom: 1px solid var(--border2); white-space: nowrap; }
+    .tbl td { padding: 11px 12px; border-bottom: 1px solid rgba(31,41,55,.8); vertical-align: middle; font-size: 13px; }
+    .tbl tr:last-child td { border-bottom: none; }
+    .tbl tr:hover td { background: rgba(255,255,255,.02); }
+    .prod-name { font-weight: 500; }
+    .prod-asin { font-size: 10px; color: var(--text3); font-family: monospace; }
+    .num-r { text-align: right; font-weight: 600; }
+    .stock-ok { color: var(--green); }
+    .stock-warn { color: var(--yellow); }
+    .stock-ng { color: var(--red); }
+    .rank-badge { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 5px; }
 
-    .btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 7px 13px; border-radius: var(--radius);
-      font-size: 12px; font-family: inherit; font-weight: 500;
-      cursor: pointer; border: none; transition: all 0.2s;
-    }
-    .btn-primary { background: var(--accent); color: #000; }
-    .btn-primary:hover { background: #00b8d9; transform: translateY(-1px); }
-    .btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
-    .btn-secondary:hover { background: #2d333b; }
-    .btn-small { padding: 5px 10px; font-size: 11px; }
+    /* GAUGE / PROGRESS */
+    .progress-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .progress-label { width: 130px; font-size: 12px; color: var(--text2); flex-shrink: 0; }
+    .progress-track { flex: 1; height: 7px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+    .progress-bar { height: 100%; border-radius: 4px; }
+    .progress-val { width: 50px; text-align: right; font-size: 12px; font-weight: 600; }
 
-    .price-table { width: 100%; border-collapse: collapse; }
-    .price-table th {
-      padding: 10px 12px; text-align: left;
-      font-size: 11px; font-weight: 600; color: var(--text2);
-      text-transform: uppercase; letter-spacing: 0.5px;
-      border-bottom: 1px solid var(--border); white-space: nowrap;
-    }
-    .price-table td {
-      padding: 10px 12px; border-bottom: 1px solid rgba(48,54,61,0.5);
-      vertical-align: middle;
-    }
-    .price-table tr:last-child td { border-bottom: none; }
-    .price-table tr:hover td { background: rgba(255,255,255,0.02); }
-    .price-table tr.selected td { background: rgba(0,212,255,0.04); border-left: 2px solid var(--accent); }
+    /* ALERT LIST */
+    .alert-list { display: flex; flex-direction: column; gap: 8px; }
+    .alert-item { display: flex; align-items: flex-start; gap: 10px; background: var(--bg3); border-radius: 8px; padding: 11px 14px; border-left: 3px solid transparent; }
+    .alert-item.err { border-left-color: var(--red); }
+    .alert-item.warn { border-left-color: var(--yellow); }
+    .alert-item.ok { border-left-color: var(--green); }
+    .alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .alert-text { font-size: 12px; line-height: 1.5; }
+    .alert-time { font-size: 10px; color: var(--text3); margin-top: 3px; }
 
-    .product-name { font-weight: 500; font-size: 13px; }
-    .product-cat { font-size: 10px; color: var(--text2); margin-top: 2px; }
-
-    .price-cell { text-align: right; font-size: 13px; font-weight: 600; min-width: 70px; }
-    .price-cell.cheapest { color: var(--green); }
-    .price-cell.priciest { color: var(--red); }
-    .price-cell.mid { color: var(--text); }
-    .price-na { color: var(--text2); font-weight: 400; font-size: 12px; }
-
-    .site-badge {
-      display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 5px;
-      border-radius: 3px; letter-spacing: 0.3px; vertical-align: middle; margin-left: 3px;
-    }
-    .site-amz { background: rgba(255,153,0,0.15); color: var(--amazon); }
-    .site-rak { background: rgba(191,0,0,0.12); color: var(--rakuten); }
-    .site-yah { background: rgba(255,0,51,0.1); color: var(--yahoo); }
-
-    .change-badge {
-      display: inline-flex; align-items: center; gap: 2px;
-      font-size: 11px; padding: 2px 7px; border-radius: 20px; font-weight: 600;
-    }
-    .change-up { background: rgba(248,81,73,0.12); color: var(--red); }
-    .change-down { background: rgba(63,185,80,0.12); color: var(--green); }
-    .change-same { background: rgba(139,148,158,0.1); color: var(--text2); }
-
-    .row-btn {
-      background: none; border: 1px solid var(--border); color: var(--text2);
-      padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;
-      font-family: inherit; transition: all 0.2s;
-    }
-    .row-btn:hover { border-color: var(--accent); color: var(--accent); }
-    .row-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,0.08); }
-
-    /* CHART SECTION */
-    .chart-section {
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: var(--radius); overflow: hidden; margin-bottom: 20px;
-      display: none;
-    }
-    .chart-section.visible { display: block; }
-    .chart-header {
-      padding: 12px 16px; background: var(--bg3); border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
-    }
-    .chart-title { font-size: 13px; font-weight: 600; }
-    .chart-legend { display: flex; gap: 12px; }
-    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; }
-    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
-    .chart-body { padding: 16px; }
+    /* CHART CANVAS */
     canvas { display: block; width: 100% !important; }
 
-    /* ALERT PANEL */
-    .alert-panel {
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: var(--radius); overflow: hidden; margin-bottom: 20px;
-    }
-    .alert-header {
-      padding: 12px 16px; background: var(--bg3); border-bottom: 1px solid var(--border);
-      font-size: 13px; font-weight: 600;
-    }
-    .alert-body { padding: 16px; }
-    .alert-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;
-    }
-    .alert-item {
-      background: var(--bg3); border: 1px solid var(--border);
-      border-radius: 6px; padding: 14px;
-    }
-    .alert-product { font-size: 12px; font-weight: 600; margin-bottom: 10px; color: var(--text2); }
-    .alert-input-row { display: flex; align-items: center; gap: 8px; }
-    .alert-label { font-size: 12px; white-space: nowrap; }
-    .alert-input {
-      flex: 1; background: var(--bg); border: 1px solid var(--border);
-      color: var(--text); padding: 6px 10px; border-radius: 4px;
-      font-family: inherit; font-size: 12px; outline: none;
-    }
-    .alert-input:focus { border-color: var(--accent); }
-    .alert-unit { font-size: 12px; color: var(--text2); }
-    .test-mail-btn {
-      margin-top: 10px; width: 100%;
-      background: none; border: 1px solid var(--border); color: var(--text2);
-      padding: 7px; border-radius: 4px; cursor: pointer; font-size: 12px;
-      font-family: inherit; transition: all 0.2s;
-    }
-    .test-mail-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-    /* EMAIL PREVIEW POPUP */
-    .email-preview-box {
-      display: none; margin-top: 10px;
-      background: var(--bg); border: 1px solid rgba(0,212,255,0.3);
-      border-radius: 6px; padding: 12px; font-size: 11px;
-    }
-    .email-preview-box.visible { display: block; }
-    .ep-row { display: flex; gap: 6px; padding: 3px 0; }
-    .ep-label { color: var(--text2); min-width: 36px; }
-    .ep-val { color: var(--text); }
-    .ep-body { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); line-height: 1.8; color: var(--text); }
+    /* AUTOMATION STEPS */
+    .flow-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+    .flow-card { background: var(--bg3); border: 1px solid var(--border2); border-radius: 10px; padding: 18px; position: relative; }
+    .flow-num { position: absolute; top: 14px; right: 14px; width: 22px; height: 22px; border-radius: 50%; background: rgba(245,158,11,.15); color: var(--amazon); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+    .flow-icon { font-size: 28px; margin-bottom: 10px; }
+    .flow-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+    .flow-desc { font-size: 12px; color: var(--text2); line-height: 1.6; }
+    .flow-tech { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px; }
+    .tech-chip { font-size: 10px; background: var(--bg4); color: var(--text2); padding: 2px 7px; border-radius: 4px; }
+    .auto-badge { display: inline-block; font-size: 10px; background: rgba(16,185,129,.12); color: var(--green); padding: 1px 6px; border-radius: 4px; margin-top: 6px; }
 
     /* CODE */
-    .code-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-    .code-header {
-      background: var(--bg3); padding: 10px 16px;
-      display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-    }
-    .code-filename { font-size: 12px; color: var(--text2); font-family: monospace; }
-    .copy-code-btn {
-      background: none; border: 1px solid var(--border); color: var(--text2);
-      cursor: pointer; padding: 4px 10px; border-radius: 4px;
-      font-size: 11px; font-family: inherit; transition: all 0.2s;
-    }
-    .copy-code-btn:hover { color: var(--text); border-color: var(--text2); }
-    pre { padding: 20px; overflow-x: auto; font-size: 12.5px; line-height: 1.7; color: var(--text); }
-    pre code { font-family: 'SF Mono', 'Fira Code', monospace; }
-    .kw { color: #ff7b72; }
-    .fn { color: #d2a8ff; }
-    .str { color: #a5d6ff; }
-    .cm { color: #8b949e; font-style: italic; }
-    .num { color: #79c0ff; }
-    .imp { color: #ffa657; }
+    .code-wrap { background: #0d1117; border: 1px solid var(--border2); border-radius: var(--r); overflow: hidden; }
+    .code-head { background: var(--bg3); padding: 10px 16px; border-bottom: 1px solid var(--border2); display: flex; align-items: center; justify-content: space-between; }
+    .code-file { font-family: monospace; font-size: 12px; color: var(--text2); }
+    .copy-btn { background: none; border: 1px solid var(--border2); color: var(--text2); padding: 3px 10px; border-radius: 5px; cursor: pointer; font-size: 11px; font-family: inherit; transition: all .15s; }
+    .copy-btn:hover { color: var(--text); border-color: var(--text2); }
+    pre { padding: 20px; overflow-x: auto; font-family: 'SF Mono','Fira Code',monospace; font-size: 12.5px; line-height: 1.75; color: #e6edf3; }
+    .kw{color:#ff7b72} .fn{color:#d2a8ff} .str{color:#a5d6ff} .cm{color:#8b949e;font-style:italic} .num{color:#79c0ff} .var{color:#ffa657}
 
-    /* USECASES */
-    .usecase-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
-    .usecase-card {
-      background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 20px; transition: border-color 0.2s;
-    }
-    .usecase-card:hover { border-color: var(--accent); }
-    .usecase-icon { font-size: 28px; margin-bottom: 10px; }
-    .usecase-name { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
-    .usecase-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
-    .usecase-tag {
-      display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px;
-      background: rgba(0,212,255,0.1); color: var(--accent); margin-top: 10px;
-    }
+    /* INFO REQUEST PANEL */
+    .info-panel { background: linear-gradient(135deg, #1a2535 0%, #1a2040 100%); border: 1px solid rgba(59,130,246,.3); border-radius: var(--r); padding: 28px 32px; margin-bottom: 20px; }
+    .info-panel-title { font-size: 18px; font-weight: 800; color: var(--blue); margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+    .info-panel-sub { font-size: 13px; color: var(--text2); margin-bottom: 22px; line-height: 1.6; }
+    .info-sections { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .info-section { background: rgba(0,0,0,.25); border: 1px solid rgba(59,130,246,.15); border-radius: 8px; padding: 16px 18px; }
+    .info-section-title { font-size: 12px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 12px; }
+    .info-item { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 9px; }
+    .info-check { color: var(--blue); font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+    .info-text { font-size: 12px; color: var(--text2); line-height: 1.5; }
+    .info-text strong { color: var(--text); }
+    .info-footer { margin-top: 18px; background: rgba(59,130,246,.08); border-radius: 8px; padding: 12px 16px; font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
 
-    footer {
-      text-align: center; padding: 48px 24px; margin-top: 40px;
-      border-top: 1px solid var(--border);
-    }
-    .footer-label { font-size: 12px; color: var(--text2); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
-    .footer-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
-    .cta-btn {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: var(--accent); color: #000; font-weight: 700;
-      padding: 14px 28px; border-radius: var(--radius); text-decoration: none;
-      font-size: 15px; transition: all 0.2s;
-    }
-    .cta-btn:hover { background: #00b8d9; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,212,255,0.25); }
+    /* TIMELINE */
+    .tl { display: flex; flex-direction: column; gap: 0; }
+    .tl-item { display: flex; gap: 14px; position: relative; }
+    .tl-item:not(:last-child)::after { content:''; position:absolute; left:10px; top:22px; bottom:-4px; width:1px; background: var(--border2); }
+    .tl-dot { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+    .tl-done { background: rgba(16,185,129,.2); color: var(--green); border: 1px solid var(--green); }
+    .tl-active { background: rgba(245,158,11,.2); color: var(--amazon); border: 1px solid var(--amazon); box-shadow: 0 0 8px rgba(245,158,11,.3); }
+    .tl-todo { background: var(--bg3); color: var(--text3); border: 1px solid var(--border2); }
+    .tl-body { padding-bottom: 16px; flex: 1; }
+    .tl-title { font-size: 13px; font-weight: 500; }
+    .tl-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
 
-    .toast {
-      position: fixed; bottom: 24px; right: 24px;
-      background: var(--bg3); border: 1px solid var(--green); color: var(--green);
-      padding: 12px 18px; border-radius: var(--radius); font-size: 13px;
-      opacity: 0; transform: translateY(10px); transition: all 0.3s;
-      z-index: 999; pointer-events: none;
-    }
-    .toast.show { opacity: 1; transform: translateY(0); }
+    /* BTN */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 7px; font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer; border: none; transition: all .15s; }
+    .btn-primary { background: var(--amazon); color: #000; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-ghost { background: var(--bg3); color: var(--text2); border: 1px solid var(--border2); }
+    .btn-ghost:hover { color: var(--text); border-color: var(--text2); }
+    .btn-sm { padding: 4px 10px; font-size: 11px; }
 
-    @media (max-width: 680px) {
-      .price-table th:nth-child(n+3):nth-child(-n+5),
-      .price-table td:nth-child(n+3):nth-child(-n+5) { display: none; }
-    }
+    /* TOAST */
+    .toast { position:fixed; bottom:20px; right:20px; background:var(--bg3); border:1px solid var(--green); color:var(--green); padding:10px 16px; border-radius:8px; font-size:13px; opacity:0; transform:translateY(8px); transition:all .3s; pointer-events:none; z-index:999; }
+    .toast.show { opacity:1; transform:translateY(0); }
+
+    /* SECTION TITLE */
+    .section-title { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+
+    /* Responsive */
+    @media(max-width:780px){ .kpi-row{grid-template-columns:1fr 1fr;} .grid2,.grid3,.flow-grid,.info-sections{grid-template-columns:1fr;} .nav-tabs{display:none;} }
   </style>
 </head>
 <body>
 
+<!-- NAV -->
 <nav>
-  <span class="logo">&lt;nagi /&gt;</span>
-  <a href="/portfolio/" class="back-btn">← ポートフォリオに戻る</a>
+  <div class="nav-logo">
+    <span>📦</span> Amazon EC 運用管理
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('dashboard',this)">📊 ダッシュボード</button>
+    <button class="nav-tab" onclick="showPage('automation',this)">⚙️ 自動化できること</button>
+    <button class="nav-tab" onclick="showPage('code',this)">＜/＞ コードサンプル</button>
+    <button class="nav-tab" onclick="showPage('request',this)">📋 詳細ヒアリング</button>
+  </div>
+  <div class="nav-right">
+    <div class="live-badge"><div class="live-dot"></div>自動更新中</div>
+    <span class="demo-badge">叩き台デモ</span>
+  </div>
 </nav>
 
-<header>
-  <div class="tag">Python 自動化</div>
-  <h1>EC価格監視 ダッシュボード</h1>
-  <div class="badges">
-    <span class="badge problem">❌ 課題: 競合他社の価格を毎日手動でチェックしてExcelに記録している</span>
-    <span class="badge solution">✅ 解決: Pythonで自動収集・グラフ化 → 毎朝メールで届く</span>
-  </div>
-  <p class="summary-line">商品名クリックで30日間の価格推移グラフを表示。アラート設定でしきい値を下回った際のメール通知プレビューも確認できます。</p>
-</header>
+<!-- ==================== PAGE 1: DASHBOARD ==================== -->
+<div id="dashboard" class="page active">
 
-<div class="tabs">
-  <button class="tab active" onclick="showTab('demo', this)">🎬 デモ</button>
-  <button class="tab" onclick="showTab('code', this)">＜/＞ コード</button>
-  <button class="tab" onclick="showTab('usecases', this)">💼 活用例</button>
-</div>
-
-<!-- DEMO TAB -->
-<div id="demo" class="tab-content active">
-  <div class="content-area">
-
-    <!-- STATUS -->
-    <div class="status-bar">
-      <div class="status-left">
-        <div class="status-dot"></div>
-        <span class="status-text">前回の収集: <strong>2025-05-03 09:00</strong> 自動実行 (cron毎朝9時)</span>
-      </div>
-      <div style="display:flex; gap:8px; align-items:center;">
-        <span style="font-size:11px; color:var(--text2)">監視商品: 7件</span>
-        <button class="btn btn-secondary btn-small" onclick="refreshPrices()">🔄 最新に更新</button>
-      </div>
+  <!-- KPI -->
+  <div class="kpi-row" style="margin-top:20px;">
+    <div class="kpi green">
+      <div class="kpi-label">月間売上（推計）</div>
+      <div class="kpi-value green">¥1.24M</div>
+      <div class="kpi-sub up">↑ +18% vs 先月</div>
     </div>
+    <div class="kpi yellow">
+      <div class="kpi-label">平均粗利率</div>
+      <div class="kpi-value yellow">34.2%</div>
+      <div class="kpi-sub up">↑ +2.1pt 広告最適化後</div>
+    </div>
+    <div class="kpi blue">
+      <div class="kpi-label">平均 ACoS</div>
+      <div class="kpi-value blue">18.4%</div>
+      <div class="kpi-sub down">↑ +1.2pt ※要改善</div>
+    </div>
+    <div class="kpi red">
+      <div class="kpi-label">在庫切れリスク</div>
+      <div class="kpi-value red">3件</div>
+      <div class="kpi-sub down">↑ 14日以内に枯渇見込み</div>
+    </div>
+  </div>
 
-    <!-- PRODUCT PRICE TABLE -->
-    <div class="product-table-wrap">
-      <div class="product-table-header">
-        <span class="table-title">📦 監視中の商品一覧</span>
-        <div class="header-right">
-          <span style="font-size:11px; color:var(--text2)">商品名をクリックで価格推移グラフを表示</span>
+  <div class="grid2" style="margin-bottom:16px;">
+
+    <!-- 商品別パフォーマンス -->
+    <div class="card" style="grid-column: span 2;">
+      <div class="card-head">
+        <div class="card-title">📦 出品商品別パフォーマンス（ペットEC）</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="font-size:11px;color:var(--text3)">SP-API / Keepa API 自動集計 | 毎朝9時更新</span>
+          <button class="btn btn-ghost btn-sm" onclick="refreshTable()">🔄 更新</button>
         </div>
       </div>
-      <div style="overflow-x:auto">
-        <table class="price-table" id="price-table">
+      <div style="overflow-x:auto;">
+        <table class="tbl" id="prod-table">
           <thead>
             <tr>
               <th>商品名</th>
-              <th style="text-align:right"><span class="site-badge site-amz">AMZ</span></th>
-              <th style="text-align:right"><span class="site-badge site-rak">楽天</span></th>
-              <th style="text-align:right"><span class="site-badge site-yah">Y!</span></th>
-              <th style="text-align:right">最安値</th>
-              <th style="text-align:center">前日比</th>
-              <th></th>
+              <th>ASIN</th>
+              <th style="text-align:right">売上 / 月</th>
+              <th style="text-align:right">粗利率</th>
+              <th style="text-align:right">ACoS</th>
+              <th style="text-align:right">在庫数</th>
+              <th style="text-align:right">補充目安</th>
+              <th style="text-align:right">Keepa推移</th>
+              <th style="text-align:center">状態</th>
             </tr>
           </thead>
-          <tbody id="price-body"></tbody>
+          <tbody id="prod-body"></tbody>
         </table>
       </div>
     </div>
+  </div>
 
-    <!-- CHART -->
-    <div class="chart-section" id="chart-section">
-      <div class="chart-header">
-        <span class="chart-title" id="chart-title">価格推移グラフ</span>
-        <div class="chart-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:var(--amazon)"></div>Amazon</div>
-          <div class="legend-item"><div class="legend-dot" style="background:var(--rakuten)"></div>楽天</div>
-          <div class="legend-item"><div class="legend-dot" style="background:var(--yahoo)"></div>Yahoo!</div>
+  <div class="grid2">
+
+    <!-- 売上トレンドグラフ -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">📈 売上・広告費トレンド（90日）</div>
+        <span class="tag tag-green">自動生成グラフ</span>
+      </div>
+      <div class="card-body">
+        <canvas id="sales-chart" height="180"></canvas>
+        <div style="display:flex;gap:16px;margin-top:10px;font-size:11px;">
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:3px;background:var(--green);border-radius:2px;display:inline-block;"></span>売上</span>
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:3px;background:var(--red);border-radius:2px;display:inline-block;"></span>広告費</span>
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:12px;height:3px;background:var(--yellow);border-radius:2px;display:inline-block;"></span>粗利</span>
         </div>
       </div>
-      <div class="chart-body">
-        <canvas id="price-chart" height="200"></canvas>
+    </div>
+
+    <!-- アラート & 今日の自動処理 -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">🔔 自動検知アラート</div>
+          <span class="tag tag-red">3件要対応</span>
+        </div>
+        <div class="card-body">
+          <div class="alert-list">
+            <div class="alert-item err">
+              <div class="alert-icon">🚨</div>
+              <div><div class="alert-text"><strong>プレミアムドッグフード 5kg</strong> — 在庫残14個<br>現在の販売ペースで<strong style="color:var(--red)">11日で枯渇</strong>の予測</div><div class="alert-time">今日 09:00 自動検知</div></div>
+            </div>
+            <div class="alert-item warn">
+              <div class="alert-icon">⚠️</div>
+              <div><div class="alert-text"><strong>犬用おやつ チキン 200g</strong> — 競合他社が<strong style="color:var(--yellow)">¥280値下げ</strong><br>現在価格差 -¥120（対応推奨）</div><div class="alert-time">今日 09:03 Keepa検知</div></div>
+            </div>
+            <div class="alert-item warn">
+              <div class="alert-icon">📉</div>
+              <div><div class="alert-text"><strong>ペット用サプリ 関節ケア</strong> — ACoS が目標値 <strong style="color:var(--yellow)">25%超え</strong><br>広告入札額の見直しを推奨</div><div class="alert-time">今日 09:05 自動分析</div></div>
+            </div>
+            <div class="alert-item ok">
+              <div class="alert-icon">✅</div>
+              <div><div class="alert-text"><strong>月次売上レポート</strong> — Googleスプレッドシートに自動出力完了</div><div class="alert-time">今日 09:00</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">🕐 今日の自動処理ログ</div>
+          <span class="tag tag-green">5件 完了</span>
+        </div>
+        <div class="card-body">
+          <div class="tl">
+            <div class="tl-item"><div class="tl-dot tl-done">✓</div><div class="tl-body"><div class="tl-title">全商品の売上・在庫データ取得 (SP-API)</div><div class="tl-meta">09:00 完了 — 12商品</div></div></div>
+            <div class="tl-item"><div class="tl-dot tl-done">✓</div><div class="tl-body"><div class="tl-title">競合価格モニタリング (Keepa API)</div><div class="tl-meta">09:02 完了 — 競合28商品</div></div></div>
+            <div class="tl-item"><div class="tl-dot tl-done">✓</div><div class="tl-body"><div class="tl-title">在庫補充アラート判定・Slack通知</div><div class="tl-meta">09:05 完了 — 3件を通知</div></div></div>
+            <div class="tl-item"><div class="tl-dot tl-done">✓</div><div class="tl-body"><div class="tl-title">月次レポートをGoogleシートへ出力</div><div class="tl-meta">09:06 完了</div></div></div>
+            <div class="tl-item"><div class="tl-dot tl-active">…</div><div class="tl-body"><div class="tl-title">広告ACoS分析 → 入札額最適化提案</div><div class="tl-meta">09:10 処理中...</div></div></div>
+            <div class="tl-item"><div class="tl-dot tl-todo">○</div><div class="tl-body"><div class="tl-title">日次サマリーをSlack / メールへ送信</div><div class="tl-meta">18:00 予定</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 広告効率 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">🎯 広告効率（商品別 ACoS 分析）</div>
+      <span class="tag tag-amber">目標: ACoS ≤ 20%</span>
+    </div>
+    <div class="card-body">
+      <div class="section-title">ACoS = 広告費 ÷ 広告経由売上（低いほど効率◎）</div>
+      <div id="acos-bars"></div>
+    </div>
+  </div>
+
+</div>
+<!-- ==================== PAGE 2: AUTOMATION ==================== -->
+<div id="automation" class="page">
+  <div style="margin-top:20px;">
+    <div style="background:linear-gradient(135deg,#111827,#1a2535);border:1px solid var(--border2);border-radius:var(--r);padding:24px 28px;margin-bottom:20px;">
+      <div style="font-size:20px;font-weight:800;margin-bottom:6px;">🤖 Claude Code で自動化できること一覧</div>
+      <div style="color:var(--text2);font-size:13px;line-height:1.7;">以下の業務はすべて <strong style="color:var(--amazon)">Claude Code + Python / GAS</strong> で自動化可能です。<br>まず「最も時間がかかっている1つ」からプロトタイプを作り、効果を確認してから拡張します。</div>
+    </div>
+
+    <div class="flow-grid">
+      <div class="flow-card">
+        <div class="flow-num">1</div>
+        <div class="flow-icon">📊</div>
+        <div class="flow-title">売上・粗利レポート自動生成</div>
+        <div class="flow-desc">SP-APIからデータを取得し、毎日Googleスプレッドシートに売上・粗利・FBA手数料を自動集計。手作業ゼロで経営判断に必要な数字が揃う。</div>
+        <div class="flow-tech"><span class="tech-chip">Python</span><span class="tech-chip">SP-API</span><span class="tech-chip">GAS</span><span class="tech-chip">Googleシート</span></div>
+        <div class="auto-badge">⏱ 削減工数: 1〜2時間/日</div>
+      </div>
+      <div class="flow-card">
+        <div class="flow-num">2</div>
+        <div class="flow-icon">🔔</div>
+        <div class="flow-title">在庫枯渇アラート自動化</div>
+        <div class="flow-desc">在庫数 × 日次販売ペースを計算し、N日以内に枯渇する商品をSlack / メールで自動通知。補充発注のタイミングを逃さない。</div>
+        <div class="flow-tech"><span class="tech-chip">Python</span><span class="tech-chip">SP-API</span><span class="tech-chip">Slack API</span><span class="tech-chip">cron</span></div>
+        <div class="auto-badge">⏱ 削減工数: 30分/日</div>
+      </div>
+      <div class="flow-card">
+        <div class="flow-num">3</div>
+        <div class="flow-icon">🏷</div>
+        <div class="flow-title">競合価格モニタリング</div>
+        <div class="flow-desc">Keepa APIで競合ASINの価格を毎時監視。競合が値下げした場合にアラート → 価格改定を提案（SP-API Listings APIで自動改定も可）。</div>
+        <div class="flow-tech"><span class="tech-chip">Python</span><span class="tech-chip">Keepa API</span><span class="tech-chip">SP-API</span></div>
+        <div class="auto-badge">⏱ 削減工数: 45分/日</div>
+      </div>
+      <div class="flow-card">
+        <div class="flow-num">4</div>
+        <div class="flow-icon">📝</div>
+        <div class="flow-title">商品説明文・タイトルのAI最適化</div>
+        <div class="flow-desc">Claude APIで商品タイトル・バレットポイント・商品説明を自動生成・改善。キーワードリサーチとA/Bテストも自動化。</div>
+        <div class="flow-tech"><span class="tech-chip">Claude API</span><span class="tech-chip">Python</span><span class="tech-chip">SP-API</span></div>
+        <div class="auto-badge">⏱ 削減工数: 2時間/週</div>
+      </div>
+      <div class="flow-card">
+        <div class="flow-num">5</div>
+        <div class="flow-icon">💬</div>
+        <div class="flow-title">レビュー収集 & 問い合わせ要約</div>
+        <div class="flow-desc">SP-APIで新着レビューを自動取得→Claude APIで感情分析・要約。問い合わせの定型文もAIで自動下書き。対応漏れをゼロに。</div>
+        <div class="flow-tech"><span class="tech-chip">Claude API</span><span class="tech-chip">SP-API</span><span class="tech-chip">GAS</span></div>
+        <div class="auto-badge">⏱ 削減工数: 1時間/日</div>
+      </div>
+      <div class="flow-card">
+        <div class="flow-num">6</div>
+        <div class="flow-icon">🤖</div>
+        <div class="flow-title">広告 ACoS 分析 & 入札最適化</div>
+        <div class="flow-desc">SP-API Advertising APIで広告データを取得→ACoSが目標値を超えたキーワードの入札額をレコメンド or 自動調整。無駄な広告費を削減。</div>
+        <div class="flow-tech"><span class="tech-chip">Python</span><span class="tech-chip">Advertising API</span><span class="tech-chip">Claude API</span></div>
+        <div class="auto-badge">⏱ 削減工数: 1時間/週</div>
       </div>
     </div>
 
-    <!-- ALERT PANEL -->
-    <div class="alert-panel">
-      <div class="alert-header">🔔 アラート設定（価格がしきい値を下回ったらメール通知）</div>
-      <div class="alert-body">
-        <div class="alert-grid" id="alert-grid"></div>
+    <!-- ROI Priority Matrix -->
+    <div class="card" style="margin-top:20px;">
+      <div class="card-head">
+        <div class="card-title">🎯 どれから始めるべきか — ROI 優先度マトリクス</div>
+        <span class="tag tag-amber">推奨スタート順</span>
+      </div>
+      <div class="card-body">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>優先度</th>
+              <th>自動化項目</th>
+              <th style="text-align:right">削減工数/週</th>
+              <th style="text-align:right">実装期間</th>
+              <th style="text-align:center">難易度</th>
+              <th style="text-align:center">ROI</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="tag tag-red" style="font-weight:800;">🥇 1st</span></td><td><strong>在庫枯渇アラート</strong><br><span style="font-size:11px;color:var(--text3)">売上ロスが最も大きい。機会損失ゼロへ</span></td><td class="num-r" style="color:var(--green)">3.5h</td><td class="num-r">3〜4日</td><td style="text-align:center"><span class="tag tag-green">低</span></td><td style="text-align:center"><span class="tag tag-red">最高</span></td></tr>
+            <tr><td><span class="tag tag-amber" style="font-weight:800;">🥈 2nd</span></td><td><strong>売上・粗利レポート自動化</strong><br><span style="font-size:11px;color:var(--text3)">毎日の集計作業を完全ゼロに</span></td><td class="num-r" style="color:var(--green)">10h</td><td class="num-r">5〜7日</td><td style="text-align:center"><span class="tag tag-green">低</span></td><td style="text-align:center"><span class="tag tag-red">最高</span></td></tr>
+            <tr><td><span class="tag tag-blue" style="font-weight:800;">🥉 3rd</span></td><td><strong>競合価格モニタリング</strong><br><span style="font-size:11px;color:var(--text3)">Keepa API で競合値下げを即検知</span></td><td class="num-r" style="color:var(--green)">5h</td><td class="num-r">3〜5日</td><td style="text-align:center"><span class="tag tag-amber">中</span></td><td style="text-align:center"><span class="tag tag-amber">高</span></td></tr>
+            <tr><td><span class="tag tag-purple">4th</span></td><td><strong>商品説明文 AI 最適化</strong><br><span style="font-size:11px;color:var(--text3)">Claude APIで SEO × 購買率を上げる</span></td><td class="num-r" style="color:var(--green)">8h</td><td class="num-r">1週間</td><td style="text-align:center"><span class="tag tag-amber">中</span></td><td style="text-align:center"><span class="tag tag-amber">高</span></td></tr>
+            <tr><td><span class="tag tag-purple">5th</span></td><td><strong>レビュー・問い合わせ要約</strong><br><span style="font-size:11px;color:var(--text3)">AI で対応漏れゼロ & 品質改善ヒント抽出</span></td><td class="num-r" style="color:var(--green)">7h</td><td class="num-r">1週間</td><td style="text-align:center"><span class="tag tag-amber">中</span></td><td style="text-align:center"><span class="tag tag-green">中</span></td></tr>
+            <tr><td><span class="tag tag-purple">6th</span></td><td><strong>広告 ACoS 入札最適化</strong><br><span style="font-size:11px;color:var(--text3)">Advertising API で広告費を削減</span></td><td class="num-r" style="color:var(--green)">4h</td><td class="num-r">2週間</td><td style="text-align:center"><span class="tag tag-red">高</span></td><td style="text-align:center"><span class="tag tag-amber">高</span></td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:14px;font-size:12px;color:var(--text2);background:var(--bg3);border-radius:8px;padding:12px 16px;">
+          💬 <strong style="color:var(--text)">進め方：</strong>最初の1週間で「1st」だけをプロトタイプとして動かします。実際に使いながら精度を確認してから次へ。一気に全部は作りません。
+        </div>
       </div>
     </div>
 
+    <div style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:var(--r);padding:18px 22px;margin-top:16px;font-size:13px;line-height:1.7;">
+      <strong style="color:var(--green);">💡 なぜ Claude API が他と違うのか</strong><br>
+      SP-API や Keepa は「データを取る」ツールです。Claude API は「<strong>データから判断・文章・戦略を生成する</strong>」ツール。商品説明の最適化・レビュー分析・アラートの自然言語解説など、AIならではの付加価値を追加できます。Python + SP-API + Claude API の組み合わせが、今の Amazon EC 自動化の最先端です。
+    </div>
   </div>
 </div>
 
-<!-- CODE TAB -->
-<div id="code" class="tab-content">
-  <div class="content-area">
+<!-- ==================== PAGE 3: CODE ==================== -->
+<div id="code" class="page">
+  <div style="margin-top:20px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:16px 20px;margin-bottom:4px;">
+    <div style="font-size:13px;font-weight:700;margin-bottom:6px;">📂 コードサンプル一覧</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <span class="tag tag-green">1. SP-API 売上・在庫取得</span>
+      <span class="tag tag-amber">2. Keepa 競合価格監視</span>
+      <span class="tag tag-blue" style="background:rgba(139,92,246,.12);color:var(--purple);">3. Claude API 商品説明AI最適化 ← 差別化ポイント</span>
+    </div>
+  </div>
+  <div style="margin-top:12px;display:flex;flex-direction:column;gap:16px;">
+
     <div class="code-wrap">
-      <div class="code-header">
-        <span class="code-filename">price_monitor.py</span>
-        <button class="copy-code-btn" onclick="copyCode()">コピー</button>
+      <div class="code-head">
+        <span class="code-file">amazon_sp_api.py — 売上・在庫データ取得（SP-API）</span>
+        <button class="copy-btn" onclick="copyCode('code1')">コピー</button>
       </div>
-      <pre><code id="py-code"><span class="imp">import</span> requests
-<span class="imp">from</span> bs4 <span class="imp">import</span> BeautifulSoup
-<span class="imp">import</span> smtplib
-<span class="imp">import</span> json
-<span class="imp">import</span> time
-<span class="imp">from</span> datetime <span class="imp">import</span> datetime
-<span class="imp">from</span> pathlib <span class="imp">import</span> Path
-<span class="imp">from</span> email.mime.text <span class="imp">import</span> MIMEText
-<span class="imp">from</span> email.mime.multipart <span class="imp">import</span> MIMEMultipart
+      <pre id="code1"><span class="cm"># Amazon SP-API を使った売上・在庫データ取得</span>
+<span class="cm"># スクレイピング不使用 — 公式APIのみ使用（規約準拠）</span>
+<span class="kw">import</span> boto3
+<span class="kw">from</span> sp_api.api <span class="kw">import</span> Orders, Inventories, Reports
+<span class="kw">from</span> sp_api.base <span class="kw">import</span> Marketplaces, SellingApiException
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timedelta
+<span class="kw">import</span> gspread  <span class="cm"># Googleシート連携</span>
 
-<span class="cm"># 監視商品リスト</span>
-PRODUCTS = [
-    {
-        <span class="str">"name"</span>: <span class="str">"ワイヤレスイヤホン A10"</span>,
-        <span class="str">"amazon_url"</span>: <span class="str">"https://amazon.co.jp/dp/XXXXXXXX"</span>,
-        <span class="str">"rakuten_url"</span>: <span class="str">"https://item.rakuten.co.jp/xxx/yyy"</span>,
-        <span class="str">"alert_price"</span>: <span class="num">8000</span>
-    },
-    <span class="cm"># ... 他の商品を追加</span>
-]
+<span class="cm"># SP-API 認証情報（クライアントから提供いただく情報）</span>
+CREDENTIALS = {
+    <span class="str">"refresh_token"</span>: <span class="str">"YOUR_REFRESH_TOKEN"</span>,   <span class="cm"># セラーセントラルから取得</span>
+    <span class="str">"lwa_app_id"</span>:     <span class="str">"YOUR_APP_ID"</span>,
+    <span class="str">"lwa_client_secret"</span>: <span class="str">"YOUR_SECRET"</span>,
+}
 
-<span class="kw">def</span> <span class="fn">scrape_amazon_price</span>(url: str) -> int | <span class="kw">None</span>:
-    <span class="str">"""Amazon商品ページから価格を取得"""</span>
-    headers = {
-        <span class="str">"User-Agent"</span>: <span class="str">"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "</span>
-                     <span class="str">"AppleWebKit/537.36"</span>,
-        <span class="str">"Accept-Language"</span>: <span class="str">"ja-JP,ja;q=0.9"</span>
-    }
-    <span class="kw">try</span>:
-        res = requests.<span class="fn">get</span>(url, headers=headers, timeout=<span class="num">10</span>)
-        soup = BeautifulSoup(res.text, <span class="str">"html.parser"</span>)
+<span class="kw">def</span> <span class="fn">get_monthly_sales</span>() -> list[dict]:
+    <span class="str">"""先月の注文データを取得して売上・粗利を集計"""</span>
+    orders_api = Orders(credentials=CREDENTIALS, marketplace=Marketplaces.JP)
 
-        <span class="cm"># 複数のセレクタで価格を探す（ページ構造変化に対応）</span>
-        selectors = [
-            <span class="str">"#priceblock_ourprice"</span>,
-            <span class="str">"#priceblock_dealprice"</span>,
-            <span class="str">".a-price .a-offscreen"</span>
-        ]
-        <span class="kw">for</span> sel <span class="kw">in</span> selectors:
-            el = soup.<span class="fn">select_one</span>(sel)
-            <span class="kw">if</span> el:
-                price_text = el.<span class="fn">get_text</span>().<span class="fn">strip</span>()
-                price = int(price_text.<span class="fn">replace</span>(<span class="str">'¥'</span>, <span class="str">''</span>)
-                                      .<span class="fn">replace</span>(<span class="str">','</span>, <span class="str">''</span>))
-                <span class="kw">return</span> price
-    <span class="kw">except</span> Exception <span class="kw">as</span> e:
-        <span class="fn">print</span>(<span class="str">f"Amazon取得エラー: {e}"</span>)
-    <span class="kw">return</span> <span class="kw">None</span>
+    end   = datetime.utcnow()
+    start = end - timedelta(days=<span class="num">30</span>)
 
-<span class="kw">def</span> <span class="fn">save_price_history</span>(product_name: str, prices: dict):
-    <span class="str">"""価格履歴をJSONファイルに保存"""</span>
-    history_file = Path(<span class="str">f"history/{product_name}.json"</span>)
-    history_file.parent.<span class="fn">mkdir</span>(exist_ok=<span class="kw">True</span>)
+    res = orders_api.get_orders(
+        CreatedAfter=start.isoformat() + <span class="str">"Z"</span>,
+        CreatedBefore=end.isoformat() + <span class="str">"Z"</span>,
+        OrderStatuses=[<span class="str">"Shipped"</span>, <span class="str">"Delivered"</span>]
+    )
+    orders = res.payload.get(<span class="str">"Orders"</span>, [])
+    <span class="fn">print</span>(<span class="str">f"取得した注文数: {len(orders)}"</span>)
+    <span class="kw">return</span> orders
 
-    history = json.<span class="fn">loads</span>(history_file.<span class="fn">read_text</span>()) \
-        <span class="kw">if</span> history_file.<span class="fn">exists</span>() <span class="kw">else</span> []
+<span class="kw">def</span> <span class="fn">get_inventory_levels</span>() -> list[dict]:
+    <span class="str">"""全商品の在庫数・補充判定を取得"""</span>
+    inv_api = Inventories(credentials=CREDENTIALS, marketplace=Marketplaces.JP)
+    res = inv_api.get_inventory_summary_marketplace(
+        details=<span class="kw">True</span>, marketplaceIds=[<span class="str">"A1VC38T7YXB528"</span>]  <span class="cm"># JP</span>
+    )
+    summaries = res.payload.get(<span class="str">"inventorySummaries"</span>, [])
 
-    history.<span class="fn">append</span>({
-        <span class="str">"date"</span>: datetime.<span class="fn">now</span>().<span class="fn">strftime</span>(<span class="str">"%Y-%m-%d"</span>),
-        **prices
-    })
-    <span class="cm"># 90日分を保持</span>
-    history_file.<span class="fn">write_text</span>(json.<span class="fn">dumps</span>(history[-<span class="num">90</span>:], ensure_ascii=<span class="kw">False</span>))
+    <span class="cm"># 在庫切れリスク判定（14日分を下回ったらアラート）</span>
+    alerts = []
+    <span class="kw">for</span> item <span class="kw">in</span> summaries:
+        qty = item.get(<span class="str">"totalQuantity"</span>, <span class="num">0</span>)
+        daily_velocity = item.get(<span class="str">"salesRank"</span>, <span class="num">1</span>) <span class="cm"># 実際は売上履歴から算出</span>
+        days_left = qty / max(daily_velocity, <span class="num">0.1</span>)
+        <span class="kw">if</span> days_left < <span class="num">14</span>:
+            alerts.append({<span class="str">"asin"</span>: item[<span class="str">"asin"</span>], <span class="str">"days_left"</span>: round(days_left)})
+    <span class="kw">return</span> alerts
 
-<span class="kw">def</span> <span class="fn">send_alert_email</span>(product: dict, current_price: int, site: str):
-    <span class="str">"""アラートメールを送信"""</span>
-    msg = MIMEMultipart()
-    msg[<span class="str">"Subject"</span>] = <span class="str">f"🔔 価格アラート: {product['name']} が安くなりました！"</span>
-    msg[<span class="str">"From"</span>] = <span class="str">"pricebot@nagi-works.com"</span>
-    msg[<span class="str">"To"</span>] = <span class="str">"you@example.com"</span>
+<span class="kw">def</span> <span class="fn">export_to_sheets</span>(data: list[dict]):
+    <span class="str">"""売上データをGoogleスプレッドシートへ自動出力"""</span>
+    gc = gspread.<span class="fn">service_account</span>(filename=<span class="str">"credentials.json"</span>)
+    sh = gc.<span class="fn">open</span>(<span class="str">"Amazon EC 売上管理"</span>)
+    ws = sh.<span class="fn">worksheet</span>(<span class="str">"月次データ"</span>)
 
-    body = <span class="str">f"""
-商品名: {product['name']}
-現在価格: ¥{current_price:,} ({site})
-設定しきい値: ¥{product['alert_price']:,}
-
-→ すぐに確認する: {product['amazon_url']}
-"""</span>
-    msg.<span class="fn">attach</span>(MIMEText(body, <span class="str">"plain"</span>))
-
-    <span class="kw">with</span> smtplib.<span class="fn">SMTP_SSL</span>(<span class="str">"smtp.gmail.com"</span>, <span class="num">465</span>) <span class="kw">as</span> server:
-        server.<span class="fn">login</span>(<span class="str">"you@gmail.com"</span>, <span class="str">"APP_PASSWORD"</span>)
-        server.<span class="fn">send_message</span>(msg)
-    <span class="fn">print</span>(<span class="str">f"✅ アラートメール送信: {product['name']} ¥{current_price:,}"</span>)
-
-<span class="kw">def</span> <span class="fn">run_monitor</span>():
-    <span class="str">"""全商品を巡回して価格を収集・アラートチェック"""</span>
-    <span class="fn">print</span>(<span class="str">f"[{datetime.now():%Y-%m-%d %H:%M}] 価格監視スタート"</span>)
-
-    <span class="kw">for</span> product <span class="kw">in</span> PRODUCTS:
-        prices = {}
-        amazon_price = <span class="fn">scrape_amazon_price</span>(product[<span class="str">"amazon_url"</span>])
-        <span class="kw">if</span> amazon_price:
-            prices[<span class="str">"amazon"</span>] = amazon_price
-            <span class="kw">if</span> amazon_price <= product[<span class="str">"alert_price"</span>]:
-                <span class="fn">send_alert_email</span>(product, amazon_price, <span class="str">"Amazon"</span>)
-
-        <span class="fn">save_price_history</span>(product[<span class="str">"name"</span>], prices)
-        time.<span class="fn">sleep</span>(<span class="num">2</span>)  <span class="cm"># サーバー負荷対策</span>
-
-    <span class="fn">print</span>(<span class="str">"✅ 価格監視完了"</span>)
+    rows = [[d[<span class="str">"asin"</span>], d[<span class="str">"sales"</span>], d[<span class="str">"profit_rate"</span>], d[<span class="str">"acos"</span>]] <span class="kw">for</span> d <span class="kw">in</span> data]
+    ws.<span class="fn">append_rows</span>(rows, value_input_option=<span class="str">"USER_ENTERED"</span>)
+    <span class="fn">print</span>(<span class="str">"✅ Googleシートへの出力完了"</span>)
 
 <span class="cm"># cron: 毎朝9時に自動実行</span>
-<span class="cm"># 0 9 * * * /usr/bin/python3 /home/user/price_monitor.py</span>
+<span class="cm"># 0 9 * * * python3 amazon_sp_api.py</span>
 <span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
-    <span class="fn">run_monitor</span>()</code></pre>
+    sales = <span class="fn">get_monthly_sales</span>()
+    stock_alerts = <span class="fn">get_inventory_levels</span>()
+    <span class="fn">export_to_sheets</span>(sales)</pre>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-head">
+        <span class="code-file">keepa_monitor.py — 競合価格監視（Keepa API）</span>
+        <button class="copy-btn" onclick="copyCode('code2')">コピー</button>
+      </div>
+      <pre id="code2"><span class="cm"># Keepa APIを使った競合価格監視 + Slack自動通知</span>
+<span class="kw">import</span> keepa
+<span class="kw">import</span> requests
+
+KEEPA_API_KEY = <span class="str">"YOUR_KEEPA_KEY"</span>  <span class="cm"># Keepa有料プランが必要</span>
+SLACK_WEBHOOK  = <span class="str">"YOUR_SLACK_WEBHOOK_URL"</span>
+
+<span class="cm"># 監視対象の競合ASIN（クライアントから提供いただく）</span>
+COMPETITOR_ASINS = [
+    <span class="str">"B09XXXXX01"</span>,  <span class="cm"># 競合A: ドッグフード 2kg</span>
+    <span class="str">"B09XXXXX02"</span>,  <span class="cm"># 競合B: 犬用おやつ</span>
+]
+
+<span class="kw">def</span> <span class="fn">check_competitor_prices</span>(our_prices: dict) -> list[dict]:
+    <span class="str">"""競合価格を取得して自社との差分を検出"""</span>
+    api = keepa.<span class="fn">Keepa</span>(KEEPA_API_KEY)
+    products = api.<span class="fn">query</span>(COMPETITOR_ASINS, stats=<span class="num">90</span>)
+
+    alerts = []
+    <span class="kw">for</span> p <span class="kw">in</span> products:
+        asin = p[<span class="str">"asin"</span>]
+        <span class="cm"># Keepaの価格はセント単位なので100で割る</span>
+        current_price = p[<span class="str">"stats"</span>][<span class="str">"current"</span>][<span class="num">0</span>] / <span class="num">100</span>
+        our_price = our_prices.get(asin, <span class="num">0</span>)
+        diff = our_price - current_price
+
+        <span class="kw">if</span> diff > <span class="num">200</span>:  <span class="cm"># 競合より200円以上高い場合はアラート</span>
+            alerts.<span class="fn">append</span>({
+                <span class="str">"asin"</span>: asin,
+                <span class="str">"our_price"</span>: our_price,
+                <span class="str">"competitor_price"</span>: current_price,
+                <span class="str">"diff"</span>: diff,
+                <span class="str">"30day_low"</span>: p[<span class="str">"stats"</span>][<span class="str">"min"</span>][<span class="num">0</span>] / <span class="num">100</span>,  <span class="cm"># 過去30日最安値</span>
+            })
+    <span class="kw">return</span> alerts
+
+<span class="kw">def</span> <span class="fn">notify_slack</span>(alerts: list[dict]):
+    <span class="str">"""価格乖離をSlackに通知"""</span>
+    <span class="kw">if not</span> alerts:
+        <span class="kw">return</span>
+
+    text = <span class="str">"🚨 *競合価格アラート*\n\n"</span>
+    <span class="kw">for</span> a <span class="kw">in</span> alerts:
+        text += (
+            <span class="str">f"• ASIN: `{a['asin']}`\n"</span>
+            <span class="str">f"  自社: ¥{a['our_price']:,} → 競合: ¥{a['competitor_price']:,} "</span>
+            <span class="str">f"（*¥{a['diff']:,} 高い*）\n"</span>
+            <span class="str">f"  過去30日最安値: ¥{a['30day_low']:,}\n\n"</span>
+        )
+
+    requests.<span class="fn">post</span>(SLACK_WEBHOOK, json={<span class="str">"text"</span>: text})
+    <span class="fn">print</span>(<span class="str">f"✅ Slack通知送信: {len(alerts)}件"</span>)</pre>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-head">
+        <span class="code-file">ai_listing_optimizer.py — 商品説明文 AI 自動生成（Claude API）</span>
+        <button class="copy-btn" onclick="copyCode('code3')">コピー</button>
+      </div>
+      <pre id="code3"><span class="cm"># Claude API を使った商品タイトル・バレットポイントの自動最適化</span>
+<span class="cm"># SP-APIで現在のリスティングを取得 → Claude APIで改善案を生成 → 確認後に更新</span>
+<span class="kw">import</span> anthropic
+<span class="kw">from</span> sp_api.api <span class="kw">import</span> CatalogItems, Listings
+<span class="kw">from</span> sp_api.base <span class="kw">import</span> Marketplaces
+
+CLAUDE_CLIENT = anthropic.<span class="fn">Anthropic</span>()  <span class="cm"># ANTHROPIC_API_KEY を環境変数にセット</span>
+
+CREDENTIALS = {
+    <span class="str">"refresh_token"</span>: <span class="str">"YOUR_REFRESH_TOKEN"</span>,
+    <span class="str">"lwa_app_id"</span>: <span class="str">"YOUR_APP_ID"</span>,
+    <span class="str">"lwa_client_secret"</span>: <span class="str">"YOUR_SECRET"</span>,
+}
+
+<span class="kw">def</span> <span class="fn">get_current_listing</span>(asin: str) -> dict:
+    <span class="str">"""SP-APIで現在の商品情報を取得"""</span>
+    cat = CatalogItems(credentials=CREDENTIALS, marketplace=Marketplaces.JP)
+    res = cat.<span class="fn">get_catalog_item</span>(asin=asin, includedData=[<span class="str">"summaries"</span>,<span class="str">"attributes"</span>])
+    item = res.payload
+    <span class="kw">return</span> {
+        <span class="str">"title"</span>: item[<span class="str">"summaries"</span>][<span class="num">0</span>].get(<span class="str">"itemName"</span>, <span class="str">""</span>),
+        <span class="str">"bullets"</span>: item.get(<span class="str">"attributes"</span>, {}).get(<span class="str">"bullet_point"</span>, []),
+    }
+
+<span class="kw">def</span> <span class="fn">generate_optimized_listing</span>(current: dict, keywords: list[str], product_info: str) -> dict:
+    <span class="str">"""Claude APIで最適化されたタイトル・バレットポイントを生成"""</span>
+    prompt = <span class="str">f"""
+あなたはAmazon日本のSEO専門家です。以下の商品リスティングを改善してください。
+
+【現在のタイトル】
+{current['title']}
+
+【バレットポイント】
+{chr(10).join(f'• {b}' for b in current['bullets'])}
+
+【ターゲットキーワード】
+{', '.join(keywords)}
+
+【商品の特徴・USP】
+{product_info}
+
+以下の形式でJSON出力してください:
+{{
+  "title": "改善後タイトル（80文字以内）",
+  "bullets": ["バレット1（最重要メリット）", "バレット2", "バレット3", "バレット4", "バレット5"],
+  "改善ポイント": ["変更点の説明"]
+}}
+"""</span>
+
+    response = CLAUDE_CLIENT.messages.<span class="fn">create</span>(
+        model=<span class="str">"claude-opus-4-5"</span>,
+        max_tokens=<span class="num">1024</span>,
+        messages=[{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: prompt}]
+    )
+    <span class="kw">import</span> json
+    <span class="kw">return</span> json.<span class="fn">loads</span>(response.content[<span class="num">0</span>].text)
+
+<span class="kw">def</span> <span class="fn">update_listing_with_approval</span>(asin: str, seller_id: str, optimized: dict):
+    <span class="str">"""人間の確認後にSP-APIでリスティングを更新"""</span>
+    <span class="fn">print</span>(<span class="str">"=== 改善案 ==="</span>)
+    <span class="fn">print</span>(<span class="str">f"タイトル: {optimized['title']}"</span>)
+    <span class="fn">print</span>(<span class="str">f"改善ポイント: {optimized['改善ポイント']}"</span>)
+
+    confirm = <span class="fn">input</span>(<span class="str">"\n反映しますか? (y/N): "</span>).strip().lower()
+    <span class="kw">if</span> confirm != <span class="str">"y"</span>:
+        <span class="fn">print</span>(<span class="str">"キャンセルしました"</span>)
+        <span class="kw">return</span>
+
+    listings = Listings(credentials=CREDENTIALS, marketplace=Marketplaces.JP)
+    listings.<span class="fn">put_listings_item</span>(
+        sellerId=seller_id, sku=asin,
+        body={<span class="str">"productType"</span>: <span class="str">"PET_FOOD"</span>, <span class="str">"attributes"</span>: {
+            <span class="str">"item_name"</span>: [{<span class="str">"value"</span>: optimized[<span class="str">"title"</span>], <span class="str">"language_tag"</span>: <span class="str">"ja_JP"</span>}],
+            <span class="str">"bullet_point"</span>: [{<span class="str">"value"</span>: b, <span class="str">"language_tag"</span>: <span class="str">"ja_JP"</span>} <span class="kw">for</span> b <span class="kw">in</span> optimized[<span class="str">"bullets"</span>]],
+        }}
+    )
+    <span class="fn">print</span>(<span class="str">"✅ リスティングを更新しました"</span>)
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    asin = <span class="str">"B09PET0001"</span>
+    current = <span class="fn">get_current_listing</span>(asin)
+    optimized = <span class="fn">generate_optimized_listing</span>(
+        current=current,
+        keywords=[<span class="str">"プレミアムドッグフード"</span>, <span class="str">"無添加 犬 フード"</span>, <span class="str">"国産 ドッグフード"</span>],
+        product_info=<span class="str">"無添加・国産・グレインフリー。シニア犬にも対応。獣医師監修。"</span>
+    )
+    <span class="fn">update_listing_with_approval</span>(asin, <span class="str">"YOUR_SELLER_ID"</span>, optimized)</pre>
     </div>
   </div>
 </div>
 
-<!-- USE CASES TAB -->
-<div id="usecases" class="tab-content">
-  <div class="content-area">
-    <div class="usecase-grid">
-      <div class="usecase-card">
-        <div class="usecase-icon">🛒</div>
-        <div class="usecase-name">EC事業者・せどり</div>
-        <div class="usecase-desc">仕入れ先と販売先の価格差を毎日自動チェック。差益が出た瞬間にアラートメール → 在庫購入の判断を即座に下せる。</div>
-        <span class="usecase-tag">仕入れ機会 逃さない</span>
+<!-- ==================== PAGE 4: INFO REQUEST ==================== -->
+<div id="request" class="page">
+  <div style="margin-top:20px;">
+
+    <div class="info-panel">
+      <div class="info-panel-title">
+        📋 これを教えていただけると、より精密なシステムが作れます
       </div>
-      <div class="usecase-card">
-        <div class="usecase-icon">🏪</div>
-        <div class="usecase-name">小売・卸売業</div>
-        <div class="usecase-desc">競合他社が値下げした際に即時検知。自社の価格戦略を迅速に見直し、競争力を維持するための情報を自動収集。</div>
-        <span class="usecase-tag">競合監視 自動化</span>
+      <div class="info-panel-sub">
+        このダッシュボードはあくまで<strong>叩き台</strong>です。以下の情報をヒアリングすることで、<br>
+        <strong style="color:var(--text)">実際の業務フローに完全に合致した自動化システム</strong>を最短で構築できます。
       </div>
-      <div class="usecase-card">
-        <div class="usecase-icon">📊</div>
-        <div class="usecase-name">バイヤー・調達担当</div>
-        <div class="usecase-desc">原材料・備品の価格を複数サイトで監視。最安値更新を自動検知し、購買部門の意思決定スピードを大幅向上。</div>
-        <span class="usecase-tag">調達コスト 最適化</span>
+
+      <div class="info-sections">
+        <div class="info-section">
+          <div class="info-section-title">🛒 Amazon 出品情報</div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>出品カテゴリと商品数</strong>（例: ペットフード 12商品）<br>→ データ取得の設計に影響</div></div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>FBA / 自己発送 の割合</strong><br>→ 在庫管理のロジックが変わる</div></div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>SP-API 申請状況</strong>（未申請 / 申請済み / 取得済み）<br>→ 未申請の場合は申請手順もサポートします</div></div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>監視したい競合 ASIN</strong>（あれば）<br>→ Keepa APIで価格推移を自動監視</div></div>
+        </div>
+
+        <div class="info-section">
+          <div class="info-section-title">😫 現在の手作業・困りごと</div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>一番時間がかかっている作業</strong>（何分 / 何時間/日）<br>→ 最初にここから自動化します</div></div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>現在使っているスプレッドシートやツール</strong><br>→ 既存フォーマットに合わせて出力します</div></div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>アラートを受け取りたい条件</strong><br>（例: 在庫10日以下 / ACoS25%超 など）</div></div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>レポートを受け取りたい頻度・形式</strong><br>（毎朝Slack / 週次メール / Sheets更新 など）</div></div>
+        </div>
+
+        <div class="info-section">
+          <div class="info-section-title">💰 数字まわり</div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>目標粗利率 / 目標ACoS</strong><br>→ アラートの閾値設定に使用</div></div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>在庫補充のリードタイム</strong>（例: 発注〜入庫まで14日）<br>→ 補充アラートのタイミングを最適化</div></div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>Keepaの契約状況</strong>（未契約 / 個人 / プロ）<br>→ 競合監視の設計に影響</div></div>
+        </div>
+
+        <div class="info-section">
+          <div class="info-section-title">🔧 インフラ・環境</div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>自動実行の希望環境</strong><br>（自社PC / サーバー / GCP / AWS / GAS のみ）</div></div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>通知先</strong>（Slack / メール / LINE通知 / Notion など）<br>→ 連携方法を設計します</div></div>
+          <div class="info-item"><div class="info-check">□</div><div class="info-text"><strong>他に連携したいツール</strong><br>（Notion / freee / kintone など）</div></div>
+        </div>
       </div>
-      <div class="usecase-card">
-        <div class="usecase-icon">🏠</div>
-        <div class="usecase-name">不動産・賃貸</div>
-        <div class="usecase-desc">競合物件の家賃相場変動を自動収集。エリア別・間取り別の価格推移をグラフ化し、適正賃料設定の根拠データに。</div>
-        <span class="usecase-tag">市場動向 可視化</span>
-      </div>
-      <div class="usecase-card">
-        <div class="usecase-icon">✈️</div>
-        <div class="usecase-name">旅行・出張管理</div>
-        <div class="usecase-desc">航空券・ホテルの価格を毎日監視。出発日が近づくにつれた価格変動をグラフ化し、最適な予約タイミングを可視化。</div>
-        <span class="usecase-tag">予約最適化</span>
-      </div>
-      <div class="usecase-card">
-        <div class="usecase-icon">💡</div>
-        <div class="usecase-name">監視対象のカスタマイズ</div>
-        <div class="usecase-desc">任意のECサイト・情報サイトに対応。スクレイピング可否の事前確認から実装・定期実行の設定まで一括対応。</div>
-        <span class="usecase-tag">クラウドワークスで依頼</span>
+
+      <div class="info-footer">
+        💬 <strong style="color:var(--text)">クラウドワークスのメッセージ</strong>で上記をざっくり教えていただくだけでOKです。箇条書きで構いません。<br>
+        不明な点はこちらから確認しながら進めますので、完全な情報でなくても大丈夫です。
       </div>
     </div>
+
+    <!-- Why this approach -->
+    <div class="card">
+      <div class="card-head"><div class="card-title">🎯 なぜヒアリングが重要なのか</div></div>
+      <div class="card-body">
+        <div class="grid3" style="gap:12px;">
+          <div style="background:var(--bg3);border-radius:8px;padding:16px;">
+            <div style="font-size:20px;margin-bottom:8px;">😓</div>
+            <div style="font-size:12px;font-weight:700;margin-bottom:4px;color:var(--red);">ヒアリングなしで作ると…</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.6;">「使いにくい」「想定と違う」が発生し、修正に時間がかかる。最悪、作り直しになる。</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:16px;">
+            <div style="font-size:20px;margin-bottom:8px;">✅</div>
+            <div style="font-size:12px;font-weight:700;margin-bottom:4px;color:var(--green);">ヒアリング後に作ると…</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.6;">初回から「これ、そのまま使える！」になる確率が大幅に上がり、継続関係につながりやすい。</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:16px;">
+            <div style="font-size:20px;margin-bottom:8px;">🚀</div>
+            <div style="font-size:12px;font-weight:700;margin-bottom:4px;color:var(--blue);">このデモの位置づけ</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.6;">「こういうことができます」の証明。詳細はヒアリングで業務に合わせてカスタマイズします。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
-
-<footer>
-  <p class="footer-label">このデモについて</p>
-  <p class="footer-title">このような自動化、クラウドワークスでご依頼いただけます</p>
-  <a href="https://crowdworks.jp/public/employees/6119556" target="_blank" rel="noopener noreferrer" class="cta-btn">
-    クラウドワークスで依頼する →
-  </a>
-</footer>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// -------------------------------------------------------
-// PRODUCT DATA
-// -------------------------------------------------------
+// ---- DATA ----
 const PRODUCTS = [
-  { id:1, name:'ワイヤレスイヤホン A10',  cat:'オーディオ', amz:9800,  rak:10200, yah:9500,  prev_min:9500,  alert:8000 },
-  { id:2, name:'USB-C充電器 65W',          cat:'充電器',     amz:3480,  rak:3980,  yah:3680,  prev_min:3480,  alert:2800 },
-  { id:3, name:'メカニカルキーボード K3',  cat:'周辺機器',   amz:14800, rak:15200, yah:null,  prev_min:14800, alert:12000 },
-  { id:4, name:'Webカメラ 4K',             cat:'カメラ',     amz:11500, rak:12800, yah:11200, prev_min:11200, alert:9000 },
-  { id:5, name:'PCスタンド 折りたたみ',    cat:'周辺機器',   amz:2980,  rak:3200,  yah:2980,  prev_min:3100,  alert:2500 },
-  { id:6, name:'ポータブルSSD 1TB',        cat:'ストレージ', amz:8900,  rak:9400,  yah:8700,  prev_min:8700,  alert:7500 },
-  { id:7, name:'モニターライト LED',        cat:'デスク用品', amz:5480,  rak:5980,  yah:5280,  prev_min:5480,  alert:4500 },
+  { name:'プレミアムドッグフード 5kg', asin:'B09PET0001', sales:320000, profit:36, acos:22, stock:14, replenish:30, trend:'▼' },
+  { name:'犬用おやつ チキン 200g',     asin:'B09PET0002', sales:185000, profit:41, acos:15, stock:68, replenish:14, trend:'▲' },
+  { name:'ペット用サプリ 関節ケア',    asin:'B09PET0003', sales:142000, profit:28, acos:31, stock:23, replenish:21, trend:'→' },
+  { name:'オーガニックドッグフード 2kg',asin:'B09PET0004', sales:98000,  profit:44, acos:12, stock:91, replenish: 7, trend:'▲' },
+  { name:'犬用シャンプー ノンシリコン', asin:'B09PET0005', sales:76000,  profit:38, acos:19, stock:37, replenish:14, trend:'→' },
+  { name:'ペット用歯磨きセット',        asin:'B09PET0006', sales:54000,  profit:52, acos:9,  stock: 8, replenish:21, trend:'▲' },
 ];
 
-// 30日分の模擬価格履歴を生成
-function generateHistory(base, noise) {
-  const days = 30;
-  const res = [];
-  let v = base;
-  for (let i = days; i >= 0; i--) {
-    v = Math.max(base * 0.85, Math.min(base * 1.12, v + (Math.random() - 0.5) * noise));
-    res.push(Math.round(v / 100) * 100);
-  }
-  return res;
-}
-
-let selectedProduct = null;
-
-function getPriceClass(product, price, site) {
-  if (!price) return '';
-  const prices = [product.amz, product.rak, product.yah].filter(Boolean);
-  const min = Math.min(...prices);
-  const max = Math.max(...prices);
-  if (price === min) return 'cheapest';
-  if (price === max) return 'priciest';
-  return 'mid';
-}
-
-function renderPriceTable() {
-  const tbody = document.getElementById('price-body');
+// ---- RENDER PRODUCT TABLE ----
+function renderTable() {
+  const tbody = document.getElementById('prod-body');
   tbody.innerHTML = PRODUCTS.map(p => {
-    const prices = [p.amz, p.rak, p.yah].filter(Boolean);
-    const minPrice = Math.min(...prices);
-    const prevChange = minPrice - p.prev_min;
-    const changeHtml = prevChange < 0
-      ? `<span class="change-badge change-down">▼ ¥${Math.abs(prevChange).toLocaleString()}</span>`
-      : prevChange > 0
-      ? `<span class="change-badge change-up">▲ ¥${prevChange.toLocaleString()}</span>`
-      : `<span class="change-badge change-same">— 変動なし</span>`;
-
-    const isSelected = selectedProduct && selectedProduct.id === p.id;
-
+    const stockClass = p.stock < 15 ? 'stock-ng' : p.stock < 30 ? 'stock-warn' : 'stock-ok';
+    const stockIcon  = p.stock < 15 ? '🚨' : p.stock < 30 ? '⚠️' : '✅';
+    const acosClass  = p.acos > 25 ? 'style="color:var(--red)"' : p.acos > 18 ? 'style="color:var(--yellow)"' : 'style="color:var(--green)"';
+    const trendColor = p.trend==='▲' ? 'var(--green)' : p.trend==='▼' ? 'var(--red)' : 'var(--text2)';
     return `
-      <tr class="${isSelected ? 'selected' : ''}" onclick="selectProduct(${p.id})">
-        <td>
-          <div class="product-name">${p.name}</div>
-          <div class="product-cat">${p.cat}</div>
-        </td>
-        <td class="price-cell ${getPriceClass(p, p.amz, 'amz')}">¥${p.amz.toLocaleString()}</td>
-        <td class="price-cell ${getPriceClass(p, p.rak, 'rak')}">¥${p.rak.toLocaleString()}</td>
-        <td class="price-cell ${getPriceClass(p, p.yah, 'yah')}">${p.yah ? '¥' + p.yah.toLocaleString() : '<span class="price-na">—</span>'}</td>
-        <td class="price-cell cheapest" style="font-size:14px">¥${minPrice.toLocaleString()}</td>
-        <td style="text-align:center">${changeHtml}</td>
-        <td>
-          <button class="row-btn ${isSelected ? 'active' : ''}" onclick="event.stopPropagation(); selectProduct(${p.id})">
-            ${isSelected ? '▲ 閉じる' : '📈 推移'}
-          </button>
-        </td>
-      </tr>
-    `;
+      <tr>
+        <td><div class="prod-name">${p.name}</div></td>
+        <td><span class="prod-asin">${p.asin}</span></td>
+        <td class="num-r">¥${p.sales.toLocaleString()}</td>
+        <td class="num-r" style="color:var(--green)">${p.profit}%</td>
+        <td class="num-r" ${acosClass}>${p.acos}%</td>
+        <td class="num-r ${stockClass}">${stockIcon} ${p.stock}個</td>
+        <td class="num-r" style="color:var(--text2)">${p.replenish}日分</td>
+        <td class="num-r" style="color:${trendColor}">${p.trend}</td>
+        <td style="text-align:center"><span class="tag ${p.stock<15?'tag-red':p.acos>25?'tag-amber':'tag-green'}">${p.stock<15?'要補充':p.acos>25?'ACoS高':'良好'}</span></td>
+      </tr>`;
   }).join('');
 }
 
-function selectProduct(id) {
-  const p = PRODUCTS.find(p => p.id === id);
-  if (selectedProduct && selectedProduct.id === id) {
-    selectedProduct = null;
-    document.getElementById('chart-section').classList.remove('visible');
-  } else {
-    selectedProduct = p;
-    document.getElementById('chart-section').classList.add('visible');
-    document.getElementById('chart-title').textContent = `📈 ${p.name} — 30日間価格推移`;
-    setTimeout(() => drawPriceChart(p), 50);
-  }
-  renderPriceTable();
+// ---- RENDER ACOS BARS ----
+function renderAcos() {
+  const el = document.getElementById('acos-bars');
+  el.innerHTML = PRODUCTS.map(p => {
+    const color = p.acos > 25 ? 'var(--red)' : p.acos > 18 ? 'var(--yellow)' : 'var(--green)';
+    const pct = Math.min(p.acos / 40 * 100, 100);
+    return `
+      <div class="progress-row">
+        <div class="progress-label" style="font-size:12px">${p.name.substring(0,14)}…</div>
+        <div class="progress-track"><div class="progress-bar" style="width:${pct}%;background:${color}"></div></div>
+        <div class="progress-val" style="color:${color}">${p.acos}%</div>
+        <span class="tag ${p.acos>25?'tag-red':p.acos>18?'tag-amber':'tag-green'}" style="font-size:10px;margin-left:6px;">${p.acos>25?'要改善':p.acos>18?'注意':'良好'}</span>
+      </div>`;
+  }).join('');
 }
 
-function drawPriceChart(product) {
-  const canvas = document.getElementById('price-chart');
+// ---- SALES CHART ----
+function drawSalesChart() {
+  const canvas = document.getElementById('sales-chart');
+  if(!canvas) return;
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
-  const W = canvas.parentElement.clientWidth - 32;
-  const H = 200;
-  canvas.width = W * dpr;
-  canvas.height = H * dpr;
-  canvas.style.width = W + 'px';
-  canvas.style.height = H + 'px';
+  const W = canvas.parentElement.clientWidth - 36;
+  const H = 180;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W+'px'; canvas.style.height = H+'px';
   ctx.scale(dpr, dpr);
 
-  const amzData  = generateHistory(product.amz, 400);
-  const rakData  = generateHistory(product.rak, 500);
-  const yahData  = product.yah ? generateHistory(product.yah, 350) : null;
-
-  const allVals = [...amzData, ...rakData, ...(yahData || [])];
-  const minVal = Math.min(...allVals) * 0.97;
-  const maxVal = Math.max(...allVals) * 1.03;
-  const n = amzData.length;
-
-  const padL = 62, padR = 16, padT = 20, padB = 36;
-  const chartW = W - padL - padR;
-  const chartH = H - padT - padB;
-
-  ctx.clearRect(0, 0, W, H);
-
-  // Grid
-  for (let i = 0; i <= 4; i++) {
-    const y = padT + chartH - (chartH / 4 * i);
-    ctx.strokeStyle = 'rgba(48,54,61,0.9)';
-    ctx.lineWidth = 1;
-    ctx.setLineDash([3, 3]);
-    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
-    ctx.setLineDash([]);
-    const v = minVal + (maxVal - minVal) / 4 * i;
-    ctx.fillStyle = '#8b949e';
-    ctx.font = '9px system-ui';
-    ctx.textAlign = 'right';
-    ctx.fillText('¥' + Math.round(v / 100) * 100, padL - 4, y + 4);
+  const n = 90;
+  const sales = [], adcost = [], profit = [];
+  let s=280000, a=55000;
+  for(let i=0;i<n;i++){
+    s = Math.max(150000, s + (Math.random()-.4)*20000);
+    a = Math.max(20000, a + (Math.random()-.5)*8000);
+    sales.push(Math.round(s));
+    adcost.push(Math.round(a));
+    profit.push(Math.round(s*.34 - a*.3));
   }
 
-  // Alert threshold line
-  if (product.alert >= minVal && product.alert <= maxVal) {
-    const alertY = padT + chartH - ((product.alert - minVal) / (maxVal - minVal)) * chartH;
-    ctx.strokeStyle = 'rgba(240,136,62,0.6)';
-    ctx.lineWidth = 1;
-    ctx.setLineDash([5, 5]);
-    ctx.beginPath(); ctx.moveTo(padL, alertY); ctx.lineTo(W - padR, alertY); ctx.stroke();
+  const allVals = [...sales,...adcost,...profit];
+  const minV = Math.min(...allVals)*.9, maxV = Math.max(...allVals)*1.05;
+  const pL=50, pR=12, pT=12, pB=28;
+  const cW=W-pL-pR, cH=H-pT-pB;
+
+  ctx.clearRect(0,0,W,H);
+
+  // grid
+  for(let i=0;i<=3;i++){
+    const y=pT+cH/3*i;
+    ctx.strokeStyle='rgba(55,65,81,.7)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(pL,y); ctx.lineTo(W-pR,y); ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle = '#f0883e';
-    ctx.font = 'bold 9px system-ui';
-    ctx.textAlign = 'left';
-    ctx.fillText('🔔 アラート ¥' + product.alert.toLocaleString(), padL + 4, alertY - 3);
+    const v=maxV-(maxV-minV)/3*i;
+    ctx.fillStyle='#6b7280'; ctx.font='9px system-ui'; ctx.textAlign='right';
+    ctx.fillText('¥'+(v/10000).toFixed(0)+'万', pL-4, y+4);
   }
 
-  // Draw lines
-  const LINES = [
-    { data: amzData,  color: '#ff9900', name: 'Amazon' },
-    { data: rakData,  color: '#bf0000', name: '楽天' },
-    { data: yahData,  color: '#ff0033', name: 'Yahoo!' },
-  ].filter(l => l.data);
-
-  LINES.forEach(({ data, color }) => {
-    const pts = data.map((v, i) => ({
-      x: padL + (chartW / (n - 1)) * i,
-      y: padT + chartH - ((v - minVal) / (maxVal - minVal)) * chartH
-    }));
-
+  [[sales,'#10b981'],[adcost,'#ef4444'],[profit,'#f59e0b']].forEach(([data,color])=>{
+    const pts = data.map((v,i)=>({x:pL+cW/(n-1)*i, y:pT+cH-((v-minV)/(maxV-minV))*cH}));
     ctx.beginPath();
-    pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Dots at latest
-    const last = pts[pts.length - 1];
-    ctx.beginPath();
-    ctx.arc(last.x, last.y, 4, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.fill();
-    ctx.strokeStyle = '#0d1117';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Min price dot (green highlight)
-    const minIdx = data.indexOf(Math.min(...data));
-    const minPt = pts[minIdx];
-    ctx.beginPath();
-    ctx.arc(minPt.x, minPt.y, 5, 0, Math.PI * 2);
-    ctx.fillStyle = '#3fb950';
-    ctx.fill();
-    ctx.strokeStyle = '#0d1117';
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+    ctx.strokeStyle=color; ctx.lineWidth=2; ctx.stroke();
   });
 
-  // X axis dates
-  ctx.fillStyle = '#8b949e';
-  ctx.font = '9px system-ui';
-  ctx.textAlign = 'center';
-  const today = new Date();
-  [0, 7, 14, 21, 28, 30].forEach(offset => {
-    const d = new Date(today);
-    d.setDate(d.getDate() - (30 - offset));
-    const x = padL + (chartW / 30) * offset;
-    ctx.fillText(`${d.getMonth()+1}/${d.getDate()}`, x, H - padB + 14);
+  // x axis
+  ctx.fillStyle='#6b7280'; ctx.font='9px system-ui'; ctx.textAlign='center';
+  const today=new Date();
+  [0,30,60,89].forEach(i=>{
+    const d=new Date(today); d.setDate(d.getDate()-(89-i));
+    ctx.fillText(`${d.getMonth()+1}/${d.getDate()}`, pL+cW/(n-1)*i, H-pB+14);
   });
 }
 
-function renderAlerts() {
-  document.getElementById('alert-grid').innerHTML = PRODUCTS.slice(0, 4).map(p => `
-    <div class="alert-item">
-      <div class="alert-product">📦 ${p.name}</div>
-      <div class="alert-input-row">
-        <span class="alert-label">しきい値:</span>
-        <input type="number" class="alert-input" id="alert-${p.id}" value="${p.alert}" min="0" step="100">
-        <span class="alert-unit">円以下</span>
-      </div>
-      <button class="test-mail-btn" onclick="showEmailPreview(${p.id})">📧 テストメール送信 (プレビュー)</button>
-      <div class="email-preview-box" id="ep-${p.id}"></div>
-    </div>
-  `).join('');
-}
-
-function showEmailPreview(pid) {
-  const p = PRODUCTS.find(p => p.id === pid);
-  const threshold = document.getElementById(`alert-${pid}`).value;
-  const box = document.getElementById(`ep-${pid}`);
-
-  const prices = [p.amz, p.rak, p.yah].filter(Boolean);
-  const minPrice = Math.min(...prices);
-
-  box.innerHTML = `
-    <div class="ep-row"><span class="ep-label">To:</span><span class="ep-val">you@example.com</span></div>
-    <div class="ep-row"><span class="ep-label">件名:</span><span class="ep-val">🔔 価格アラート: ${p.name} が安くなりました！</span></div>
-    <div class="ep-body">商品名: ${p.name}<br>現在価格: ¥${minPrice.toLocaleString()} (最安値)<br>設定しきい値: ¥${parseInt(threshold).toLocaleString()}<br><br>→ すぐに確認する: https://amazon.co.jp/...</div>
-  `;
-  box.classList.toggle('visible');
-  if (box.classList.contains('visible')) {
-    showToast('📧 メールプレビューを表示しました');
-  }
-}
-
-function refreshPrices() {
+// ---- INTERACTIONS ----
+function refreshTable() {
   PRODUCTS.forEach(p => {
-    const delta = Math.floor(Math.random() * 201) - 100;
-    p.amz = Math.max(100, p.amz + delta);
-    const d2 = Math.floor(Math.random() * 201) - 100;
-    p.rak = Math.max(100, p.rak + d2);
+    p.stock = Math.max(5, p.stock + Math.floor(Math.random()*10-3));
+    p.acos  = Math.max(5, Math.min(40, p.acos + (Math.random()-.5)*3));
+    p.acos  = Math.round(p.acos*10)/10;
   });
-  renderPriceTable();
-  if (selectedProduct) {
-    const updated = PRODUCTS.find(p => p.id === selectedProduct.id);
-    drawPriceChart(updated);
-  }
-  showToast('🔄 価格情報を更新しました');
+  renderTable(); renderAcos();
+  showToast('🔄 データを更新しました（SP-API シミュレーション）');
 }
 
-function copyCode() {
-  const code = document.getElementById('py-code').innerText;
-  navigator.clipboard.writeText(code).then(() => showToast('コードをコピーしました'));
-}
-
-function showTab(name, btn) {
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById(name).classList.add('active');
-  if (btn) btn.classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(name==='dashboard') setTimeout(drawSalesChart, 50);
+}
+
+function copyCode(id) {
+  navigator.clipboard.writeText(document.getElementById(id).innerText)
+    .then(()=>showToast('✅ コードをコピーしました'));
 }
 
 function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2800);
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// ---- KPI COUNT-UP ANIMATION ----
+function animateKPI(el, target, prefix, suffix, duration) {
+  const start = performance.now();
+  const isDecimal = target % 1 !== 0;
+  function update(now) {
+    const elapsed = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - elapsed, 3); // ease-out cubic
+    const current = target * ease;
+    el.textContent = prefix + (isDecimal ? current.toFixed(1) : Math.round(current).toLocaleString()) + suffix;
+    if(elapsed < 1) requestAnimationFrame(update);
+    else el.textContent = prefix + (isDecimal ? target.toFixed(1) : target.toLocaleString()) + suffix;
+  }
+  requestAnimationFrame(update);
+}
+
+function startKPIAnimation() {
+  const kpiDefs = [
+    { selector: '.kpi.green .kpi-value', prefix: '¥', val: 1.24, suffix: 'M', isFloat: true },
+    { selector: '.kpi.yellow .kpi-value', prefix: '', val: 34.2, suffix: '%', isFloat: true },
+    { selector: '.kpi.blue .kpi-value', prefix: '', val: 18.4, suffix: '%', isFloat: true },
+    { selector: '.kpi.red .kpi-value', prefix: '', val: 3, suffix: '件', isFloat: false },
+  ];
+  kpiDefs.forEach(({selector, prefix, val, suffix, isFloat}, i) => {
+    const el = document.querySelector(selector);
+    if(!el) return;
+    el.textContent = prefix + '0' + suffix;
+    setTimeout(() => animateKPI(el, val, prefix, suffix, 900), i * 120);
+  });
 }
 
 // Init
-renderPriceTable();
-renderAlerts();
+renderTable(); renderAcos();
+setTimeout(drawSalesChart, 100);
+setTimeout(startKPIAnimation, 200);
 </script>
 </body>
 </html>
