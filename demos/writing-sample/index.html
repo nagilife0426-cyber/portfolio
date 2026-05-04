@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ライティングサンプル集 | なぎ</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+      background: #fafaf8;
+      color: #1a1a1a;
+      line-height: 1.85;
+    }
+
+    /* Header */
+    .site-header {
+      background: #fff;
+      border-bottom: 2px solid #2d6a4f;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .site-header .logo { font-size: 14px; font-weight: 700; color: #2d6a4f; letter-spacing: 1px; }
+    .site-header .badge {
+      background: #2d6a4f; color: #fff;
+      font-size: 11px; padding: 4px 12px; border-radius: 20px; font-weight: 600;
+    }
+
+    /* Hero */
+    .hero {
+      background: linear-gradient(135deg, #2d6a4f 0%, #40916c 50%, #52b788 100%);
+      color: #fff;
+      padding: 60px 24px;
+      text-align: center;
+    }
+    .hero h1 { font-size: clamp(24px, 5vw, 40px); font-weight: 900; margin-bottom: 12px; line-height: 1.3; }
+    .hero p { font-size: 15px; opacity: 0.9; margin-bottom: 24px; }
+    .hero-stats {
+      display: flex; gap: 24px; justify-content: center; flex-wrap: wrap;
+    }
+    .stat-box {
+      background: rgba(255,255,255,0.15); border-radius: 12px; padding: 14px 20px; text-align: center;
+      backdrop-filter: blur(4px);
+    }
+    .stat-box .num { font-size: 28px; font-weight: 900; }
+    .stat-box .label { font-size: 11px; opacity: 0.85; margin-top: 2px; }
+
+    /* Tabs */
+    .tabs-wrap { background: #fff; border-bottom: 1px solid #e0e0e0; position: sticky; top: 57px; z-index: 99; }
+    .tabs { display: flex; max-width: 900px; margin: 0 auto; overflow-x: auto; }
+    .tab {
+      padding: 14px 22px; font-size: 13px; font-weight: 600; color: #666;
+      border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .tab.active { color: #2d6a4f; border-bottom-color: #2d6a4f; }
+
+    /* Content */
+    .content { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+
+    .section-title {
+      font-size: 13px; font-weight: 700; color: #2d6a4f; letter-spacing: 2px;
+      text-transform: uppercase; margin-bottom: 20px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: #e0e0e0; }
+
+    /* Article cards */
+    .article-card {
+      background: #fff; border-radius: 16px; overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 32px;
+    }
+    .article-meta {
+      background: #f0f7f3; padding: 14px 24px;
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    }
+    .article-meta .category {
+      background: #2d6a4f; color: #fff; font-size: 11px; font-weight: 700;
+      padding: 3px 10px; border-radius: 12px;
+    }
+    .article-meta .info { font-size: 12px; color: #666; }
+    .article-meta .score {
+      margin-left: auto; font-size: 12px; font-weight: 700; color: #2d6a4f;
+      background: #d8f3dc; padding: 3px 10px; border-radius: 12px;
+    }
+
+    .article-body { padding: 28px 28px 32px; }
+    .article-body h2 { font-size: 20px; font-weight: 900; color: #1a1a1a; margin-bottom: 16px; line-height: 1.4; }
+    .article-body .lead {
+      font-size: 15px; color: #444; margin-bottom: 20px; padding: 16px;
+      background: #f8f8f6; border-left: 3px solid #52b788; border-radius: 0 8px 8px 0;
+    }
+    .article-body h3 { font-size: 16px; font-weight: 700; color: #2d6a4f; margin: 24px 0 10px; }
+    .article-body p { font-size: 14px; color: #444; margin-bottom: 14px; }
+    .article-body .point-box {
+      background: #f0f7f3; border-radius: 10px; padding: 16px 20px; margin: 20px 0;
+    }
+    .article-body .point-box ul { padding-left: 18px; }
+    .article-body .point-box li { font-size: 14px; color: #333; margin-bottom: 6px; }
+    .article-body .word-count {
+      margin-top: 20px; padding-top: 14px; border-top: 1px solid #eee;
+      font-size: 12px; color: #999; text-align: right;
+    }
+
+    /* Script sample */
+    .script-card {
+      background: #fff; border-radius: 16px; overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 32px;
+    }
+    .script-header {
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      color: #fff; padding: 18px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .script-header .title { font-size: 15px; font-weight: 700; }
+    .script-header .yt-badge {
+      background: #ff0000; color: #fff; font-size: 11px; font-weight: 700;
+      padding: 3px 10px; border-radius: 6px;
+    }
+    .script-body { padding: 24px; }
+    .script-line {
+      display: flex; gap: 16px; margin-bottom: 16px;
+      padding-bottom: 16px; border-bottom: 1px solid #f0f0f0;
+    }
+    .script-line:last-child { border-bottom: none; margin-bottom: 0; }
+    .script-line .role {
+      font-size: 11px; font-weight: 700; color: #fff;
+      padding: 3px 8px; border-radius: 6px; white-space: nowrap;
+      height: fit-content; margin-top: 2px;
+    }
+    .script-line .role.narrator { background: #2d6a4f; }
+    .script-line .role.direction { background: #f77f00; }
+    .script-line .text { font-size: 14px; color: #333; line-height: 1.7; flex: 1; }
+    .script-line .text em { color: #2d6a4f; font-style: normal; font-weight: 700; }
+
+    /* Caption samples */
+    .caption-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px; margin-bottom: 32px;
+    }
+    .caption-card {
+      background: #fff; border-radius: 14px; overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+    .caption-header {
+      padding: 12px 16px; display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .caption-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+    }
+    .caption-account { font-size: 12px; font-weight: 700; color: #1a1a1a; }
+    .caption-type { font-size: 10px; color: #999; }
+    .caption-img {
+      width: 100%; aspect-ratio: 1; display: flex; align-items: center;
+      justify-content: center; font-size: 60px;
+    }
+    .caption-text { padding: 12px 16px; font-size: 12px; color: #333; line-height: 1.6; }
+    .caption-tags { padding: 0 16px 14px; font-size: 11px; color: #2d6a4f; font-weight: 600; }
+
+    /* Skills */
+    .skills-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px; margin-bottom: 32px;
+    }
+    .skill-card {
+      background: #fff; border-radius: 14px; padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06); text-align: center;
+    }
+    .skill-card .icon { font-size: 36px; margin-bottom: 10px; }
+    .skill-card .name { font-size: 14px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
+    .skill-card .desc { font-size: 12px; color: #666; }
+
+    /* Tab panels */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Footer */
+    footer {
+      text-align: center; padding: 32px 24px;
+      color: #999; font-size: 12px; border-top: 1px solid #eee;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">✍️ なぎ｜ライティングポートフォリオ</div>
+  <span class="badge">制作デモ</span>
+</header>
+
+<div class="hero">
+  <h1>読者の心を動かす文章を<br>丁寧に、スピーディーに。</h1>
+  <p>旅行・ライフスタイル・SNSキャプション・YouTube台本に対応</p>
+  <div class="hero-stats">
+    <div class="stat-box"><div class="num">SEO</div><div class="label">キーワード設計対応</div></div>
+    <div class="stat-box"><div class="num">修正</div><div class="label">3回まで無料対応</div></div>
+    <div class="stat-box"><div class="num">納期</div><div class="label">1記事あたり約2日</div></div>
+  </div>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('travel')">✈️ 旅行記事</div>
+    <div class="tab" onclick="showTab('youtube')">▶️ YouTube台本</div>
+    <div class="tab" onclick="showTab('instagram')">📸 Instagramキャプション</div>
+    <div class="tab" onclick="showTab('skills')">🛠 対応可能範囲</div>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- ===== 旅行記事サンプル ===== -->
+  <div class="tab-panel active" id="tab-travel">
+    <div class="section-title">旅行・おでかけ記事サンプル</div>
+
+    <div class="article-card">
+      <div class="article-meta">
+        <span class="category">旅行ライティング</span>
+        <span class="info">約1,500文字 / SEO最適化済み / 2日で納品</span>
+        <span class="score">⭐ サンプル記事</span>
+      </div>
+      <div class="article-body">
+        <h2>【京都・嵐山】20代女子が本当に行くべきおすすめスポット7選｜穴場カフェ＆映えスポット完全ガイド</h2>
+        <p class="lead">「京都に行くなら嵐山」とよく聞くけど、どこに行けばいいか迷いますよね。定番の竹林や天龍寺はもちろん、地元の人しか知らない穴場カフェや、SNSで話題の絶景スポットまで、20代女子目線でリアルにまとめました。</p>
+
+        <h3>①「竹林の小径」は朝7時前が正解</h3>
+        <p>嵐山といえば外せない竹林の小径。ただし、10時以降は観光客でびっしり。写真を綺麗に撮りたいなら<strong>朝7時前</strong>がゴールデンタイムです。空気が澄んでいて、光の差し込み方が全然違います。早起きする価値は十分あります。</p>
+
+        <h3>②渡月橋の夕暮れは一生に一度見る価値あり</h3>
+        <p>観光スポットとして有名な渡月橋も、日没30分前から表情が一変。橋と川が夕陽でオレンジに染まる光景は、何度見ても飽きない美しさです。川沿いのベンチに腰掛けてぼんやりと眺めるのが最高の過ごし方。</p>
+
+        <h3>③地元民おすすめ「嵯峨豆腐 森嘉」の揚げ出し豆腐</h3>
+        <p>観光地グルメに飽きたら、地元の人が愛する老舗へ。明治時代から続く豆腐屋「森嘉」の揚げ出し豆腐は、外はサクサク、中はとろとろ。行列ができる日もありますが、それでも食べる価値あり。</p>
+
+        <div class="point-box">
+          <strong>📍 アクセス・まとめチェックリスト</strong>
+          <ul>
+            <li>竹林：朝7時前 → 混雑なし・写真映え◎</li>
+            <li>渡月橋：日没30分前 → 夕暮れが絶景</li>
+            <li>森嘉：11〜14時 → 混雑前に入店がベスト</li>
+            <li>嵐電（嵐山電車）で一周もおすすめ</li>
+          </ul>
+        </div>
+
+        <p>嵐山は「定番すぎて飽きた」と思っていた方ほど、時間帯や視点を変えると全く新しい顔を見せてくれます。ぜひ早起きして、自分だけの嵐山時間を楽しんでみてください。</p>
+
+        <div class="word-count">文字数：約1,450字 ／ キーワード：嵐山 / 嵯峨 / 20代 / 女子旅 / 穴場 / おすすめ</div>
+      </div>
+    </div>
+
+    <div class="article-card">
+      <div class="article-meta">
+        <span class="category">旅行ライティング</span>
+        <span class="info">約1,200文字 / 体験談ベース / 親しみやすいトーン</span>
+        <span class="score">⭐ サンプル記事</span>
+      </div>
+      <div class="article-body">
+        <h2>はじめてひとり旅に行く人へ。「怖い」を「楽しい」に変える5つのコツ</h2>
+        <p class="lead">「ひとり旅ってなんか寂しくない？」「危なくないの？」——そんな不安を持ったまま、私も最初の一歩を踏み出しました。でも結論、ひとり旅は"最高の自己投資"でした。失敗談も含めてリアルにお伝えします。</p>
+
+        <h3>1. プランは「大枠だけ」決めておく</h3>
+        <p>スケジュールを分刻みで決めると、ちょっとしたズレで焦ります。「午前中に○○エリアを散歩、夜は名物を食べる」くらいのゆるい設計で十分。空白の時間が、ひとり旅の醍醐味です。</p>
+
+        <h3>2. 行き帰りの交通だけは事前確認を</h3>
+        <p>宿や観光地は当日決めてもなんとかなりますが、新幹線や飛行機は早めに押さえておくと安心。繁忙期は数千円変わることも。ここだけはしっかり準備しましょう。</p>
+
+        <h3>3. 「話しかけられたらラッキー」の心構えで</h3>
+        <p>ひとりだと声をかけられやすくなります。地元のおじさんに絶品の定食屋を教えてもらったり、同じひとり旅の人と意気投合したり。ひとり旅ならではの出会いが生まれます。</p>
+
+        <div class="point-box">
+          <strong>🎒 ひとり旅を楽にするグッズ3選</strong>
+          <ul>
+            <li>モバイルバッテリー（地図・カメラで電池を消費）</li>
+            <li>エコバッグ（お土産が増えても安心）</li>
+            <li>イヤホン（移動時間が快適になる）</li>
+          </ul>
+        </div>
+
+        <div class="word-count">文字数：約1,150字 ／ キーワード：ひとり旅 / 初心者 / コツ / 旅行</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== YouTube台本サンプル ===== -->
+  <div class="tab-panel" id="tab-youtube">
+    <div class="section-title">YouTube台本サンプル（約5分尺）</div>
+
+    <div class="script-card">
+      <div class="script-header">
+        <div class="title">「月3万円を旅行代に充てる方法｜20代が実践している節約術5選」</div>
+        <span class="yt-badge">▶ YouTube台本</span>
+      </div>
+      <div class="script-body">
+
+        <div class="script-line">
+          <span class="role direction">ト書き</span>
+          <div class="text">【冒頭：インパクトのある一言から始める】</div>
+        </div>
+
+        <div class="script-line">
+          <span class="role narrator">本文</span>
+          <div class="text">「旅行に行きたいけど、お金がない」——毎月そう思いながら、気づいたら貯金もゼロ。そんな状態から脱出して、<em>月に3万円を旅行専用貯金に回せるようになった</em>、実際の方法を今日は話します。</div>
+        </div>
+
+        <div class="script-line">
+          <span class="role direction">ト書き</span>
+          <div class="text">【チャンネル紹介・登録促し → 本題へ】</div>
+        </div>
+
+        <div class="script-line">
+          <span class="role narrator">本文</span>
+          <div class="text">このチャンネルでは、20代が「今すぐ使える」お金と旅行の話をしています。気に入ったらチャンネル登録してもらえると励みになります。では、さっそく本題です。</div>
+        </div>
+
+        <div class="script-line">
+          <span class="role direction">ト書き</span>
+          <div class="text">【方法① テロップ表示：「固定費の見直し」】</div>
+        </div>
+
+        <div class="script-line">
+          <span class="role narrator">本文</span>
+          <div class="text">まず一番効果が大きかったのが、<em>スマホ代を格安SIMに変えたこと</em>。月8,000円払っていたのが、1,500円になりました。年間で78,000円の削減。これだけで国内旅行2〜3回分の原資になります。</div>
+        </div>
+
+        <div class="script-line">
+          <span class="role direction">ト書き</span>
+          <div class="text">【方法② テロップ：「旅行専用の口座をつくる」】</div>
+        </div>
+
+        <div class="script-line">
+          <span class="role narrator">本文</span>
+          <div class="text">給料日に自動で3万円を「旅行口座」に移す設定をしました。ポイントは<em>「余ったら入れる」ではなく「最初から分ける」こと</em>。手をつけないように別の銀行に置いておくのがコツです。</div>
+        </div>
+
+        <div class="script-line">
+          <span class="role direction">ト書き</span>
+          <div class="text">【まとめ・CTA】</div>
+        </div>
+
+        <div class="script-line">
+          <span class="role narrator">本文</span>
+          <div class="text">5つの方法、いかがでしたか？全部やる必要はなくて、まず1つだけ試してみてください。<em>「スマホ代を見直す」だけでも、今月からできます。</em>コメントで「やってみる！」と書いてくれると、私も嬉しいです。次の動画でお会いしましょう！</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Instagramキャプション ===== -->
+  <div class="tab-panel" id="tab-instagram">
+    <div class="section-title">Instagramキャプションサンプル（ジャンル別）</div>
+    <div class="caption-grid">
+
+      <div class="caption-card">
+        <div class="caption-header">
+          <div class="caption-avatar" style="background:#fff3e0">🍜</div>
+          <div>
+            <div class="caption-account">グルメ系アカウント</div>
+            <div class="caption-type">ラーメン専門店の投稿</div>
+          </div>
+        </div>
+        <div class="caption-img" style="background:linear-gradient(135deg,#fff3e0,#ffe0b2)">🍜</div>
+        <div class="caption-text">
+          週一で通ってます、ここ。<br><br>
+          濃厚なのに後味さっぱり。<br>
+          このバランスをどうやって出しているのか、いまだに謎です🤔<br><br>
+          スープを飲み干した瞬間、また来週も来ようって思う。<br>
+          そういうお店って、なかなかないですよね。<br><br>
+          📍◯◯市 ×× ラーメン
+        </div>
+        <div class="caption-tags">#ラーメン #濃厚 #週一通い #グルメ #おすすめ</div>
+      </div>
+
+      <div class="caption-card">
+        <div class="caption-header">
+          <div class="caption-avatar" style="background:#e8f5e9">☕</div>
+          <div>
+            <div class="caption-account">カフェ系アカウント</div>
+            <div class="caption-type">週末おでかけ投稿</div>
+          </div>
+        </div>
+        <div class="caption-img" style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9)">☕</div>
+        <div class="caption-text">
+          週末の朝、9時前に来るのがちょうどいい☀️<br><br>
+          人が少なくて、窓際の席が取れる。<br>
+          好きな本を持って、コーヒー1杯でゆっくりする時間が、<br>
+          一週間で一番好きな時間かもしれない。<br><br>
+          忙しい日々のご褒美に、たまにはこんな朝もいいですよ。
+        </div>
+        <div class="caption-tags">#カフェ #週末モーニング #癒し #ゆっくり時間</div>
+      </div>
+
+      <div class="caption-card">
+        <div class="caption-header">
+          <div class="caption-avatar" style="background:#e3f2fd">🛍</div>
+          <div>
+            <div class="caption-account">コスメ・美容系</div>
+            <div class="caption-type">新商品レビュー投稿</div>
+          </div>
+        </div>
+        <div class="caption-img" style="background:linear-gradient(135deg,#e3f2fd,#bbdefb)">💄</div>
+        <div class="caption-text">
+          これ、正直すごかった。<br><br>
+          乾燥しやすい季節に使い始めて3日。<br>
+          朝起きたときの肌のもちもち感が明らかに違う。<br><br>
+          テクスチャーが軽いのに、ちゃんと保湿される感じ。<br>
+          「もっと早く知りたかった」系のやつです💙<br><br>
+          ※個人の感想です
+        </div>
+        <div class="caption-tags">#美容 #スキンケア #乾燥対策 #新作コスメ #おすすめ</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== スキル・対応範囲 ===== -->
+  <div class="tab-panel" id="tab-skills">
+    <div class="section-title">対応可能なライティング範囲</div>
+    <div class="skills-grid">
+      <div class="skill-card">
+        <div class="icon">✈️</div>
+        <div class="name">旅行・おでかけ記事</div>
+        <div class="desc">SEO対応、1,000〜3,000字、観光ガイド・ひとり旅・女子旅など</div>
+      </div>
+      <div class="skill-card">
+        <div class="icon">▶️</div>
+        <div class="name">YouTube台本</div>
+        <div class="desc">3〜10分尺、ト書き付き、ナレーション対応、AI活用可</div>
+      </div>
+      <div class="skill-card">
+        <div class="icon">📸</div>
+        <div class="name">Instagramキャプション</div>
+        <div class="desc">グルメ・カフェ・美容・旅行、タグ付き、コンテンツカレンダー作成可</div>
+      </div>
+      <div class="skill-card">
+        <div class="icon">🏥</div>
+        <div class="name">健康・ライフスタイル記事</div>
+        <div class="desc">美容・ダイエット・生活習慣改善、読みやすいトーンで執筆</div>
+      </div>
+      <div class="skill-card">
+        <div class="icon">🛒</div>
+        <div class="name">商品・サービス紹介文</div>
+        <div class="desc">LP補足テキスト、商品説明文、セールスライティング</div>
+      </div>
+      <div class="skill-card">
+        <div class="icon">🔍</div>
+        <div class="name">SEOライティング</div>
+        <div class="desc">キーワード選定〜記事構成〜執筆まで一貫対応可</div>
+      </div>
+    </div>
+
+    <div style="background:#fff;border-radius:14px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,.06);">
+      <div class="section-title">ご依頼前に確認させていただくこと</div>
+      <ul style="list-style:none;display:grid;gap:10px;">
+        <li style="font-size:14px;padding:10px 14px;background:#f0f7f3;border-radius:8px;">📌 ターゲット読者（年齢層・悩み・興味）</li>
+        <li style="font-size:14px;padding:10px 14px;background:#f0f7f3;border-radius:8px;">📌 文体のトーン（ですます / だである / フレンドリーなど）</li>
+        <li style="font-size:14px;padding:10px 14px;background:#f0f7f3;border-radius:8px;">📌 使用するキーワード・NGワード</li>
+        <li style="font-size:14px;padding:10px 14px;background:#f0f7f3;border-radius:8px;">📌 参考にしたい記事・サイト（あれば）</li>
+      </ul>
+      <p style="font-size:13px;color:#666;margin-top:16px;">これらを事前に確認することで「思ってたのと違った」を防ぎ、修正回数を最小限にします。</p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  制作サンプル by <strong>なぎ</strong> ·
+  <a href="https://nagilife0426-cyber.github.io/portfolio/" style="color:#2d6a4f;">ポートフォリオを見る</a>
+  <br><span style="font-size:11px;opacity:0.6;display:block;margin-top:6px;">※ このページは制作力のデモ用サンプルです。記事内容はフィクションを含みます。</span>
+</footer>
+
+<script>
+  function showTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.target.classList.add('active');
+  }
+</script>
+</body>
+</html>
