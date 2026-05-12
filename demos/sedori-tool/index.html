@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ジュエリーせどり出品ツール｜プロトタイプデモ</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0e1a; --bg2: #111827; --bg3: #1f2937; --bg4: #374151;
+      --border: #1f2937; --border2: #374151;
+      --accent: #f59e0b; --accent2: #3b82f6; --accent3: #10b981;
+      --text: #f9fafb; --text2: #9ca3af; --text3: #6b7280;
+      --red: #ef4444; --green: #10b981; --yellow: #f59e0b; --blue: #3b82f6; --purple: #8b5cf6;
+      --gold: #d4af37; --r: 10px;
+    }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.5; }
+
+    /* NAV */
+    nav { background: var(--bg2); border-bottom: 1px solid var(--border2); padding: 0 24px; position: sticky; top: 0; z-index: 200; display: flex; align-items: stretch; }
+    .nav-logo { font-size: 15px; font-weight: 700; color: var(--gold); padding: 14px 0; display: flex; align-items: center; gap: 8px; }
+    .nav-tabs { display: flex; margin-left: 32px; gap: 0; }
+    .nav-tab { background: none; border: none; color: var(--text2); cursor: pointer; font-family: inherit; font-size: 13px; padding: 14px 18px; border-bottom: 2px solid transparent; transition: all .15s; }
+    .nav-tab:hover { color: var(--text); }
+    .nav-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+    .nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .demo-badge { background: rgba(212,175,55,.15); color: var(--gold); border: 1px solid rgba(212,175,55,.3); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+    .proto-badge { background: rgba(139,92,246,.15); color: var(--purple); border: 1px solid rgba(139,92,246,.3); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+
+    /* LAYOUT */
+    .page { display: none; max-width: 1000px; margin: 0 auto; padding: 24px; }
+    .page.active { display: block; }
+
+    /* CARDS */
+    .card { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r); overflow: hidden; margin-bottom: 16px; }
+    .card-head { padding: 13px 18px; border-bottom: 1px solid var(--border2); display: flex; align-items: center; justify-content: space-between; background: var(--bg3); }
+    .card-title { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+    .card-body { padding: 20px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+    /* KPI */
+    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+    .kpi { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r); padding: 18px 20px; position: relative; overflow: hidden; }
+    .kpi::before { content:''; position:absolute; inset:0; border-radius:var(--r); opacity:.06; }
+    .kpi.green::before { background: var(--green); }
+    .kpi.yellow::before { background: var(--yellow); }
+    .kpi.gold::before { background: var(--gold); }
+    .kpi.blue::before { background: var(--blue); }
+    .kpi-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
+    .kpi-value { font-size: 26px; font-weight: 800; line-height: 1; }
+    .kpi-value.green { color: var(--green); }
+    .kpi-value.yellow { color: var(--yellow); }
+    .kpi-value.gold { color: var(--gold); }
+    .kpi-value.blue { color: var(--blue); }
+    .kpi-sub { font-size: 11px; margin-top: 6px; color: var(--text2); }
+
+    /* FORM */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 11px; color: var(--text2); font-weight: 600; text-transform: uppercase; letter-spacing: .6px; }
+    .form-control { background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px; color: var(--text); font-family: inherit; font-size: 14px; padding: 9px 12px; width: 100%; transition: border-color .15s; }
+    .form-control:focus { outline: none; border-color: var(--gold); }
+    select.form-control { cursor: pointer; }
+    .input-group { position: relative; }
+    .input-prefix { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 13px; }
+    .input-group .form-control { padding-left: 26px; }
+    .input-suffix { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 13px; }
+    .input-group .form-control.has-suffix { padding-right: 36px; }
+
+    /* RESULT */
+    .result-box { background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--r); padding: 20px; }
+    .result-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(55,65,81,.5); }
+    .result-row:last-child { border-bottom: none; }
+    .result-label { font-size: 13px; color: var(--text2); }
+    .result-val { font-size: 14px; font-weight: 600; }
+    .profit-verdict { text-align: center; padding: 16px; border-radius: 8px; margin-top: 14px; font-weight: 700; font-size: 16px; }
+    .verdict-go { background: rgba(16,185,129,.15); border: 1px solid rgba(16,185,129,.3); color: var(--green); }
+    .verdict-ng { background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.25); color: var(--red); }
+    .verdict-warn { background: rgba(245,158,11,.12); border: 1px solid rgba(245,158,11,.25); color: var(--yellow); }
+
+    /* BUTTONS */
+    .btn { border: none; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; padding: 10px 20px; transition: all .15s; }
+    .btn-primary { background: var(--gold); color: #0a0e1a; }
+    .btn-primary:hover { background: #e8c547; }
+    .btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border2); }
+    .btn-secondary:hover { background: var(--bg4); }
+    .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+    /* TAGS */
+    .tag { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 20px; }
+    .tag-gold { background: rgba(212,175,55,.15); color: var(--gold); }
+    .tag-green { background: rgba(16,185,129,.12); color: var(--green); }
+    .tag-blue { background: rgba(59,130,246,.12); color: var(--blue); }
+    .tag-red { background: rgba(239,68,68,.12); color: var(--red); }
+    .tag-yellow { background: rgba(245,158,11,.12); color: var(--yellow); }
+    .tag-purple { background: rgba(139,92,246,.12); color: var(--purple); }
+
+    /* TABLE */
+    .tbl { width: 100%; border-collapse: collapse; }
+    .tbl th { padding: 9px 12px; text-align: left; font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .6px; border-bottom: 1px solid var(--border2); white-space: nowrap; }
+    .tbl td { padding: 11px 12px; border-bottom: 1px solid rgba(31,41,55,.8); vertical-align: middle; font-size: 13px; }
+    .tbl tr:last-child td { border-bottom: none; }
+    .tbl tr:hover td { background: rgba(255,255,255,.02); }
+    .num-r { text-align: right; font-weight: 600; }
+
+    /* TEXTAREA */
+    .listing-output { background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px; color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; line-height: 1.7; padding: 14px; width: 100%; min-height: 280px; resize: vertical; }
+
+    /* GOLD PRICE BADGE */
+    .gold-price-bar { background: linear-gradient(135deg, rgba(212,175,55,.2), rgba(212,175,55,.08)); border: 1px solid rgba(212,175,55,.3); border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .gold-price-label { font-size: 12px; color: var(--text2); }
+    .gold-price-val { font-size: 18px; font-weight: 800; color: var(--gold); }
+    .gold-price-note { font-size: 11px; color: var(--text3); }
+
+    /* MATERIAL SELECT */
+    .material-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+    .mat-card { background: var(--bg3); border: 2px solid var(--border2); border-radius: 8px; padding: 12px; cursor: pointer; text-align: center; transition: all .15s; }
+    .mat-card:hover { border-color: var(--gold); }
+    .mat-card.selected { border-color: var(--gold); background: rgba(212,175,55,.08); }
+    .mat-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .mat-price { font-size: 11px; color: var(--text2); }
+
+    /* SECTION TITLE */
+    .section-hd { margin-bottom: 16px; }
+    .section-hd h3 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .section-hd p { font-size: 12px; color: var(--text3); }
+
+    /* NOTICE */
+    .notice { background: rgba(139,92,246,.1); border: 1px solid rgba(139,92,246,.3); border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #c4b5fd; margin-bottom: 18px; display: flex; align-items: flex-start; gap: 8px; }
+
+    @media (max-width: 640px) {
+      .kpi-row { grid-template-columns: 1fr 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .material-cards { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">💎 ジュエリーせどりPRO</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('calc', this)">仕入れ判断</button>
+    <button class="nav-tab" onclick="showPage('listing', this)">出品テキスト生成</button>
+    <button class="nav-tab" onclick="showPage('stock', this)">在庫管理</button>
+  </div>
+  <div class="nav-right">
+    <span class="proto-badge">🔬 プロトタイプ</span>
+    <span class="demo-badge">DEMO</span>
+  </div>
+</nav>
+
+<!-- ===== PAGE: 仕入れ判断 ===== -->
+<div class="page active" id="page-calc">
+
+  <div class="notice">
+    💡 このデモは実際に制作したツールをプロトタイプとして公開しています。金価格・素材判定・利益計算はダミーデータを使用しています。
+  </div>
+
+  <div class="gold-price-bar">
+    <div>
+      <div class="gold-price-label">現在の金相場（自動取得）</div>
+      <div class="gold-price-val">¥15,240 <span style="font-size:12px;font-weight:400;color:var(--text2)">/g</span></div>
+    </div>
+    <div style="text-align:right">
+      <div class="gold-price-val" style="font-size:14px;color:var(--text2)">Pt900: ¥6,180/g</div>
+      <div class="gold-price-note">最終更新: 2026-05-13 09:00（デモ値）</div>
+    </div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi green">
+      <div class="kpi-label">今月利益</div>
+      <div class="kpi-value green">¥184,200</div>
+      <div class="kpi-sub">先月比 +23%</div>
+    </div>
+    <div class="kpi yellow">
+      <div class="kpi-label">仕入れ点数</div>
+      <div class="kpi-value yellow">47点</div>
+      <div class="kpi-sub">ジュエリー・コイン含む</div>
+    </div>
+    <div class="kpi gold">
+      <div class="kpi-label">平均利益率</div>
+      <div class="kpi-value gold">31.4%</div>
+      <div class="kpi-sub">目標: 25%以上</div>
+    </div>
+    <div class="kpi blue">
+      <div class="kpi-label">在庫点数</div>
+      <div class="kpi-value blue">12点</div>
+      <div class="kpi-sub">出品中: 9 / 準備中: 3</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title">⚖️ 仕入れ判断シミュレーター</span>
+    </div>
+    <div class="card-body">
+
+      <div class="section-hd">
+        <h3>素材を選択</h3>
+        <p>素材と刻印から相場価格を自動計算します</p>
+      </div>
+      <div class="material-cards">
+        <div class="mat-card selected" id="mat-k18" onclick="selectMaterial('k18')">
+          <div class="mat-name" style="color:var(--gold)">K18 / 18金</div>
+          <div class="mat-price">含有率 75%</div>
+          <div class="mat-price">¥11,430/g</div>
+        </div>
+        <div class="mat-card" id="mat-k14" onclick="selectMaterial('k14')">
+          <div class="mat-name" style="color:#c7a84a">K14 / 14金</div>
+          <div class="mat-price">含有率 58.5%</div>
+          <div class="mat-price">¥8,915/g</div>
+        </div>
+        <div class="mat-card" id="mat-pt900" onclick="selectMaterial('pt900')">
+          <div class="mat-name" style="color:#e0e0e0">Pt900</div>
+          <div class="mat-price">含有率 90%</div>
+          <div class="mat-price">¥5,562/g</div>
+        </div>
+        <div class="mat-card" id="mat-k10" onclick="selectMaterial('k10')">
+          <div class="mat-name" style="color:#a08030">K10 / 10金</div>
+          <div class="mat-price">含有率 41.7%</div>
+          <div class="mat-price">¥6,355/g</div>
+        </div>
+        <div class="mat-card" id="mat-sv925" onclick="selectMaterial('sv925')">
+          <div class="mat-name" style="color:#a8a8a8">SV925 / シルバー</div>
+          <div class="mat-price">含有率 92.5%</div>
+          <div class="mat-price">¥148/g</div>
+        </div>
+        <div class="mat-card" id="mat-unknown" onclick="selectMaterial('unknown')">
+          <div class="mat-name" style="color:var(--text2)">刻印なし / 不明</div>
+          <div class="mat-price">素材価値は考慮外</div>
+          <div class="mat-price">ブランド価値のみ</div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>重量 (g)</label>
+          <div class="input-group">
+            <input class="form-control has-suffix" type="number" id="weight" placeholder="例: 5.2" value="5.2" oninput="calculate()">
+            <span class="input-suffix">g</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>仕入れ価格</label>
+          <div class="input-group">
+            <span class="input-prefix">¥</span>
+            <input class="form-control" type="number" id="purchase" placeholder="例: 25000" value="25000" oninput="calculate()">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>ブランド</label>
+          <select class="form-control" id="brand" onchange="calculate()">
+            <option value="1.0">なし（素材値のみ）</option>
+            <option value="1.3" selected>ノーブランド（高級感あり）</option>
+            <option value="1.6">国内ブランド（星座、etc）</option>
+            <option value="2.0">海外ブランド（4℃、agete）</option>
+            <option value="3.0">ハイブランド（Tiffany等）</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>コンディション</label>
+          <select class="form-control" id="condition" onchange="calculate()">
+            <option value="1.0">未使用・新品同様</option>
+            <option value="0.9" selected>良い（多少の使用感）</option>
+            <option value="0.75">やや傷・ダメージあり</option>
+            <option value="0.55">難あり・大きな傷</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="result-box">
+        <div class="result-row">
+          <span class="result-label">素材価値（地金換算）</span>
+          <span class="result-val" id="res-material" style="color:var(--gold)">¥59,436</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">推定売却価格（メルカリ想定）</span>
+          <span class="result-val" id="res-sell">¥52,000</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">プラットフォーム手数料（10%）</span>
+          <span class="result-val" id="res-fee" style="color:var(--red)">-¥5,200</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">送料（ネコポス想定）</span>
+          <span class="result-val" style="color:var(--red)">-¥210</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label" style="font-weight:700">純利益</span>
+          <span class="result-val" id="res-profit" style="font-size:18px;color:var(--green)">¥21,590</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">利益率</span>
+          <span class="result-val" id="res-margin" style="color:var(--green)">46.0%</span>
+        </div>
+        <div class="profit-verdict verdict-go" id="verdict">
+          ✅ 仕入れOK — 利益率 46.0% / 目標25%以上
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE: 出品テキスト生成 ===== -->
+<div class="page" id="page-listing">
+  <div class="notice">
+    💡 商品情報を入力するとメルカリ・ラクマ向け出品テキストを自動生成します。
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-head"><span class="card-title">📝 商品情報入力</span></div>
+      <div class="card-body">
+        <div class="form-group" style="margin-bottom:12px">
+          <label>カテゴリ</label>
+          <select class="form-control" id="lst-category" onchange="updateListing()">
+            <option>リング（指輪）</option>
+            <option>ネックレス</option>
+            <option>ブレスレット</option>
+            <option>ピアス</option>
+            <option>ブローチ</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label>素材</label>
+          <select class="form-control" id="lst-material" onchange="updateListing()">
+            <option>K18（18金）</option>
+            <option>Pt900（プラチナ）</option>
+            <option>K10（10金）</option>
+            <option>SV925（シルバー）</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label>石・特徴（任意）</label>
+          <input class="form-control" type="text" id="lst-stone" placeholder="例: ダイヤモンド 0.3ct" value="ダイヤモンド 0.2ct" oninput="updateListing()">
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label>コンディション詳細</label>
+          <select class="form-control" id="lst-cond" onchange="updateListing()">
+            <option>未使用品</option>
+            <option selected>良品（目立つキズなし）</option>
+            <option>やや使用感あり</option>
+            <option>傷・汚れあり</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label>付属品</label>
+          <select class="form-control" id="lst-box" onchange="updateListing()">
+            <option>ボックス・保証書付き</option>
+            <option>ボックスのみ</option>
+            <option selected>付属品なし</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:16px">
+          <label>出品価格</label>
+          <div class="input-group">
+            <span class="input-prefix">¥</span>
+            <input class="form-control" type="number" id="lst-price" value="38000" oninput="updateListing()">
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="updateListing()">テキスト生成 ✨</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">📋 生成テキスト</span>
+        <button class="btn btn-secondary btn-sm" onclick="copyListing()">コピー</button>
+      </div>
+      <div class="card-body">
+        <textarea class="listing-output" id="listing-text" readonly></textarea>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <span class="tag tag-green" id="char-count">文字数: 0</span>
+          <span class="tag tag-blue">メルカリ最適化</span>
+          <span class="tag tag-yellow">ラクマ対応</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE: 在庫管理 ===== -->
+<div class="page" id="page-stock">
+  <div class="notice">
+    💡 仕入れ済みアイテムの在庫・状態・出品状況を一覧管理します。
+  </div>
+  <div class="kpi-row">
+    <div class="kpi green">
+      <div class="kpi-label">出品中</div>
+      <div class="kpi-value green">9点</div>
+      <div class="kpi-sub">¥892,000（合計出品額）</div>
+    </div>
+    <div class="kpi yellow">
+      <div class="kpi-label">準備中</div>
+      <div class="kpi-value yellow">3点</div>
+      <div class="kpi-sub">撮影・クリーニング待ち</div>
+    </div>
+    <div class="kpi gold">
+      <div class="kpi-label">今月売却済</div>
+      <div class="kpi-value gold">5点</div>
+      <div class="kpi-sub">利益 ¥184,200</div>
+    </div>
+    <div class="kpi blue">
+      <div class="kpi-label">平均回転日数</div>
+      <div class="kpi-value blue">8.4日</div>
+      <div class="kpi-sub">目標: 14日以内</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title">📦 在庫一覧</span>
+      <div style="display:flex;gap:8px">
+        <span class="tag tag-gold">全12点</span>
+      </div>
+    </div>
+    <div class="card-body" style="padding:0">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>商品</th>
+            <th>素材</th>
+            <th>重量</th>
+            <th class="num-r">仕入値</th>
+            <th class="num-r">出品値</th>
+            <th class="num-r">見込み利益</th>
+            <th>ステータス</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div style="font-weight:600">K18 ダイヤリング</div><div style="font-size:11px;color:var(--text3)">0.3ct ソリテール</div></td>
+            <td><span class="tag tag-gold">K18</span></td>
+            <td>3.8g</td>
+            <td class="num-r">¥45,000</td>
+            <td class="num-r">¥128,000</td>
+            <td class="num-r" style="color:var(--green)">¥68,000</td>
+            <td><span class="tag tag-green">出品中</span></td>
+          </tr>
+          <tr>
+            <td><div style="font-weight:600">Pt900 ネックレス</div><div style="font-size:11px;color:var(--text3)">40cm チェーン</div></td>
+            <td><span class="tag" style="background:rgba(224,224,224,.12);color:#e0e0e0">Pt900</span></td>
+            <td>8.2g</td>
+            <td class="num-r">¥28,000</td>
+            <td class="num-r">¥68,000</td>
+            <td class="num-r" style="color:var(--green)">¥32,000</td>
+            <td><span class="tag tag-green">出品中</span></td>
+          </tr>
+          <tr>
+            <td><div style="font-weight:600">K18 パールネックレス</div><div style="font-size:11px;color:var(--text3)">南洋白蝶 9mm</div></td>
+            <td><span class="tag tag-gold">K18</span></td>
+            <td>12.5g</td>
+            <td class="num-r">¥35,000</td>
+            <td class="num-r">¥95,000</td>
+            <td class="num-r" style="color:var(--green)">¥44,500</td>
+            <td><span class="tag tag-green">出品中</span></td>
+          </tr>
+          <tr>
+            <td><div style="font-weight:600">K18 ブレスレット</div><div style="font-size:11px;color:var(--text3)">チェーンタイプ 18cm</div></td>
+            <td><span class="tag tag-gold">K18</span></td>
+            <td>6.1g</td>
+            <td class="num-r">¥18,000</td>
+            <td class="num-r">¥48,000</td>
+            <td class="num-r" style="color:var(--green)">¥22,000</td>
+            <td><span class="tag tag-yellow">準備中</span></td>
+          </tr>
+          <tr>
+            <td><div style="font-weight:600">SV925 ピアス</div><div style="font-size:11px;color:var(--text3)">ターコイズ装飾 ペア</div></td>
+            <td><span class="tag" style="background:rgba(168,168,168,.12);color:#a8a8a8">SV925</span></td>
+            <td>4.2g</td>
+            <td class="num-r">¥2,500</td>
+            <td class="num-r">¥9,800</td>
+            <td class="num-r" style="color:var(--green)">¥5,800</td>
+            <td><span class="tag tag-yellow">準備中</span></td>
+          </tr>
+          <tr>
+            <td><div style="font-weight:600">K18 イエローゴールドリング</div><div style="font-size:11px;color:var(--text3)">刻印あり 12号</div></td>
+            <td><span class="tag tag-gold">K18</span></td>
+            <td>5.5g</td>
+            <td class="num-r">¥32,000</td>
+            <td class="num-r">¥72,000</td>
+            <td class="num-r" style="color:var(--green)">¥31,000</td>
+            <td><span class="tag tag-green">出品中</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ 材料データ ============
+const MATERIALS = {
+  k18:     { name: 'K18（18金）', purity: 0.75, goldPricePerG: 11430 },
+  k14:     { name: 'K14（14金）', purity: 0.585, goldPricePerG: 8915 },
+  pt900:   { name: 'Pt900', purity: 0.90, basePrice: 5562 },
+  k10:     { name: 'K10（10金）', purity: 0.417, goldPricePerG: 6355 },
+  sv925:   { name: 'SV925（シルバー）', purity: 0.925, basePrice: 148 },
+  unknown: { name: '刻印なし', purity: 0, basePrice: 0 }
+};
+let selectedMaterial = 'k18';
+
+function selectMaterial(key) {
+  selectedMaterial = key;
+  document.querySelectorAll('.mat-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('mat-' + key).classList.add('selected');
+  calculate();
+}
+
+function fmt(n) { return '¥' + Math.round(n).toLocaleString(); }
+
+function calculate() {
+  const weight = parseFloat(document.getElementById('weight').value) || 0;
+  const purchase = parseFloat(document.getElementById('purchase').value) || 0;
+  const brandMult = parseFloat(document.getElementById('brand').value);
+  const condMult = parseFloat(document.getElementById('condition').value);
+
+  const mat = MATERIALS[selectedMaterial];
+  const pricePerG = mat.goldPricePerG || mat.basePrice || 0;
+  const materialValue = weight * pricePerG * mat.purity;
+
+  const estimatedSell = Math.max(materialValue * brandMult * condMult, purchase * 1.1);
+  const fee = estimatedSell * 0.10;
+  const shipping = 210;
+  const profit = estimatedSell - fee - shipping - purchase;
+  const margin = purchase > 0 ? (profit / purchase) * 100 : 0;
+
+  document.getElementById('res-material').textContent = fmt(materialValue);
+  document.getElementById('res-sell').textContent = fmt(estimatedSell);
+  document.getElementById('res-fee').textContent = '-' + fmt(fee);
+  document.getElementById('res-profit').textContent = fmt(profit);
+  document.getElementById('res-margin').textContent = margin.toFixed(1) + '%';
+
+  const verdict = document.getElementById('verdict');
+  if (margin >= 25) {
+    verdict.className = 'profit-verdict verdict-go';
+    verdict.textContent = '✅ 仕入れOK — 利益率 ' + margin.toFixed(1) + '% / 目標25%以上達成';
+  } else if (margin >= 10) {
+    verdict.className = 'profit-verdict verdict-warn';
+    verdict.textContent = '⚠️ 要検討 — 利益率 ' + margin.toFixed(1) + '% / 目標まであと' + (25 - margin).toFixed(1) + '%';
+  } else {
+    verdict.className = 'profit-verdict verdict-ng';
+    verdict.textContent = '❌ 仕入れNG — 利益率 ' + margin.toFixed(1) + '% / 損失リスクあり';
+  }
+}
+
+// ============ 出品テキスト生成 ============
+function updateListing() {
+  const category = document.getElementById('lst-category').value;
+  const material = document.getElementById('lst-material').value;
+  const stone = document.getElementById('lst-stone').value;
+  const cond = document.getElementById('lst-cond').value;
+  const box = document.getElementById('lst-box').value;
+  const price = parseInt(document.getElementById('lst-price').value) || 0;
+
+  const stoneStr = stone ? `\n【宝石・装飾】${stone}` : '';
+  const text = `【${material} ${category}】${stone ? stone + ' ' : ''}出品
+
+━━━━━━━━━━━━━━━━━━
+【商品詳細】
+━━━━━━━━━━━━━━━━━━
+【カテゴリ】${category}
+【素材】${material}${stoneStr}
+【コンディション】${cond}
+【付属品】${box}
+【価格】¥${price.toLocaleString()}
+
+━━━━━━━━━━━━━━━━━━
+【商品について】
+━━━━━━━━━━━━━━━━━━
+${material}を使用した${category}です。
+素材の純度・刻印を確認済みです。${stone ? `\n${stone}が美しく輝く、上品なデザインです。` : ''}
+シンプルで使いやすく、普段使いからフォーマルまで幅広くお使いいただけます。
+
+コンディションは「${cond}」です。
+細かい点は写真にてご確認ください。
+ご不明な点はお気軽にコメントください。
+
+━━━━━━━━━━━━━━━━━━
+【発送・梱包について】
+━━━━━━━━━━━━━━━━━━
+・丁寧に梱包してお送りします
+・追跡番号あり（ネコポス or らくらくメルカリ便）
+・購入後2〜3日以内に発送いたします
+
+━━━━━━━━━━━━━━━━━━
+※写真は実物を撮影していますが、モニターの環境により色味が異なる場合があります。
+※ジュエリーの性質上、小さなスレ等がある場合がございます（写真にてご確認ください）。`;
+
+  document.getElementById('listing-text').value = text;
+  document.getElementById('char-count').textContent = '文字数: ' + text.length;
+}
+
+function copyListing() {
+  const el = document.getElementById('listing-text');
+  navigator.clipboard.writeText(el.value).then(() => {
+    const btn = event.target;
+    btn.textContent = 'コピー済み ✓';
+    setTimeout(() => btn.textContent = 'コピー', 1500);
+  });
+}
+
+// ============ ページ切替 ============
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// 初期化
+calculate();
+updateListing();
+</script>
+</body>
+</html>

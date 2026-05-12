@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ツクツク!!!代理店サポートチャットボット｜プロトタイプデモ</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0e1a; --bg2: #111827; --bg3: #1f2937; --bg4: #374151;
+      --border: #1f2937; --border2: #374151;
+      --accent: #10b981; --accent2: #3b82f6;
+      --text: #f9fafb; --text2: #9ca3af; --text3: #6b7280;
+      --red: #ef4444; --green: #10b981; --yellow: #f59e0b; --blue: #3b82f6; --purple: #8b5cf6;
+      --brand: #f97316; --r: 12px;
+    }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.5; min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* TOP BAR */
+    .topbar { background: var(--bg2); border-bottom: 1px solid var(--border2); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .topbar-logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 36px; height: 36px; background: var(--brand); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: white; }
+    .logo-text { font-size: 15px; font-weight: 700; color: var(--text); }
+    .logo-sub { font-size: 11px; color: var(--text2); }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .online-badge { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--green); }
+    .online-dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(1.15)} }
+    .proto-badge { background: rgba(139,92,246,.15); color: var(--purple); border: 1px solid rgba(139,92,246,.3); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+    .demo-badge { background: rgba(249,115,22,.15); color: var(--brand); border: 1px solid rgba(249,115,22,.3); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+
+    /* LAYOUT */
+    .main { display: flex; flex: 1; max-width: 1100px; margin: 0 auto; width: 100%; padding: 20px; gap: 20px; }
+    .sidebar { width: 240px; flex-shrink: 0; }
+    .chat-area { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+    /* SIDEBAR */
+    .sidebar-card { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r); padding: 16px; margin-bottom: 14px; }
+    .sidebar-title { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .7px; margin-bottom: 12px; }
+    .topic-btn { display: flex; align-items: center; gap: 8px; width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; color: var(--text); cursor: pointer; font-family: inherit; font-size: 12px; padding: 9px 12px; margin-bottom: 7px; text-align: left; transition: all .15s; }
+    .topic-btn:hover { border-color: var(--brand); background: rgba(249,115,22,.06); }
+    .topic-icon { font-size: 14px; }
+    .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(55,65,81,.5); }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { font-size: 12px; color: var(--text2); }
+    .stat-val { font-size: 13px; font-weight: 700; color: var(--green); }
+
+    /* CHAT WINDOW */
+    .chat-window { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r); flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .chat-header { padding: 14px 18px; border-bottom: 1px solid var(--border2); display: flex; align-items: center; gap: 12px; background: var(--bg3); }
+    .bot-avatar { width: 36px; height: 36px; background: linear-gradient(135deg, var(--brand), #f59e0b); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .bot-info .bot-name { font-weight: 700; font-size: 14px; }
+    .bot-info .bot-desc { font-size: 11px; color: var(--text2); }
+    .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; min-height: 360px; max-height: 440px; }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-track { background: transparent; }
+    .chat-messages::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    /* MESSAGES */
+    .msg { display: flex; gap: 10px; animation: fadeIn .25s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+    .msg.user { flex-direction: row-reverse; }
+    .msg-avatar { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .msg-avatar.bot { background: linear-gradient(135deg, var(--brand), #f59e0b); }
+    .msg-avatar.user { background: var(--bg3); border: 1px solid var(--border2); }
+    .bubble { max-width: 75%; padding: 11px 14px; border-radius: 12px; font-size: 13px; line-height: 1.6; }
+    .bubble.bot { background: var(--bg3); border: 1px solid var(--border2); border-top-left-radius: 4px; }
+    .bubble.user { background: var(--brand); color: white; border-top-right-radius: 4px; }
+    .bubble .timestamp { font-size: 10px; color: var(--text3); margin-top: 5px; }
+    .bubble.user .timestamp { color: rgba(255,255,255,.6); text-align: right; }
+    .bubble h4 { font-size: 13px; margin-bottom: 6px; color: var(--brand); }
+    .bubble ul { padding-left: 16px; margin: 6px 0; }
+    .bubble ul li { margin-bottom: 4px; }
+    .bubble a { color: var(--blue); }
+    .typing { display: flex; align-items: center; gap: 4px; padding: 12px; }
+    .typing span { width: 6px; height: 6px; background: var(--text3); border-radius: 50%; animation: bounce .8s infinite; }
+    .typing span:nth-child(2) { animation-delay: .15s; }
+    .typing span:nth-child(3) { animation-delay: .3s; }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+
+    /* QUICK REPLIES */
+    .quick-replies { padding: 12px 18px; border-top: 1px solid var(--border2); display: flex; flex-wrap: wrap; gap: 7px; background: var(--bg2); }
+    .qr-btn { background: var(--bg3); border: 1px solid var(--border2); border-radius: 20px; color: var(--text); cursor: pointer; font-family: inherit; font-size: 12px; padding: 6px 14px; transition: all .15s; }
+    .qr-btn:hover { border-color: var(--brand); color: var(--brand); background: rgba(249,115,22,.06); }
+
+    /* INPUT */
+    .chat-input-row { padding: 14px 18px; border-top: 1px solid var(--border2); display: flex; gap: 10px; background: var(--bg2); border-bottom-left-radius: var(--r); border-bottom-right-radius: var(--r); }
+    .chat-input { flex: 1; background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 13px; padding: 9px 14px; transition: border-color .15s; }
+    .chat-input:focus { outline: none; border-color: var(--brand); }
+    .send-btn { background: var(--brand); border: none; border-radius: 8px; color: white; cursor: pointer; font-size: 16px; padding: 9px 16px; transition: opacity .15s; }
+    .send-btn:hover { opacity: .85; }
+
+    /* NOTICE */
+    .notice { background: rgba(139,92,246,.1); border: 1px solid rgba(139,92,246,.3); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #c4b5fd; margin-bottom: 14px; }
+
+    @media (max-width: 700px) {
+      .main { flex-direction: column; padding: 12px; }
+      .sidebar { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">
+    <div class="logo-icon">T!</div>
+    <div>
+      <div class="logo-text">ツクツク!!! 代理店サポートBot</div>
+      <div class="logo-sub">よくある質問に24時間自動回答</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="online-badge"><div class="online-dot"></div>オンライン</div>
+    <span class="proto-badge">🔬 プロトタイプ</span>
+    <span class="demo-badge">DEMO</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="notice" style="margin-bottom:14px">
+      💡 実際に代理店向けサポート業務で使用したチャットボットのプロトタイプです。
+    </div>
+    <div class="sidebar-card">
+      <div class="sidebar-title">🗂 よくある質問</div>
+      <button class="topic-btn" onclick="sendQuick('ライセンス有効化の手順を教えてください')"><span class="topic-icon">🔑</span>ライセンス有効化</button>
+      <button class="topic-btn" onclick="sendQuick('ショップ開設の流れを教えてください')"><span class="topic-icon">🏪</span>ショップ開設</button>
+      <button class="topic-btn" onclick="sendQuick('売上確認の方法は？')"><span class="topic-icon">💰</span>売上確認</button>
+      <button class="topic-btn" onclick="sendQuick('商品登録の手順を教えてください')"><span class="topic-icon">📦</span>商品登録</button>
+      <button class="topic-btn" onclick="sendQuick('振込申請のやり方は？')"><span class="topic-icon">🏦</span>振込申請</button>
+      <button class="topic-btn" onclick="sendQuick('代理店紹介特典について教えてください')"><span class="topic-icon">🎁</span>紹介特典</button>
+    </div>
+    <div class="sidebar-card">
+      <div class="sidebar-title">📊 サポート実績</div>
+      <div class="stat-row"><span class="stat-label">今月対応件数</span><span class="stat-val">247件</span></div>
+      <div class="stat-row"><span class="stat-label">自動解決率</span><span class="stat-val">89%</span></div>
+      <div class="stat-row"><span class="stat-label">平均応答時間</span><span class="stat-val">0.8秒</span></div>
+      <div class="stat-row"><span class="stat-label">満足度</span><span class="stat-val">4.8/5.0</span></div>
+    </div>
+  </aside>
+
+  <!-- CHAT -->
+  <div class="chat-area">
+    <div class="chat-window">
+      <div class="chat-header">
+        <div class="bot-avatar">🤖</div>
+        <div class="bot-info">
+          <div class="bot-name">ツクツクサポートBot</div>
+          <div class="bot-desc">代理店向け質問に自動回答します</div>
+        </div>
+      </div>
+
+      <div class="chat-messages" id="messages">
+        <!-- 初期メッセージ -->
+        <div class="msg">
+          <div class="msg-avatar bot">🤖</div>
+          <div class="bubble bot">
+            こんにちは！ツクツク!!!代理店サポートBotです😊<br><br>
+            ライセンス有効化・ショップ開設・売上確認・商品登録などのご質問にお答えします。<br><br>
+            下のボタンから質問を選ぶか、直接メッセージを入力してください。
+            <div class="timestamp">09:00</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="quick-replies" id="quick-replies">
+        <button class="qr-btn" onclick="sendQuick('ライセンス有効化の手順を教えてください')">🔑 ライセンス有効化</button>
+        <button class="qr-btn" onclick="sendQuick('ショップ開設の流れを教えてください')">🏪 ショップ開設</button>
+        <button class="qr-btn" onclick="sendQuick('売上確認の方法は？')">💰 売上確認</button>
+        <button class="qr-btn" onclick="sendQuick('商品登録の手順を教えてください')">📦 商品登録</button>
+      </div>
+
+      <div class="chat-input-row">
+        <input class="chat-input" id="user-input" type="text" placeholder="質問を入力してください…" onkeydown="if(event.key==='Enter')sendMessage()">
+        <button class="send-btn" onclick="sendMessage()">▶</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const now = () => {
+  const d = new Date();
+  return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+};
+
+const QA = {
+  'ライセンス': {
+    text: `<h4>🔑 ライセンス有効化の手順</h4>
+ツクツク!!!のライセンス有効化は以下の手順で行います：
+<ul>
+  <li>①　ツクツク!!!公式サイトにログイン</li>
+  <li>②　マイページ →「ライセンス管理」を開く</li>
+  <li>③　発行されたライセンスキーを入力</li>
+  <li>④　「有効化する」ボタンをクリック</li>
+  <li>⑤　確認メールが届いたら完了</li>
+</ul>
+有効化後、24時間以内に反映されます。<br>
+反映されない場合は再度お知らせください。`,
+    quick: ['ショップ開設の手順は？', '他に質問する', 'サポートに連絡したい']
+  },
+  'ショップ': {
+    text: `<h4>🏪 ショップ開設の流れ</h4>
+ショップ開設は5ステップで完了します：
+<ul>
+  <li>①　ライセンス有効化を完了させる</li>
+  <li>②　管理画面 →「ショップ設定」をクリック</li>
+  <li>③　ショップ名・説明・ロゴ画像を設定</li>
+  <li>④　特商法情報を入力（必須）</li>
+  <li>⑤　「公開する」で開設完了</li>
+</ul>
+⚠️ 特商法情報は正確な情報を入力してください。<br>
+審査通過まで最大3営業日かかる場合があります。`,
+    quick: ['商品を登録したい', 'ライセンスがまだ', '他に質問する']
+  },
+  '売上': {
+    text: `<h4>💰 売上確認方法</h4>
+売上は管理画面でリアルタイムに確認できます：
+<ul>
+  <li>管理画面 →「売上管理」→「売上一覧」</li>
+  <li>日別・月別・商品別でフィルタ可能</li>
+  <li>CSV出力にも対応しています</li>
+</ul>
+振込申請可能額は「残高」欄に表示されます。<br>
+最低振込金額は <strong>3,000円</strong> です。`,
+    quick: ['振込申請の方法は？', '売上が反映されない', '他に質問する']
+  },
+  '商品': {
+    text: `<h4>📦 商品登録の手順</h4>
+商品登録は管理画面から簡単にできます：
+<ul>
+  <li>①　管理画面 →「商品管理」→「新規登録」</li>
+  <li>②　商品名・説明・価格・在庫数を入力</li>
+  <li>③　商品画像をアップロード（最大10枚）</li>
+  <li>④　カテゴリ・タグを設定</li>
+  <li>⑤　「公開」または「下書き保存」</li>
+</ul>
+画像は <strong>正方形（1:1）</strong> が推奨です。<br>
+1商品あたり最大10バリエーション設定可能です。`,
+    quick: ['在庫管理の方法は？', 'ショップ公開の手順', '他に質問する']
+  },
+  '振込': {
+    text: `<h4>🏦 振込申請の方法</h4>
+振込申請の手順：
+<ul>
+  <li>①　管理画面 →「売上管理」→「振込申請」</li>
+  <li>②　振込先口座を確認（未登録の場合は先に登録）</li>
+  <li>③　申請金額を入力（最低3,000円）</li>
+  <li>④　「申請する」ボタンをクリック</li>
+</ul>
+振込は毎月 <strong>15日・末日</strong> に処理されます。<br>
+手数料は振込1回あたり220円（税込）です。`,
+    quick: ['振込が来ない', '口座変更の方法', '他に質問する']
+  },
+  '紹介': {
+    text: `<h4>🎁 代理店紹介特典について</h4>
+紹介プログラムで報酬が得られます：
+<ul>
+  <li>紹介した代理店の初月売上の <strong>5%</strong> が報酬</li>
+  <li>紹介URLはマイページ →「紹介リンク」から取得</li>
+  <li>報酬は翌月の売上に合算されます</li>
+</ul>
+紹介の上限はなく、何人でも紹介できます。<br>
+詳しくは代理店規約をご確認ください。`,
+    quick: ['紹介リンクの取得方法', '報酬の確認方法', '他に質問する']
+  }
+};
+
+function findAnswer(text) {
+  if (text.includes('ライセンス')) return QA['ライセンス'];
+  if (text.includes('ショップ') || text.includes('開設')) return QA['ショップ'];
+  if (text.includes('売上') || text.includes('売り上げ')) return QA['売上'];
+  if (text.includes('商品') || text.includes('登録')) return QA['商品'];
+  if (text.includes('振込') || text.includes('振り込み')) return QA['振込'];
+  if (text.includes('紹介') || text.includes('特典')) return QA['紹介'];
+  if (text.includes('他に') || text.includes('他の')) return null;
+  if (text.includes('サポート') || text.includes('連絡')) {
+    return {
+      text: `サポートへのお問い合わせは以下からどうぞ：<br><br>📧 <strong>support@tsukutsuku.jp</strong><br>📞 受付時間: 平日 10:00〜17:00<br><br>お問い合わせ内容に代理店IDを添えていただくとスムーズです。`,
+      quick: ['ライセンス有効化', 'ショップ開設', '最初に戻る']
+    };
+  }
+  return null;
+}
+
+function addMsg(role, html, qs) {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg' + (role === 'user' ? ' user' : '');
+  const avatar = role === 'user' ? '👤' : '🤖';
+  const cls = role === 'user' ? 'user' : 'bot';
+  div.innerHTML = `
+    <div class="msg-avatar ${cls}">${avatar}</div>
+    <div class="bubble ${cls}">${html}<div class="timestamp">${now()}</div></div>
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  // update quick replies
+  const qr = document.getElementById('quick-replies');
+  if (qs && qs.length) {
+    qr.innerHTML = qs.map(q => `<button class="qr-btn" onclick="sendQuick('${q}')">${q}</button>`).join('');
+  }
+}
+
+function showTyping() {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg';
+  div.id = 'typing-indicator';
+  div.innerHTML = `<div class="msg-avatar bot">🤖</div><div class="bubble bot"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+function reply(userText) {
+  showTyping();
+  setTimeout(() => {
+    removeTyping();
+    const ans = findAnswer(userText);
+    if (ans) {
+      addMsg('bot', ans.text, ans.quick);
+    } else {
+      addMsg('bot', `ご質問ありがとうございます。<br><br>「${userText}」についての詳細は、サポートチームにお問い合わせいただくか、下のよくある質問ボタンからお試しください。`,
+        ['ライセンス有効化', 'ショップ開設', 'サポートに連絡したい']);
+    }
+  }, 800 + Math.random() * 400);
+}
+
+function sendQuick(text) {
+  addMsg('user', text);
+  reply(text);
+}
+
+function sendMessage() {
+  const input = document.getElementById('user-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  addMsg('user', text);
+  reply(text);
+}
+</script>
+</body>
+</html>

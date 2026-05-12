@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>空き日程自動出力システム｜プロトタイプデモ</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0e1a; --bg2: #111827; --bg3: #1f2937; --bg4: #374151;
+      --border: #1f2937; --border2: #374151;
+      --accent: #3b82f6; --accent2: #10b981;
+      --text: #f9fafb; --text2: #9ca3af; --text3: #6b7280;
+      --red: #ef4444; --green: #10b981; --yellow: #f59e0b; --blue: #3b82f6; --purple: #8b5cf6;
+      --brand: #3b82f6; --r: 10px;
+    }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.5; }
+
+    /* NAV */
+    nav { background: var(--bg2); border-bottom: 1px solid var(--border2); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 54px; position: sticky; top: 0; z-index: 100; }
+    .nav-logo { font-size: 15px; font-weight: 700; color: var(--blue); display: flex; align-items: center; gap: 8px; }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .proto-badge { background: rgba(139,92,246,.15); color: var(--purple); border: 1px solid rgba(139,92,246,.3); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+    .demo-badge { background: rgba(59,130,246,.15); color: var(--blue); border: 1px solid rgba(59,130,246,.3); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+    .gas-badge { background: rgba(16,185,129,.12); color: var(--green); border: 1px solid rgba(16,185,129,.3); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+
+    /* LAYOUT */
+    .container { max-width: 1100px; margin: 0 auto; padding: 24px; display: grid; grid-template-columns: 320px 1fr; gap: 20px; }
+
+    /* CARDS */
+    .card { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r); overflow: hidden; margin-bottom: 16px; }
+    .card-head { padding: 13px 18px; border-bottom: 1px solid var(--border2); display: flex; align-items: center; justify-content: space-between; background: var(--bg3); }
+    .card-title { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+    .card-body { padding: 18px; }
+
+    /* FORM */
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 11px; color: var(--text2); font-weight: 600; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px; }
+    .form-control { background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px; color: var(--text); font-family: inherit; font-size: 13px; padding: 9px 12px; width: 100%; transition: border-color .15s; }
+    .form-control:focus { outline: none; border-color: var(--blue); }
+    select.form-control { cursor: pointer; }
+    .checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; }
+    .cb-label { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 12px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px; padding: 6px 10px; transition: all .15s; }
+    .cb-label:hover { border-color: var(--blue); }
+    .cb-label input { accent-color: var(--blue); cursor: pointer; }
+    .cb-label.checked { border-color: var(--blue); background: rgba(59,130,246,.08); color: var(--blue); }
+
+    /* BUTTON */
+    .btn { border: none; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; padding: 10px 20px; transition: all .15s; display: inline-flex; align-items: center; gap: 7px; }
+    .btn-primary { background: var(--blue); color: white; width: 100%; justify-content: center; }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border2); }
+    .btn-secondary:hover { background: var(--bg4); }
+
+    /* CALENDAR */
+    .cal-wrap { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 6px; }
+    .cal-day-name { text-align: center; font-size: 11px; font-weight: 700; color: var(--text3); padding: 4px 0; }
+    .cal-day-name.sun { color: var(--red); }
+    .cal-day-name.sat { color: var(--blue); }
+    .cal-cell { border-radius: 6px; cursor: pointer; min-height: 68px; padding: 6px; font-size: 12px; transition: all .15s; border: 1px solid transparent; }
+    .cal-cell:hover { border-color: var(--blue); }
+    .cal-cell.other-month { opacity: .3; cursor: default; }
+    .cal-cell.today { border-color: var(--blue); background: rgba(59,130,246,.08); }
+    .cal-cell.selected { border-color: var(--blue); background: rgba(59,130,246,.15); }
+    .cal-cell.has-slots { background: rgba(16,185,129,.07); }
+    .cal-date { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+    .cal-cell.sun .cal-date { color: var(--red); }
+    .cal-cell.sat .cal-date { color: var(--blue); }
+    .slot-dot { display: flex; align-items: center; gap: 3px; font-size: 10px; color: var(--green); margin-bottom: 2px; }
+    .slot-dot.busy { color: var(--text3); }
+    .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+    /* TIME SLOTS */
+    .time-slot { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; border: 1px solid var(--border2); font-size: 13px; }
+    .time-slot.free { background: rgba(16,185,129,.08); border-color: rgba(16,185,129,.25); }
+    .time-slot.busy { background: rgba(55,65,81,.3); opacity: .5; }
+    .slot-time { font-weight: 600; color: var(--green); min-width: 110px; font-size: 12px; }
+    .slot-time.busy-t { color: var(--text3); }
+    .slot-label { font-size: 12px; color: var(--text2); }
+    .slot-event { font-size: 11px; color: var(--text3); }
+
+    /* OUTPUT TEXTAREA */
+    .output-area { background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px; color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; line-height: 1.8; padding: 14px; width: 100%; min-height: 220px; resize: vertical; }
+
+    /* TAGS */
+    .tag { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 20px; }
+    .tag-green { background: rgba(16,185,129,.12); color: var(--green); }
+    .tag-blue { background: rgba(59,130,246,.12); color: var(--blue); }
+    .tag-yellow { background: rgba(245,158,11,.12); color: var(--yellow); }
+    .tag-purple { background: rgba(139,92,246,.12); color: var(--purple); }
+
+    /* NOTICE */
+    .notice { background: rgba(139,92,246,.1); border: 1px solid rgba(139,92,246,.3); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #c4b5fd; margin-bottom: 18px; }
+
+    /* STEPS */
+    .steps { display: flex; gap: 0; margin-bottom: 18px; }
+    .step { flex: 1; text-align: center; padding: 8px; position: relative; }
+    .step::after { content: '→'; position: absolute; right: -6px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 12px; }
+    .step:last-child::after { display: none; }
+    .step-num { width: 24px; height: 24px; border-radius: 50%; background: var(--bg3); border: 2px solid var(--border2); color: var(--text2); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 4px; }
+    .step.done .step-num { background: var(--green); border-color: var(--green); color: white; }
+    .step.active .step-num { background: var(--blue); border-color: var(--blue); color: white; }
+    .step-label { font-size: 10px; color: var(--text3); }
+    .step.done .step-label, .step.active .step-label { color: var(--text2); }
+
+    /* GAS FLOW */
+    .gas-flow { display: flex; flex-direction: column; gap: 10px; }
+    .gas-step { display: flex; align-items: flex-start; gap: 12px; padding: 12px; background: var(--bg3); border-radius: 8px; border: 1px solid var(--border2); }
+    .gas-icon { font-size: 20px; flex-shrink: 0; }
+    .gas-step-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .gas-step-desc { font-size: 12px; color: var(--text2); }
+    .gas-step-tech { font-size: 11px; color: var(--blue); margin-top: 4px; font-family: monospace; }
+
+    /* KPI ROW */
+    .kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+    .kpi { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r); padding: 14px 16px; }
+    .kpi-label { font-size: 11px; color: var(--text2); margin-bottom: 6px; }
+    .kpi-value { font-size: 22px; font-weight: 800; }
+    .kpi-value.green { color: var(--green); }
+    .kpi-value.blue { color: var(--blue); }
+    .kpi-value.yellow { color: var(--yellow); }
+    .kpi-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+    @media(max-width: 800px) {
+      .container { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">📅 空き日程自動出力システム</div>
+  <div class="nav-right">
+    <span class="gas-badge">GAS</span>
+    <span class="proto-badge">🔬 プロトタイプ</span>
+    <span class="demo-badge">DEMO</span>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- LEFT: 設定パネル -->
+  <div class="left-col">
+
+    <div class="notice">
+      💡 実際に営業部の日程調整業務で使用したGASシステムのプロトタイプです。Googleカレンダーと連携し、空き時間を自動でテキスト出力します。
+    </div>
+
+    <div class="card">
+      <div class="card-head"><span class="card-title">⚙️ 出力条件設定</span></div>
+      <div class="card-body">
+        <div class="form-group">
+          <label>対象期間</label>
+          <select class="form-control" id="period" onchange="updateCalendar()">
+            <option value="1">今週（5日間）</option>
+            <option value="2" selected>今後2週間</option>
+            <option value="4">今後1ヶ月</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>ミーティング時間</label>
+          <select class="form-control" id="duration">
+            <option value="30">30分</option>
+            <option value="60" selected>1時間</option>
+            <option value="90">1時間30分</option>
+            <option value="120">2時間</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>受付時間帯</label>
+          <select class="form-control" id="timerange">
+            <option value="all">9:00〜18:00（終日）</option>
+            <option value="morning" selected>9:00〜12:00（午前）+ 13:00〜18:00</option>
+            <option value="afternoon">13:00〜18:00（午後のみ）</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>出力形式</label>
+          <select class="form-control" id="format">
+            <option value="formal" selected>ビジネス丁寧体</option>
+            <option value="casual">カジュアル体</option>
+            <option value="simple">箇条書きのみ</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>除外する曜日</label>
+          <div class="checkbox-group" id="day-checks">
+            <label class="cb-label"><input type="checkbox" value="0" onchange="toggleDay(this)"> 日</label>
+            <label class="cb-label"><input type="checkbox" value="1" onchange="toggleDay(this)"> 月</label>
+            <label class="cb-label"><input type="checkbox" value="2" onchange="toggleDay(this)"> 火</label>
+            <label class="cb-label"><input type="checkbox" value="3" onchange="toggleDay(this)"> 水</label>
+            <label class="cb-label"><input type="checkbox" value="4" onchange="toggleDay(this)"> 木</label>
+            <label class="cb-label"><input type="checkbox" value="5" onchange="toggleDay(this)"> 金</label>
+            <label class="cb-label checked"><input type="checkbox" value="6" checked onchange="toggleDay(this)"> 土</label>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="generate()">
+          📋 空き日程を生成する
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><span class="card-title">🔧 システム構成（GAS）</span></div>
+      <div class="card-body">
+        <div class="gas-flow">
+          <div class="gas-step">
+            <div class="gas-icon">📅</div>
+            <div>
+              <div class="gas-step-title">Googleカレンダー取得</div>
+              <div class="gas-step-desc">CalendarApp.getEventsForDay() で予定を取得</div>
+              <div class="gas-step-tech">CalendarApp.getDefaultCalendar()</div>
+            </div>
+          </div>
+          <div class="gas-step">
+            <div class="gas-icon">🔍</div>
+            <div>
+              <div class="gas-step-title">空き時間の算出</div>
+              <div class="gas-step-desc">勤務時間から予定を差し引いて空き枠を計算</div>
+              <div class="gas-step-tech">getStartTime() / getEndTime()</div>
+            </div>
+          </div>
+          <div class="gas-step">
+            <div class="gas-icon">📝</div>
+            <div>
+              <div class="gas-step-title">テキスト自動生成</div>
+              <div class="gas-step-desc">設定した形式でメール文章・コピペ用テキストを出力</div>
+              <div class="gas-step-tech">SpreadsheetApp / MailApp</div>
+            </div>
+          </div>
+          <div class="gas-step">
+            <div class="gas-icon">📤</div>
+            <div>
+              <div class="gas-step-title">Slack / メール通知</div>
+              <div class="gas-step-desc">出力結果をSlackチャンネルまたはメールで送信</div>
+              <div class="gas-step-tech">UrlFetchApp.fetch() / GmailApp</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: カレンダー＋出力 -->
+  <div class="right-col">
+
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-label">空き枠（今後2週間）</div>
+        <div class="kpi-value green" id="kpi-free">18</div>
+        <div class="kpi-sub">1時間ミーティング想定</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">埋まっている日</div>
+        <div class="kpi-value blue" id="kpi-busy">4日</div>
+        <div class="kpi-sub">完全ブロック日</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">最短空き日</div>
+        <div class="kpi-value yellow" id="kpi-next">明日</div>
+        <div class="kpi-sub">午後 13:00〜</div>
+      </div>
+    </div>
+
+    <!-- MINI CALENDAR -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-head">
+        <span class="card-title">📅 2026年5月 — 空き状況</span>
+        <div style="display:flex;gap:8px">
+          <span class="tag tag-green">空き枠あり</span>
+          <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px">□ 空きなし</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="cal-wrap" id="calendar-header">
+          <div class="cal-day-name sun">日</div>
+          <div class="cal-day-name">月</div>
+          <div class="cal-day-name">火</div>
+          <div class="cal-day-name">水</div>
+          <div class="cal-day-name">木</div>
+          <div class="cal-day-name">金</div>
+          <div class="cal-day-name sat">土</div>
+        </div>
+        <div class="cal-wrap" id="calendar-grid"></div>
+      </div>
+    </div>
+
+    <!-- SLOTS FOR SELECTED DAY -->
+    <div class="card" id="slot-card">
+      <div class="card-head">
+        <span class="card-title" id="slot-title">📋 5月13日(水)の空き枠</span>
+      </div>
+      <div class="card-body" id="slot-body">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- OUTPUT TEXT -->
+    <div class="card" id="output-card" style="display:none">
+      <div class="card-head">
+        <span class="card-title">📤 出力テキスト（コピペ用）</span>
+        <button class="btn btn-secondary" style="padding:5px 12px;font-size:12px" onclick="copyOutput()">コピー</button>
+      </div>
+      <div class="card-body">
+        <textarea class="output-area" id="output-text" readonly></textarea>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <span class="tag tag-green" id="slot-count">空き枠: 0件</span>
+          <span class="tag tag-blue">メール文面</span>
+          <span class="tag tag-yellow">Slack対応</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ===== CALENDAR DATA =====
+// Today = 2026-05-13 (Wednesday), day of week = 3 (Wed)
+const TODAY = new Date(2026, 4, 13); // May 13, 2026
+const TODAY_DATE = 13;
+const MONTH_START_DOW = new Date(2026, 4, 1).getDay(); // May 1 is Thursday = 4
+
+// Fake busy times for demo
+const BUSY = {
+  12: [{s:'10:00',e:'12:00',title:'社内定例MTG'}, {s:'14:00',e:'15:00',title:'クライアント対応'}],
+  15: [{s:'09:00',e:'18:00',title:'外出（終日）'}],
+  19: [{s:'10:00',e:'12:00',title:'プロジェクト会議'}, {s:'13:00',e:'14:00',title:'1on1'}],
+  20: [{s:'09:00',e:'18:00',title:'外出（終日）'}],
+  22: [{s:'14:00',e:'16:00',title:'打ち合わせ'}],
+  26: [{s:'10:00',e:'12:00',title:'部門会議'}, {s:'15:00',e:'17:00',title:'レビュー'}],
+};
+
+const FREE_SLOTS = {
+  13: [{s:'13:00',e:'14:00'},{s:'15:00',e:'16:00'},{s:'16:00',e:'17:00'}],
+  14: [{s:'09:00',e:'10:00'},{s:'10:00',e:'11:00'},{s:'13:00',e:'14:00'},{s:'14:00',e:'15:00'}],
+  16: [{s:'09:00',e:'10:00'},{s:'13:00',e:'14:00'},{s:'16:00',e:'17:00'}],
+  17: [],
+  18: [{s:'10:00',e:'11:00'},{s:'11:00',e:'12:00'},{s:'13:00',e:'14:00'}],
+  21: [{s:'09:00',e:'10:00'},{s:'13:00',e:'14:00'},{s:'15:00',e:'16:00'}],
+  23: [{s:'09:00',e:'10:00'},{s:'10:00',e:'11:00'},{s:'14:00',e:'15:00'},{s:'16:00',e:'17:00'}],
+  24: [],
+  25: [{s:'09:00',e:'10:00'},{s:'13:00',e:'14:00'}],
+  27: [{s:'10:00',e:'11:00'},{s:'13:00',e:'14:00'},{s:'15:00',e:'16:00'}],
+};
+
+let selectedDay = 13;
+const DAY_NAMES = ['日','月','火','水','木','金','土'];
+
+function buildCalendar() {
+  const grid = document.getElementById('calendar-grid');
+  grid.innerHTML = '';
+
+  // padding before May 1
+  for (let i = 0; i < MONTH_START_DOW; i++) {
+    const pad = document.createElement('div');
+    pad.className = 'cal-cell other-month';
+    pad.innerHTML = `<div class="cal-date" style="color:var(--text3)">${30 - MONTH_START_DOW + i + 1}</div>`;
+    grid.appendChild(pad);
+  }
+
+  // May days
+  for (let d = 1; d <= 31; d++) {
+    const dow = (MONTH_START_DOW + d - 1) % 7;
+    const cell = document.createElement('div');
+    const hasFree = FREE_SLOTS[d] && FREE_SLOTS[d].length > 0;
+    const isBusy = BUSY[d] && BUSY[d].some(b => b.title.includes('終日'));
+    const isSun = dow === 0, isSat = dow === 6;
+
+    let cls = 'cal-cell';
+    if (isSun) cls += ' sun';
+    if (isSat) cls += ' sat';
+    if (d === TODAY_DATE) cls += ' today';
+    if (d === selectedDay) cls += ' selected';
+    if (hasFree && !isSun && !isSat) cls += ' has-slots';
+
+    cell.className = cls;
+    cell.onclick = () => selectDay(d, dow);
+
+    let slotsHtml = '';
+    if (hasFree && !isSun && !isSat) {
+      const count = FREE_SLOTS[d].length;
+      slotsHtml = `<div class="slot-dot"><div class="dot"></div>${count}枠</div>`;
+    } else if (isBusy) {
+      slotsHtml = `<div class="slot-dot busy"><div class="dot"></div>終日</div>`;
+    } else if (BUSY[d] && !isSun && !isSat) {
+      const free = (FREE_SLOTS[d]||[]).length;
+      slotsHtml = free > 0 ? `<div class="slot-dot"><div class="dot"></div>${free}枠</div>` : '';
+    }
+
+    cell.innerHTML = `<div class="cal-date">${d}</div>${slotsHtml}`;
+    grid.appendChild(cell);
+  }
+}
+
+function selectDay(d, dow) {
+  selectedDay = d;
+  buildCalendar();
+  showSlots(d, dow);
+}
+
+function showSlots(d, dow) {
+  const title = document.getElementById('slot-title');
+  title.textContent = `📋 5月${d}日(${DAY_NAMES[dow]})の空き枠`;
+
+  const body = document.getElementById('slot-body');
+  const slots = FREE_SLOTS[d] || [];
+  const busy = BUSY[d] || [];
+  const isSunSat = dow === 0 || dow === 6;
+
+  if (isSunSat) {
+    body.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px">土日は対象外です。</div>';
+    return;
+  }
+
+  let html = '';
+  const allSlots = [
+    ...slots.map(s => ({...s, free: true})),
+    ...busy.map(b => ({s: b.s, e: b.e, title: b.title, free: false}))
+  ].sort((a,b) => a.s.localeCompare(b.s));
+
+  if (allSlots.length === 0) {
+    html = '<div style="color:var(--text3);font-size:13px;padding:8px">この日の情報はありません（空き）</div>';
+  }
+
+  for (const slot of allSlots) {
+    if (slot.free) {
+      html += `<div class="time-slot free"><span class="slot-time">${slot.s} 〜 ${slot.e}</span><span class="slot-label">✅ 空き（1時間ミーティング可）</span></div>`;
+    } else {
+      html += `<div class="time-slot busy"><span class="slot-time busy-t">${slot.s} 〜 ${slot.e}</span><span class="slot-event">🔒 ${slot.title}</span></div>`;
+    }
+  }
+  body.innerHTML = html;
+}
+
+function toggleDay(cb) {
+  cb.parentElement.classList.toggle('checked', cb.checked);
+}
+
+function generate() {
+  const format = document.getElementById('format').value;
+  const duration = document.getElementById('duration').value;
+
+  const freeDays = Object.entries(FREE_SLOTS)
+    .filter(([d, slots]) => {
+      const day = parseInt(d);
+      const dow = (MONTH_START_DOW + day - 1) % 7;
+      const excl = Array.from(document.querySelectorAll('#day-checks input:checked')).map(c => parseInt(c.value));
+      return slots.length > 0 && !excl.includes(dow);
+    })
+    .sort((a,b) => parseInt(a[0]) - parseInt(b[0]));
+
+  let totalSlots = freeDays.reduce((acc, [,slots]) => acc + slots.length, 0);
+  document.getElementById('slot-count').textContent = `空き枠: ${totalSlots}件`;
+
+  let text = '';
+  if (format === 'formal') {
+    text = `お世話になっております。\n以下の日程でのお打ち合わせが可能でございます。\nご都合のよい日時をご選択いただけますでしょうか。\n\n`;
+  } else if (format === 'casual') {
+    text = `お疲れ様です！\nご都合の良い日程をお知らせします✨\n\n`;
+  } else {
+    text = `【空き日程一覧】\n\n`;
+  }
+
+  text += `◆ ご提案日程（${duration}分）\n\n`;
+
+  for (const [d, slots] of freeDays.slice(0, 4)) {
+    const day = parseInt(d);
+    const dow = (MONTH_START_DOW + day - 1) % 7;
+    text += `▷ 5月${day}日（${DAY_NAMES[dow]}）\n`;
+    for (const slot of slots.slice(0, 3)) {
+      text += `　・${slot.s} 〜 ${slot.e}\n`;
+    }
+    text += '\n';
+  }
+
+  if (format === 'formal') {
+    text += `上記以外をご希望の場合はお気軽にご相談ください。\nZoom / Google Meet / お電話など、ご希望の方法でお打ち合わせいたします。\n\nどうぞよろしくお願いいたします。`;
+  } else if (format === 'casual') {
+    text += `他の日程をご希望の場合もお気軽にどうぞ😊\nZoomでも対面でも対応できます！`;
+  }
+
+  document.getElementById('output-text').value = text;
+  document.getElementById('output-card').style.display = 'block';
+  document.getElementById('output-card').scrollIntoView({behavior:'smooth'});
+}
+
+function copyOutput() {
+  const el = document.getElementById('output-text');
+  navigator.clipboard.writeText(el.value).then(() => {
+    const btn = event.target;
+    btn.textContent = 'コピー済み ✓';
+    setTimeout(() => btn.textContent = 'コピー', 1500);
+  });
+}
+
+function updateCalendar() { buildCalendar(); }
+
+// INIT
+buildCalendar();
+selectDay(13, 3);
+</script>
+</body>
+</html>
