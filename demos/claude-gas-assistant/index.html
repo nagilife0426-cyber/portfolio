@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude × GAS 業務自動化アシスタント | Demo</title>
+<style>
+:root {
+  --bg: #0a0e1a; --bg2: #111827; --bg3: #1f2937; --bg4: #374151;
+  --border: #1f2937; --border2: #374151;
+  --green: #10b981; --yellow: #f59e0b; --blue: #3b82f6;
+  --red: #ef4444; --purple: #8b5cf6; --text: #f9fafb; --text2: #9ca3af; --text3: #6b7280;
+  --claude: #d97706;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+}
+
+/* NAV */
+nav {
+  background: var(--bg2); border-bottom: 1px solid var(--border2);
+  padding: 0 16px; height: 52px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0; z-index: 100;
+}
+.nav-logo { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.nav-logo .icon {
+  width: 30px; height: 30px;
+  background: linear-gradient(135deg, var(--claude), var(--purple));
+  border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px;
+}
+.nav-right { display: flex; align-items: center; gap: 8px; }
+.badge { padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; }
+.badge-demo { background: rgba(59,130,246,.2); color: var(--blue); border: 1px solid rgba(59,130,246,.3); }
+.badge-proto { background: rgba(139,92,246,.2); color: var(--purple); border: 1px solid rgba(139,92,246,.3); }
+.back-link { color: var(--text2); text-decoration: none; font-size: 12px; }
+.back-link:hover { color: var(--text); }
+
+/* 3カラムレイアウト */
+.main-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr 340px;
+  flex: 1; overflow: hidden;
+}
+
+/* ===== LEFT: Notion風サイドバー ===== */
+.sidebar {
+  background: var(--bg2); border-right: 1px solid var(--border2);
+  display: flex; flex-direction: column; overflow-y: auto; padding: 12px 0;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 2px; }
+.sidebar-header { padding: 8px 14px 12px; }
+.sidebar-workspace {
+  display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700;
+  cursor: pointer; padding: 6px 8px; border-radius: 6px;
+}
+.sidebar-workspace:hover { background: var(--bg3); }
+.ws-icon {
+  width: 26px; height: 26px; background: linear-gradient(135deg, var(--claude), var(--purple));
+  border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px;
+}
+.sidebar-search {
+  margin: 0 10px 8px;
+  background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px;
+  padding: 6px 10px; font-size: 12px; color: var(--text2); cursor: text;
+  display: flex; align-items: center; gap: 6px;
+}
+.sidebar-section { padding: 4px 0; }
+.sidebar-section-label {
+  font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase;
+  letter-spacing: .5px; padding: 8px 14px 4px;
+}
+.sidebar-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 14px; font-size: 13px; cursor: pointer; color: var(--text2);
+  border-radius: 0; transition: all .15s; border-left: 2px solid transparent;
+}
+.sidebar-item:hover { background: var(--bg3); color: var(--text); }
+.sidebar-item.active {
+  background: rgba(139,92,246,.1); color: var(--purple);
+  border-left-color: var(--purple); font-weight: 600;
+}
+.sidebar-item-icon { width: 16px; text-align: center; font-size: 13px; flex-shrink: 0; }
+.sidebar-badge {
+  margin-left: auto; font-size: 10px; background: var(--bg4);
+  border-radius: 99px; padding: 1px 6px; color: var(--text3);
+}
+.sidebar-sub { padding-left: 28px; }
+.sidebar-sub .sidebar-item { font-size: 12px; padding: 4px 14px 4px 0; }
+
+/* ===== CENTER: チャット ===== */
+.chat-area {
+  display: flex; flex-direction: column; overflow: hidden;
+  border-right: 1px solid var(--border2);
+}
+.chat-header {
+  padding: 12px 16px; border-bottom: 1px solid var(--border2);
+  background: var(--bg2); display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.chat-header-title { font-size: 14px; font-weight: 700; }
+.chat-header-sub { font-size: 11px; color: var(--text3); }
+.status-indicator {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:.3} }
+.chat-messages {
+  flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px;
+}
+.chat-messages::-webkit-scrollbar { width: 4px; }
+.chat-messages::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 2px; }
+
+/* Messages */
+.msg { display: flex; gap: 10px; max-width: 100%; }
+.msg.user { flex-direction: row-reverse; }
+.msg-avatar {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 14px;
+}
+.msg-avatar.claude {
+  background: linear-gradient(135deg, var(--claude), var(--purple));
+  font-size: 12px; font-weight: 700;
+}
+.msg-avatar.user { background: var(--bg4); }
+.msg-bubble {
+  max-width: calc(100% - 50px);
+  padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.65;
+}
+.msg.claude .msg-bubble {
+  background: var(--bg3); border: 1px solid var(--border2); border-top-left-radius: 4px;
+}
+.msg.user .msg-bubble {
+  background: rgba(139,92,246,.25); border: 1px solid rgba(139,92,246,.4);
+  border-top-right-radius: 4px; text-align: left;
+}
+.msg-label {
+  font-size: 10px; color: var(--text3); margin-bottom: 4px; font-weight: 600;
+}
+.msg-code {
+  background: #0d1117; border-radius: 6px; padding: 10px 12px;
+  font-family: monospace; font-size: 11px; color: #e6edf3; margin-top: 8px;
+  border: 1px solid var(--border2); overflow-x: auto;
+  white-space: pre; max-height: 160px; overflow-y: auto;
+}
+
+/* Quick replies */
+.quick-replies {
+  padding: 10px 16px; border-top: 1px solid var(--border); flex-shrink: 0;
+  background: var(--bg2);
+}
+.quick-label { font-size: 10px; color: var(--text3); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+.quick-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.quick-btn {
+  background: var(--bg3); border: 1px solid var(--border2); color: var(--text2);
+  border-radius: 20px; padding: 5px 12px; font-size: 11px; cursor: pointer;
+  font-family: inherit; transition: all .2s; white-space: nowrap;
+}
+.quick-btn:hover { border-color: var(--purple); color: var(--purple); background: rgba(139,92,246,.1); }
+.quick-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* Chat input */
+.chat-input-wrap {
+  padding: 10px 16px 12px; border-top: 1px solid var(--border2); flex-shrink: 0;
+  background: var(--bg2);
+}
+.chat-input-row { display: flex; gap: 8px; }
+.chat-input {
+  flex: 1; background: var(--bg3); border: 1px solid var(--border2); border-radius: 10px;
+  color: var(--text); padding: 9px 14px; font-size: 13px; font-family: inherit;
+  outline: none; resize: none; height: 38px; overflow: hidden;
+}
+.chat-input:focus { border-color: var(--purple); }
+.btn-send {
+  background: linear-gradient(135deg, var(--purple), var(--blue));
+  color: #fff; border: none; border-radius: 10px; width: 38px; height: 38px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  font-size: 16px; transition: opacity .2s; flex-shrink: 0;
+}
+.btn-send:hover { opacity: .9; }
+.btn-send:disabled { opacity: .4; cursor: not-allowed; }
+
+/* Typing indicator */
+.typing { display: flex; gap: 4px; align-items: center; padding: 6px 0; }
+.typing-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--text3);
+  animation: bounce 1.4s ease infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: .2s; }
+.typing-dot:nth-child(3) { animation-delay: .4s; }
+@keyframes bounce { 0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)} }
+
+/* ===== RIGHT: GAS出力ペイン ===== */
+.gas-pane {
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--bg);
+}
+.gas-pane-header {
+  padding: 12px 16px; border-bottom: 1px solid var(--border2);
+  background: var(--bg2); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+.gas-pane-title { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.gas-actions { display: flex; gap: 6px; }
+.gas-btn {
+  background: var(--bg3); border: 1px solid var(--border2); color: var(--text2);
+  border-radius: 6px; padding: 5px 10px; font-size: 11px; cursor: pointer;
+  font-family: inherit; transition: all .2s; display: flex; align-items: center; gap: 4px;
+}
+.gas-btn:hover { border-color: var(--green); color: var(--green); }
+.gas-btn.copied { border-color: var(--green); color: var(--green); }
+.gas-btn-open { border-color: rgba(59,130,246,.4); color: var(--blue); }
+.gas-btn-open:hover { background: rgba(59,130,246,.1); }
+.gas-code-wrap {
+  flex: 1; overflow-y: auto; padding: 16px;
+  font-family: 'Consolas', 'Monaco', monospace; font-size: 12px; line-height: 1.7;
+}
+.gas-code-wrap::-webkit-scrollbar { width: 4px; }
+.gas-code-wrap::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 2px; }
+.gas-placeholder {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 100%; color: var(--text3); text-align: center; gap: 10px;
+}
+.gas-placeholder-icon { font-size: 40px; opacity: .4; }
+.gas-placeholder-text { font-size: 13px; line-height: 1.6; }
+.gas-meta {
+  padding: 10px 16px; border-top: 1px solid var(--border2);
+  background: var(--bg2); font-size: 11px; color: var(--text3); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+/* Code highlighting */
+.kw { color: #ff79c6; }
+.fn { color: #50fa7b; }
+.str { color: #f1fa8c; }
+.cm { color: #6272a4; font-style: italic; }
+.nc { color: #bd93f9; }
+.prop { color: #8be9fd; }
+.op { color: #ff79c6; }
+
+@media (max-width: 1024px) {
+  .main-layout { grid-template-columns: 180px 1fr 280px; }
+}
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .main-layout { grid-template-columns: 1fr; }
+  .gas-pane { display: none; }
+  body { overflow: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="icon">🤖</div>
+    Claude × GAS 業務自動化アシスタント
+  </div>
+  <div class="nav-right">
+    <a href="../../" class="back-link">← ポートフォリオへ戻る</a>
+    <span class="badge badge-demo">DEMO</span>
+    <span class="badge badge-proto">PROTOTYPE</span>
+  </div>
+</nav>
+
+<div class="main-layout">
+  <!-- ===== LEFT SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-workspace">
+        <div class="ws-icon">M</div>
+        <div>
+          <div style="font-size:12px;font-weight:700;">miki's Workspace</div>
+          <div style="font-size:10px;color:var(--text3);font-weight:400;">Free Plan</div>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-search">
+      <span>🔍</span> クイック検索...
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">メニュー</div>
+      <div class="sidebar-item active">
+        <span class="sidebar-item-icon">💬</span> AIアシスタント
+        <span class="sidebar-badge">New</span>
+      </div>
+      <div class="sidebar-item">
+        <span class="sidebar-item-icon">📥</span> インボックス
+      </div>
+      <div class="sidebar-item">
+        <span class="sidebar-item-icon">✅</span> タスク管理
+        <span class="sidebar-badge">7</span>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">ページ</div>
+      <div class="sidebar-item" onclick="selectPage(this, 'improvement')">
+        <span class="sidebar-item-icon">📋</span> 業務改善ログ
+      </div>
+      <div class="sidebar-sub">
+        <div class="sidebar-item" onclick="selectPage(this, 'q1')">
+          <span class="sidebar-item-icon">└</span> 2026年Q1まとめ
+        </div>
+        <div class="sidebar-item" onclick="selectPage(this, 'ideas')">
+          <span class="sidebar-item-icon">└</span> 改善アイデア一覧
+        </div>
+      </div>
+      <div class="sidebar-item" onclick="selectPage(this, 'scripts')">
+        <span class="sidebar-item-icon">⚙️</span> 自動化スクリプト一覧
+      </div>
+      <div class="sidebar-sub">
+        <div class="sidebar-item" onclick="selectPage(this, 'gas1')">
+          <span class="sidebar-item-icon">└</span> フォーム→Notion連携
+        </div>
+        <div class="sidebar-item" onclick="selectPage(this, 'gas2')">
+          <span class="sidebar-item-icon">└</span> メール自動仕分け
+        </div>
+        <div class="sidebar-item" onclick="selectPage(this, 'gas3')">
+          <span class="sidebar-item-icon">└</span> 週次レポート生成
+        </div>
+      </div>
+      <div class="sidebar-item" onclick="selectPage(this, 'tasks')">
+        <span class="sidebar-item-icon">🗂️</span> タスク管理テンプレ
+      </div>
+      <div class="sidebar-item" onclick="selectPage(this, 'tools')">
+        <span class="sidebar-item-icon">🛠️</span> AIツールリサーチ
+        <span class="sidebar-badge">NEW</span>
+      </div>
+      <div class="sidebar-item" onclick="selectPage(this, 'video')">
+        <span class="sidebar-item-icon">🎬</span> 動画編集ワークフロー
+      </div>
+    </div>
+
+    <div style="margin-top:auto;padding:12px 14px;border-top:1px solid var(--border2);">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">M</div>
+        <div>
+          <div style="font-size:12px;font-weight:600;">miki</div>
+          <div style="font-size:10px;color:var(--text3);">動画編集・WEBマーケ</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== CENTER: CHAT ===== -->
+  <div class="chat-area">
+    <div class="chat-header">
+      <div class="status-indicator"></div>
+      <div>
+        <div class="chat-header-title">Claude AI アシスタント</div>
+        <div class="chat-header-sub">Claude 3.5 Sonnet · GAS連携モード</div>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="chat-messages">
+      <!-- 初期メッセージ -->
+      <div class="msg claude">
+        <div class="msg-avatar claude">C</div>
+        <div class="msg-bubble">
+          <div class="msg-label">Claude</div>
+          こんにちは、mikiさん！業務自動化アシスタントです 👋<br><br>
+          GAS（Google Apps Script）を使った自動化、Notionとの連携、Claude APIを活用した効率化など、お気軽にご相談ください。<br><br>
+          下のクイックボタンからよく使う質問を選ぶか、直接入力してください。
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick replies -->
+    <div class="quick-replies">
+      <div class="quick-label">クイック質問</div>
+      <div class="quick-btns">
+        <button class="quick-btn" onclick="sendQuick('form-notion')">📝 フォーム→Notion自動保存</button>
+        <button class="quick-btn" onclick="sendQuick('mail-auto')">📧 GASでメール自動送信</button>
+        <button class="quick-btn" onclick="sendQuick('form-summary')">📊 フォーム回答を集計</button>
+        <button class="quick-btn" onclick="sendQuick('claude-summary')">🤖 Claude APIで要約</button>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div class="chat-input-wrap">
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="chat-input" placeholder="質問を入力... (Enter で送信)" rows="1"
+          onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="btn-send" id="btn-send" onclick="sendMessage()">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== RIGHT: GAS出力ペイン ===== -->
+  <div class="gas-pane">
+    <div class="gas-pane-header">
+      <div class="gas-pane-title">
+        <span>⚙️</span> GASコード出力
+      </div>
+      <div class="gas-actions">
+        <button class="gas-btn" id="btn-copy-gas" onclick="copyGasCode()">📋 コピー</button>
+        <button class="gas-btn gas-btn-open" onclick="openScriptEditor()">↗ エディタで開く</button>
+      </div>
+    </div>
+    <div class="gas-code-wrap" id="gas-output">
+      <div class="gas-placeholder">
+        <div class="gas-placeholder-icon">⚙️</div>
+        <div class="gas-placeholder-text">
+          左のチャットで質問すると<br>GASコードがここに表示されます
+        </div>
+      </div>
+    </div>
+    <div class="gas-meta" id="gas-meta">
+      <span>コード未生成</span>
+      <span id="gas-lines">—</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== サイドバー =====
+function selectPage(el, page) {
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ===== チャット =====
+const PRESETS = {
+  'form-notion': {
+    user: 'Googleフォームの回答をNotionデータベースに自動保存したいです。GASで実装できますか？',
+    claude: `できます！Googleフォームの回答をNotionのデータベースに自動保存するGASコードを作成します。\n\n大まかな仕組みはこうです：\n1. フォームの送信をトリガーにGASが起動\n2. GASがNotion APIにリクエストを送信\n3. フォームの回答がNotionのDBに1行追加される\n\n右側にコードを生成しました。使い方は以下の通りです：\n\n① Notionでインテグレーションを作成しAPIキーを取得\n② データベースIDをURLから確認\n③ GASのスクリプトプロパティにAPIキーを設定\n④ フォームの「送信時」トリガーに関数を登録`,
+    code: `notion-form`,
+  },
+  'mail-auto': {
+    user: 'GASでGmailから特定の件名のメールを自動転送したいです。毎朝の集計レポートが届いたら自動でSlackに投稿する仕組みを作りたい。',
+    claude: `GmailとSlackを繋ぐ自動化スクリプトを作成します！\n\n処理の流れ：\n1. 毎朝指定時刻にGASが起動\n2. Gmailで「集計レポート」の件名を検索\n3. メール本文を抽出\n4. Claude APIで要点を箇条書きに要約\n5. Slack Webhookで通知\n\n実用的なポイント：既読メールは再処理しないようにラベルで管理しています。右のコードをコピーして設定値を変更するだけで動きます！`,
+    code: `mail-slack`,
+  },
+  'form-summary': {
+    user: 'Googleフォームのアンケート回答（記述式）をスプレッドシートに集計して、Claude APIで自動要約させたい。',
+    claude: `アンケート自動要約の仕組みを作ります！\n\n機能の内容：\n• スプレッドシートの回答を定期読み込み\n• Claude APIで「ポジティブ意見」「改善要望」「頻出キーワード」に分類\n• 要約結果を別シートに自動記録\n• 週次でSlack/メールにサマリーを送信\n\nこれで毎週のフィードバック整理が全自動になります。右のコードに実際のClaudeのAPI呼び出しも含めています。`,
+    code: `form-summary`,
+  },
+  'claude-summary': {
+    user: 'GASからClaude APIを呼び出して、メール文章を自動要約するコードを教えてください。',
+    claude: `GASからClaude APIを直接呼び出す基本コードです！\n\nポイント：\n• APIキーはスクリプトプロパティに保存（セキュア）\n• UrlFetchAppでAPIリクエストを送信\n• モデルはclaude-opus-4-5が推奨\n• エラーハンドリングも実装済み\n\nこれをベースに好きな処理を追加できます。プロンプトを変えるだけで要約・翻訳・分類など様々な処理に対応できますよ。`,
+    code: `claude-api`,
+  },
+};
+
+const CODES = {
+  'notion-form': {
+    filename: 'formToNotion.gs',
+    lines: 52,
+    html: `<span class="cm">// Googleフォーム回答 → Notion DB 自動保存</span>
+<span class="cm">// トリガー: フォーム送信時</span>
+
+<span class="kw">const</span> <span class="prop">NOTION_API_KEY</span> = PropertiesService
+  .<span class="fn">getScriptProperties</span>()
+  .<span class="fn">getProperty</span>(<span class="str">'NOTION_API_KEY'</span>);
+
+<span class="kw">const</span> <span class="prop">DATABASE_ID</span> = <span class="str">'your-database-id-here'</span>;
+
+<span class="kw">function</span> <span class="fn">onFormSubmit</span>(e) {
+  <span class="kw">const</span> responses = e.namedValues;
+
+  <span class="cm">// Notionに送るデータを構築</span>
+  <span class="kw">const</span> properties = {
+    <span class="str">'名前'</span>: {
+      title: [{ text: { content: responses[<span class="str">'お名前'</span>][<span class="nc">0</span>] || <span class="str">''</span> } }]
+    },
+    <span class="str">'メールアドレス'</span>: {
+      email: responses[<span class="str">'メールアドレス'</span>][<span class="nc">0</span>] || <span class="str">''</span>
+    },
+    <span class="str">'お問い合わせ内容'</span>: {
+      rich_text: [{ text: {
+        content: responses[<span class="str">'お問い合わせ内容'</span>][<span class="nc">0</span>] || <span class="str">''</span>
+      }}]
+    },
+    <span class="str">'回答日時'</span>: {
+      date: { start: <span class="kw">new</span> <span class="fn">Date</span>().<span class="fn">toISOString</span>() }
+    },
+    <span class="str">'ステータス'</span>: {
+      select: { name: <span class="str">'未対応'</span> }
+    }
+  };
+
+  <span class="cm">// Notion API呼び出し</span>
+  <span class="kw">const</span> payload = {
+    parent: { database_id: DATABASE_ID },
+    properties: properties
+  };
+
+  <span class="kw">const</span> res = UrlFetchApp.<span class="fn">fetch</span>(
+    <span class="str">'https://api.notion.com/v1/pages'</span>, {
+    method: <span class="str">'post'</span>,
+    contentType: <span class="str">'application/json'</span>,
+    headers: {
+      <span class="str">'Authorization'</span>: <span class="str">\`Bearer \${NOTION_API_KEY}\`</span>,
+      <span class="str">'Notion-Version'</span>: <span class="str">'2022-06-28'</span>,
+    },
+    payload: JSON.<span class="fn">stringify</span>(payload),
+    muteHttpExceptions: <span class="kw">true</span>
+  });
+
+  <span class="kw">if</span> (res.<span class="fn">getResponseCode</span>() === <span class="nc">200</span>) {
+    Logger.<span class="fn">log</span>(<span class="str">'✅ Notionに保存完了'</span>);
+  } <span class="kw">else</span> {
+    Logger.<span class="fn">log</span>(<span class="str">'❌ エラー: '</span> + res.<span class="fn">getContentText</span>());
+  }
+}`
+  },
+  'mail-slack': {
+    filename: 'mailToSlack.gs',
+    lines: 58,
+    html: `<span class="cm">// Gmail → Slack 自動転送 + Claude要約</span>
+<span class="cm">// トリガー: 毎朝9時に実行</span>
+
+<span class="kw">const</span> <span class="prop">SLACK_WEBHOOK</span> = <span class="str">'https://hooks.slack.com/services/XXX/YYY/ZZZ'</span>;
+<span class="kw">const</span> <span class="prop">CLAUDE_KEY</span> = PropertiesService.<span class="fn">getScriptProperties</span>()
+  .<span class="fn">getProperty</span>(<span class="str">'CLAUDE_API_KEY'</span>);
+<span class="kw">const</span> <span class="prop">SEARCH_QUERY</span> = <span class="str">'subject:集計レポート is:unread'</span>;
+
+<span class="kw">function</span> <span class="fn">checkAndForwardReports</span>() {
+  <span class="kw">const</span> threads = GmailApp.<span class="fn">search</span>(SEARCH_QUERY, <span class="nc">0</span>, <span class="nc">5</span>);
+
+  <span class="kw">if</span> (threads.length === <span class="nc">0</span>) {
+    Logger.<span class="fn">log</span>(<span class="str">'新しいレポートメールなし'</span>);
+    <span class="kw">return</span>;
+  }
+
+  threads.<span class="fn">forEach</span>(thread => {
+    <span class="kw">const</span> msg = thread.<span class="fn">getMessages</span>()[<span class="nc">0</span>];
+    <span class="kw">const</span> body = msg.<span class="fn">getPlainBody</span>().<span class="fn">slice</span>(<span class="nc">0</span>, <span class="nc">2000</span>);
+    <span class="kw">const</span> subject = msg.<span class="fn">getSubject</span>();
+
+    <span class="cm">// Claudeで要約</span>
+    <span class="kw">const</span> summary = <span class="fn">summarizeWithClaude</span>(body);
+
+    <span class="cm">// Slack通知</span>
+    UrlFetchApp.<span class="fn">fetch</span>(SLACK_WEBHOOK, {
+      method: <span class="str">'post'</span>,
+      contentType: <span class="str">'application/json'</span>,
+      payload: JSON.<span class="fn">stringify</span>({
+        text: <span class="str">\`📊 *\${subject}*\n\n\${summary}\`</span>,
+        username: <span class="str">'レポートBot'</span>,
+        icon_emoji: <span class="str">':bar_chart:'</span>
+      })
+    });
+
+    <span class="cm">// 処理済みラベルを追加</span>
+    thread.<span class="fn">addLabel</span>(GmailApp.<span class="fn">getUserLabelByName</span>(<span class="str">'GAS処理済み'</span>));
+  });
+}
+
+<span class="kw">function</span> <span class="fn">summarizeWithClaude</span>(text) {
+  <span class="kw">const</span> res = UrlFetchApp.<span class="fn">fetch</span>(
+    <span class="str">'https://api.anthropic.com/v1/messages'</span>, {
+    method: <span class="str">'post'</span>,
+    contentType: <span class="str">'application/json'</span>,
+    headers: {
+      <span class="str">'x-api-key'</span>: CLAUDE_KEY,
+      <span class="str">'anthropic-version'</span>: <span class="str">'2023-06-01'</span>
+    },
+    payload: JSON.<span class="fn">stringify</span>({
+      model: <span class="str">'claude-opus-4-5'</span>,
+      max_tokens: <span class="nc">300</span>,
+      messages: [{
+        role: <span class="str">'user'</span>,
+        content: <span class="str">\`以下のメールを3行で要約してください：\n\n\${text}\`</span>
+      }]
+    })
+  });
+  <span class="kw">return</span> JSON.<span class="fn">parse</span>(res.<span class="fn">getContentText</span>()).content[<span class="nc">0</span>].text;
+}`
+  },
+  'form-summary': {
+    filename: 'surveyAnalyzer.gs',
+    lines: 61,
+    html: `<span class="cm">// アンケート回答 → Claude自動分析・要約</span>
+<span class="cm">// トリガー: 毎週月曜 9時</span>
+
+<span class="kw">const</span> <span class="prop">SS_ID</span> = <span class="str">'your-spreadsheet-id'</span>;
+<span class="kw">const</span> <span class="prop">INPUT_SHEET</span> = <span class="str">'フォームの回答 1'</span>;
+<span class="kw">const</span> <span class="prop">OUTPUT_SHEET</span> = <span class="str">'AI要約'</span>;
+<span class="kw">const</span> <span class="prop">CLAUDE_KEY</span> = PropertiesService.<span class="fn">getScriptProperties</span>()
+  .<span class="fn">getProperty</span>(<span class="str">'CLAUDE_API_KEY'</span>);
+
+<span class="kw">function</span> <span class="fn">analyzeSurvey</span>() {
+  <span class="kw">const</span> ss = SpreadsheetApp.<span class="fn">openById</span>(SS_ID);
+  <span class="kw">const</span> inSheet = ss.<span class="fn">getSheetByName</span>(INPUT_SHEET);
+  <span class="kw">const</span> outSheet = ss.<span class="fn">getSheetByName</span>(OUTPUT_SHEET);
+
+  <span class="cm">// 今週分のデータを取得</span>
+  <span class="kw">const</span> data = inSheet.<span class="fn">getDataRange</span>().<span class="fn">getValues</span>();
+  <span class="kw">const</span> headers = data[<span class="nc">0</span>];
+  <span class="kw">const</span> rows = data.<span class="fn">slice</span>(<span class="nc">1</span>);
+
+  <span class="cm">// 自由記述欄を結合</span>
+  <span class="kw">const</span> freeTexts = rows
+    .<span class="fn">map</span>(r => r[<span class="nc">3</span>]) <span class="cm">// D列: 自由記述</span>
+    .<span class="fn">filter</span>(t => t)
+    .<span class="fn">join</span>(<span class="str">'\n---\n'</span>);
+
+  <span class="cm">// Claudeで分析</span>
+  <span class="kw">const</span> analysis = <span class="fn">analyzeWithClaude</span>(freeTexts);
+
+  <span class="cm">// 結果を出力シートに記録</span>
+  outSheet.<span class="fn">appendRow</span>([
+    <span class="kw">new</span> <span class="fn">Date</span>().<span class="fn">toLocaleDateString</span>(<span class="str">'ja-JP'</span>),
+    rows.length + <span class="str">'件'</span>,
+    analysis.positive,
+    analysis.improvement,
+    analysis.keywords
+  ]);
+  Logger.<span class="fn">log</span>(<span class="str">'✅ 分析完了: '</span> + rows.length + <span class="str">'件'</span>);
+}
+
+<span class="kw">function</span> <span class="fn">analyzeWithClaude</span>(texts) {
+  <span class="kw">const</span> prompt = <span class="str">\`以下のアンケート回答を分析してください。
+JSON形式で返答してください。
+
+回答内容:
+\${texts}
+
+出力形式:
+{
+  "positive": "ポジティブな意見の要約（3行）",
+  "improvement": "改善要望の要約（3行）",
+  "keywords": "頻出キーワード上位5つ（カンマ区切り）"
+}\`</span>;
+
+  <span class="kw">const</span> res = UrlFetchApp.<span class="fn">fetch</span>(<span class="str">'https://api.anthropic.com/v1/messages'</span>, {
+    method: <span class="str">'post'</span>, contentType: <span class="str">'application/json'</span>,
+    headers: { <span class="str">'x-api-key'</span>: CLAUDE_KEY, <span class="str">'anthropic-version'</span>: <span class="str">'2023-06-01'</span> },
+    payload: JSON.<span class="fn">stringify</span>({
+      model: <span class="str">'claude-opus-4-5'</span>, max_tokens: <span class="nc">600</span>,
+      messages: [{ role: <span class="str">'user'</span>, content: prompt }]
+    })
+  });
+  <span class="kw">return</span> JSON.<span class="fn">parse</span>(
+    JSON.<span class="fn">parse</span>(res.<span class="fn">getContentText</span>()).content[<span class="nc">0</span>].text
+  );
+}`
+  },
+  'claude-api': {
+    filename: 'claudeHelper.gs',
+    lines: 47,
+    html: `<span class="cm">// GAS から Claude API を呼び出す汎用ヘルパー</span>
+<span class="cm">// 要約・翻訳・分類など様々な用途に使えます</span>
+
+<span class="kw">const</span> <span class="prop">CLAUDE_API_KEY</span> = PropertiesService
+  .<span class="fn">getScriptProperties</span>()
+  .<span class="fn">getProperty</span>(<span class="str">'CLAUDE_API_KEY'</span>);
+
+<span class="cm">/**
+ * Claude APIを呼び出す汎用関数
+ * @param {string} prompt - 送るプロンプト
+ * @param {number} maxTokens - 最大トークン数
+ * @returns {string} - Claudeの回答
+ */</span>
+<span class="kw">function</span> <span class="fn">callClaude</span>(prompt, maxTokens = <span class="nc">500</span>) {
+  <span class="kw">const</span> payload = {
+    model: <span class="str">'claude-opus-4-5'</span>,
+    max_tokens: maxTokens,
+    messages: [{ role: <span class="str">'user'</span>, content: prompt }]
+  };
+
+  <span class="kw">const</span> options = {
+    method: <span class="str">'post'</span>,
+    contentType: <span class="str">'application/json'</span>,
+    headers: {
+      <span class="str">'x-api-key'</span>: CLAUDE_API_KEY,
+      <span class="str">'anthropic-version'</span>: <span class="str">'2023-06-01'</span>,
+    },
+    payload: JSON.<span class="fn">stringify</span>(payload),
+    muteHttpExceptions: <span class="kw">true</span>
+  };
+
+  <span class="kw">try</span> {
+    <span class="kw">const</span> res = UrlFetchApp.<span class="fn">fetch</span>(
+      <span class="str">'https://api.anthropic.com/v1/messages'</span>, options
+    );
+    <span class="kw">const</span> json = JSON.<span class="fn">parse</span>(res.<span class="fn">getContentText</span>());
+    <span class="kw">return</span> json.content[<span class="nc">0</span>].text;
+  } <span class="kw">catch</span> (err) {
+    Logger.<span class="fn">log</span>(<span class="str">'Claude API エラー: '</span> + err);
+    <span class="kw">return</span> <span class="kw">null</span>;
+  }
+}
+
+<span class="cm">// 使用例: メールの要約</span>
+<span class="kw">function</span> <span class="fn">summarizeEmail</span>() {
+  <span class="kw">const</span> emailText = <span class="str">'ここにメール本文を入れる...'</span>;
+  <span class="kw">const</span> prompt = <span class="str">\`以下のメールを3行で要約してください:\n\n\${emailText}\`</span>;
+  <span class="kw">const</span> summary = <span class="fn">callClaude</span>(prompt);
+  Logger.<span class="fn">log</span>(summary);
+}
+
+<span class="cm">// 使用例: 文章の翻訳</span>
+<span class="kw">function</span> <span class="fn">translateText</span>(text, targetLang = <span class="str">'英語'</span>) {
+  <span class="kw">return</span> <span class="fn">callClaude</span>(<span class="str">\`次の文章を\${targetLang}に翻訳してください:\n\${text}\`</span>);
+}`
+  }
+};
+
+let isTyping = false;
+let currentCode = null;
+
+function addMessage(role, text, codeKey) {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  const isUser = role === 'user';
+  div.innerHTML = `
+    <div class="msg-avatar ${isUser ? 'user' : 'claude'}">${isUser ? '👤' : 'C'}</div>
+    <div class="msg-bubble">
+      <div class="msg-label">${isUser ? 'あなた' : 'Claude'}</div>
+      ${text.replace(/\n/g, '<br>')}
+    </div>
+  `;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function addTypingIndicator() {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg claude'; div.id = 'typing-indicator';
+  div.innerHTML = `
+    <div class="msg-avatar claude">C</div>
+    <div class="msg-bubble">
+      <div class="typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>
+    </div>
+  `;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeTypingIndicator() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+function setInputDisabled(v) {
+  document.getElementById('chat-input').disabled = v;
+  document.getElementById('btn-send').disabled = v;
+  document.querySelectorAll('.quick-btn').forEach(b => b.disabled = v);
+}
+
+function sendQuick(key) {
+  if (isTyping) return;
+  const preset = PRESETS[key];
+  if (!preset) return;
+  document.getElementById('chat-input').value = '';
+  processMessage(preset.user, preset.claude, preset.code);
+}
+
+function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || isTyping) return;
+  input.value = '';
+  input.style.height = '38px';
+
+  // 汎用レスポンス
+  const claudeRes = `ご質問ありがとうございます。「${text.slice(0,20)}...」についてのGASコードを作成できます。\n\n具体的な要件をもう少し教えていただければ、より精度の高いコードを生成できます。例えば：\n• どのGoogleサービスを使いますか？（Gmail/スプレッドシート/フォーム）\n• 実行タイミングは？（手動/自動トリガー）\n• 連携先は？（Notion/Slack/LINE）`;
+  processMessage(text, claudeRes, null);
+}
+
+function processMessage(userText, claudeText, codeKey) {
+  isTyping = true;
+  setInputDisabled(true);
+  addMessage('user', userText, null);
+  setTimeout(() => {
+    addTypingIndicator();
+    setTimeout(() => {
+      removeTypingIndicator();
+      addMessage('claude', claudeText, codeKey);
+      if (codeKey && CODES[codeKey]) {
+        showCode(codeKey);
+      }
+      isTyping = false;
+      setInputDisabled(false);
+    }, 1800);
+  }, 300);
+}
+
+function showCode(key) {
+  const code = CODES[key];
+  if (!code) return;
+  currentCode = code;
+  document.getElementById('gas-output').innerHTML = code.html;
+  document.getElementById('gas-meta').innerHTML = `
+    <span>📄 ${code.filename}</span>
+    <span id="gas-lines">${code.lines} 行</span>
+  `;
+}
+
+function copyGasCode() {
+  const btn = document.getElementById('btn-copy-gas');
+  const el = document.getElementById('gas-output');
+  navigator.clipboard.writeText(el.innerText).catch(() => {});
+  btn.textContent = '✅ コピー済み';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = '📋 コピー'; btn.classList.remove('copied'); }, 2000);
+}
+
+function openScriptEditor() {
+  window.open('https://script.google.com', '_blank');
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = '38px';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+</script>
+</body>
+</html>

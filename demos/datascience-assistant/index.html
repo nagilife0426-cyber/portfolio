@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>データサイエンス × Claude Code アシスタント | デモ</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0e1a; --bg2: #111827; --bg3: #1f2937; --bg4: #374151;
+      --border2: #374151; --green: #10b981; --yellow: #f59e0b; --blue: #3b82f6;
+      --red: #ef4444; --purple: #8b5cf6; --text: #f9fafb; --text2: #9ca3af; --text3: #6b7280;
+      --r: 10px;
+    }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; min-height: 100vh; }
+
+    /* NAV */
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 28px; background: var(--bg2);
+      border-bottom: 1px solid var(--border2); position: sticky; top: 0; z-index: 100;
+    }
+    .nav-left { display: flex; align-items: center; gap: 16px; }
+    .nav-back {
+      color: var(--text2); text-decoration: none; font-size: 13px;
+      display: flex; align-items: center; gap: 6px; transition: color .2s;
+    }
+    .nav-back:hover { color: var(--text); }
+    .nav-logo { font-size: 16px; font-weight: 700; color: var(--blue); }
+    .nav-right { display: flex; align-items: center; gap: 8px; }
+    .badge-proto { background: var(--purple); color: #fff; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+    .badge-demo { background: var(--blue); color: #fff; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+
+    /* HERO */
+    .hero {
+      background: linear-gradient(135deg, #0d1b35 0%, #0a1628 60%, #0e1a2e 100%);
+      border-bottom: 1px solid var(--border2);
+      padding: 32px 28px 28px;
+    }
+    .hero-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; gap: 20px; }
+    .hero-icon { font-size: 44px; }
+    .hero h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .hero p { color: var(--text2); font-size: 13px; line-height: 1.6; }
+    .hero-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .chip {
+      background: rgba(59,130,246,.12); border: 1px solid rgba(59,130,246,.3);
+      border-radius: 20px; padding: 3px 12px; font-size: 12px; color: var(--blue);
+    }
+    .chip.green { background: rgba(16,185,129,.12); border-color: rgba(16,185,129,.3); color: var(--green); }
+    .chip.purple { background: rgba(139,92,246,.12); border-color: rgba(139,92,246,.3); color: var(--purple); }
+    .chip.yellow { background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.3); color: var(--yellow); }
+
+    /* TABS */
+    .tabs-wrap { max-width: 1100px; margin: 24px auto 0; padding: 0 28px; }
+    .tabs { display: flex; gap: 4px; background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r); padding: 4px; width: fit-content; }
+    .tab {
+      padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;
+      color: var(--text2); transition: all .2s; border: none; background: transparent;
+    }
+    .tab.active { background: var(--blue); color: #fff; }
+    .tab:hover:not(.active) { background: var(--bg3); color: var(--text); }
+
+    /* CONTAINER */
+    .container { max-width: 1100px; margin: 0 auto; padding: 24px 28px; }
+
+    /* TAB PANELS */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* CARDS */
+    .card {
+      background: var(--bg2); border: 1px solid var(--border2);
+      border-radius: var(--r); overflow: hidden;
+    }
+    .card-header {
+      padding: 14px 18px; border-bottom: 1px solid var(--border2);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .card-title { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .card-body { padding: 18px; }
+
+    /* TAG */
+    .tag { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 12px; }
+    .tag-blue { background: rgba(59,130,246,.15); color: var(--blue); }
+    .tag-green { background: rgba(16,185,129,.15); color: var(--green); }
+    .tag-yellow { background: rgba(245,158,11,.15); color: var(--yellow); }
+    .tag-purple { background: rgba(139,92,246,.15); color: var(--purple); }
+    .tag-red { background: rgba(239,68,68,.15); color: var(--red); }
+
+    /* GRID */
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+
+    /* ==================== DATA ANALYSIS TAB ==================== */
+    .upload-zone {
+      border: 2px dashed var(--border2); border-radius: var(--r);
+      padding: 36px; text-align: center; cursor: pointer;
+      transition: all .2s; background: var(--bg3);
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--blue); background: rgba(59,130,246,.05);
+    }
+    .upload-icon { font-size: 36px; margin-bottom: 10px; }
+    .upload-zone h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+    .upload-zone p { color: var(--text2); font-size: 13px; }
+    .upload-zone .sample-btn {
+      display: inline-block; margin-top: 14px; padding: 8px 18px;
+      background: var(--blue); color: #fff; border-radius: 8px; cursor: pointer;
+      font-size: 13px; font-weight: 600; border: none; transition: opacity .2s;
+    }
+    .upload-zone .sample-btn:hover { opacity: .85; }
+
+    /* ANALYSIS RESULT */
+    #analysis-result { margin-top: 18px; }
+    .analysis-progress {
+      background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r); padding: 18px;
+    }
+    .progress-step {
+      display: flex; align-items: center; gap: 12px; padding: 8px 0;
+      border-bottom: 1px solid var(--border2); font-size: 13px;
+    }
+    .progress-step:last-child { border-bottom: none; }
+    .step-icon { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+    .step-pending { background: var(--bg4); color: var(--text3); }
+    .step-running { background: rgba(59,130,246,.2); color: var(--blue); animation: pulse 1s infinite; }
+    .step-done { background: rgba(16,185,129,.2); color: var(--green); }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.5;} }
+
+    .analysis-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+    .analysis-stat { background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; padding: 14px; text-align: center; }
+    .analysis-stat .v { font-size: 24px; font-weight: 700; color: var(--blue); }
+    .analysis-stat .l { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+    .insight-list { display: flex; flex-direction: column; gap: 10px; }
+    .insight-item {
+      background: var(--bg3); border-left: 3px solid var(--blue);
+      border-radius: 0 8px 8px 0; padding: 12px 14px; font-size: 13px; line-height: 1.5;
+    }
+    .insight-item.warn { border-left-color: var(--yellow); }
+    .insight-item.good { border-left-color: var(--green); }
+    .insight-item strong { color: var(--text); }
+
+    /* MISSING VALUE TABLE */
+    .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .data-table th { text-align: left; padding: 8px 12px; color: var(--text2); font-weight: 600; border-bottom: 1px solid var(--border2); font-size: 12px; }
+    .data-table td { padding: 8px 12px; border-bottom: 1px solid rgba(55,65,81,.5); }
+    .data-table tr:last-child td { border-bottom: none; }
+    .pct-bar { height: 6px; border-radius: 3px; background: var(--bg4); overflow: hidden; margin-top: 4px; }
+    .pct-fill { height: 100%; border-radius: 3px; background: var(--blue); transition: width .8s ease; }
+    .pct-fill.red { background: var(--red); }
+    .pct-fill.green { background: var(--green); }
+
+    /* CORR MATRIX */
+    .corr-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+    .corr-cell {
+      aspect-ratio: 1; border-radius: 4px; display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+    }
+
+    /* ==================== ML TAB ==================== */
+    .bar-chart { display: flex; flex-direction: column; gap: 10px; }
+    .bar-row { display: flex; align-items: center; gap: 10px; }
+    .bar-label { width: 160px; font-size: 12px; color: var(--text2); text-align: right; flex-shrink: 0; }
+    .bar-track { flex: 1; height: 22px; background: var(--bg4); border-radius: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 11px; font-weight: 700; color: #fff; transition: width 1s ease; }
+    .bar-value { width: 40px; font-size: 12px; font-weight: 700; text-align: right; }
+
+    /* MODEL COMPARE TABLE */
+    .model-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .model-table th { text-align: left; padding: 10px 14px; color: var(--text2); font-weight: 600; border-bottom: 2px solid var(--border2); font-size: 12px; }
+    .model-table td { padding: 10px 14px; border-bottom: 1px solid rgba(55,65,81,.5); }
+    .model-table tr:last-child td { border-bottom: none; }
+    .model-table tr:hover td { background: rgba(59,130,246,.04); }
+    .best-row td { background: rgba(16,185,129,.05); }
+    .score-bar { height: 4px; background: var(--bg4); border-radius: 2px; margin-top: 4px; overflow: hidden; }
+    .score-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
+    .crown { margin-left: 6px; }
+
+    /* CONFUSION MATRIX */
+    .conf-matrix { display: grid; grid-template-columns: auto 1fr 1fr; gap: 3px; font-size: 12px; }
+    .conf-head { background: transparent; }
+    .conf-label { display: flex; align-items: center; justify-content: center; padding: 6px; font-size: 11px; color: var(--text2); font-weight: 600; }
+    .conf-cell { border-radius: 6px; padding: 14px 8px; text-align: center; font-size: 16px; font-weight: 700; }
+
+    /* ==================== AWS TAB ==================== */
+    .script-grid { display: flex; flex-direction: column; gap: 18px; }
+    .script-card { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r); overflow: hidden; }
+    .script-header {
+      padding: 14px 18px; background: var(--bg3);
+      border-bottom: 1px solid var(--border2);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .script-title { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; }
+    .script-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .aws-orange { background: rgba(255,153,0,.15); }
+    .script-body { padding: 0; }
+    pre.code-block {
+      background: #0d1117; color: #e6edf3;
+      padding: 18px 20px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px;
+      line-height: 1.6; overflow-x: auto; margin: 0;
+    }
+    .copy-btn {
+      padding: 6px 14px; background: var(--bg4); color: var(--text2); border: 1px solid var(--border2);
+      border-radius: 6px; cursor: pointer; font-size: 12px; transition: all .2s;
+    }
+    .copy-btn:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .copy-btn.copied { background: var(--green); color: #fff; border-color: var(--green); }
+
+    /* syntax highlight */
+    .kw { color: #ff7b72; } .fn { color: #d2a8ff; } .str { color: #a5d6ff; }
+    .cm { color: #8b949e; } .num { color: #79c0ff; } .var { color: #ffa657; }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      nav { padding: 12px 16px; }
+      .hero { padding: 20px 16px; }
+      .tabs-wrap { padding: 0 16px; }
+      .container { padding: 16px; }
+      .grid2, .grid3 { grid-template-columns: 1fr; }
+      .analysis-cards { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-left">
+    <a href="../../" class="nav-back">← ポートフォリオへ戻る</a>
+    <div class="nav-logo">🔬 DS Assistant</div>
+  </div>
+  <div class="nav-right">
+    <span class="badge-proto">プロトタイプ</span>
+    <span class="badge-demo">DEMO</span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-icon">🤖</div>
+    <div>
+      <h1>データサイエンス × Claude Code アシスタント</h1>
+      <p>Python/R・機械学習・AWS/GCP の作業を Claude がリアルタイムでサポート。<br>分析設計からデプロイ自動化まで、データサイエンティストの伴走 AI。</p>
+      <div class="hero-chips">
+        <span class="chip">Python / R</span>
+        <span class="chip green">機械学習</span>
+        <span class="chip purple">特徴量エンジニアリング</span>
+        <span class="chip yellow">AWS / GCP 自動化</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('analysis', this)">📊 データ分析</button>
+    <button class="tab" onclick="switchTab('ml', this)">🧠 ML特徴量</button>
+    <button class="tab" onclick="switchTab('aws', this)">☁️ AWS自動化</button>
+  </div>
+</div>
+
+<!-- ==================== PANEL: DATA ANALYSIS ==================== -->
+<div class="container">
+  <div id="panel-analysis" class="panel active">
+    <div class="grid2" style="gap:18px;">
+      <div>
+        <!-- Upload Zone -->
+        <div class="card" style="margin-bottom:18px;">
+          <div class="card-header">
+            <span class="card-title">📁 データアップロード</span>
+            <span class="tag tag-blue">Claude 分析</span>
+          </div>
+          <div class="card-body">
+            <div class="upload-zone" id="upload-zone"
+              ondragover="event.preventDefault();this.classList.add('dragover')"
+              ondragleave="this.classList.remove('dragover')"
+              ondrop="event.preventDefault();this.classList.remove('dragover');startAnalysis()">
+              <div class="upload-icon">📂</div>
+              <h3>CSV ファイルをドロップ</h3>
+              <p>または</p>
+              <button class="sample-btn" onclick="startAnalysis()">サンプルデータで試す</button>
+              <p style="margin-top:10px;font-size:12px;color:var(--text3);">sales_2024.csv (1,247行 × 18列)</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Claude Analysis Progress -->
+        <div id="analysis-result" style="display:none;">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🤖 Claude 分析レポート</span>
+              <span class="tag tag-green" id="analysis-status">分析完了</span>
+            </div>
+            <div class="card-body">
+              <div class="analysis-cards">
+                <div class="analysis-stat"><div class="v" id="s-rows">—</div><div class="l">行数</div></div>
+                <div class="analysis-stat"><div class="v" id="s-cols" style="color:var(--green)">—</div><div class="l">列数</div></div>
+                <div class="analysis-stat"><div class="v" id="s-miss" style="color:var(--yellow)">—</div><div class="l">欠損率</div></div>
+              </div>
+              <div class="insight-list" id="insight-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="right-panel" style="display:none;">
+        <!-- Missing Values -->
+        <div class="card" style="margin-bottom:18px;">
+          <div class="card-header">
+            <span class="card-title">🔍 欠損値分析</span>
+          </div>
+          <div class="card-body" style="padding:14px;">
+            <table class="data-table">
+              <thead><tr><th>カラム</th><th>欠損数</th><th>割合</th></tr></thead>
+              <tbody id="missing-table"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Correlation -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📈 相関マトリクス（数値列）</span>
+          </div>
+          <div class="card-body">
+            <div class="corr-grid" id="corr-grid"></div>
+            <div style="margin-top:12px;display:flex;gap:8px;align-items:center;font-size:11px;color:var(--text2);">
+              <div style="width:40px;height:8px;background:linear-gradient(to right,#3b82f6,#1f2937,#ef4444);border-radius:4px;"></div>
+              <span>-1.0 (負の相関) ← → +1.0 (正の相関)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PANEL: ML ==================== -->
+  <div id="panel-ml" class="panel">
+    <div class="grid2" style="gap:18px;">
+      <!-- Feature Importance -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🎯 特徴量重要度 (LightGBM)</span>
+          <span class="tag tag-green">学習済みモデル</span>
+        </div>
+        <div class="card-body">
+          <div class="bar-chart" id="feature-bars"></div>
+        </div>
+      </div>
+
+      <!-- Model Comparison -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🏆 モデル精度比較</span>
+          <span class="tag tag-purple">Accuracy / F1</span>
+        </div>
+        <div class="card-body">
+          <table class="model-table">
+            <thead>
+              <tr>
+                <th>モデル</th><th>Accuracy</th><th>F1-score</th><th>AUC</th><th>時間</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="best-row">
+                <td><strong>LightGBM</strong><span class="crown">👑</span></td>
+                <td>
+                  <div>93.2%</div>
+                  <div class="score-bar"><div class="score-fill" style="width:93.2%;background:var(--green);"></div></div>
+                </td>
+                <td>
+                  <div>0.928</div>
+                  <div class="score-bar"><div class="score-fill" style="width:92.8%;background:var(--green);"></div></div>
+                </td>
+                <td style="color:var(--green);font-weight:700;">0.971</td>
+                <td style="color:var(--text2);">2.3s</td>
+              </tr>
+              <tr>
+                <td>XGBoost</td>
+                <td>
+                  <div>91.8%</div>
+                  <div class="score-bar"><div class="score-fill" style="width:91.8%;background:var(--blue);"></div></div>
+                </td>
+                <td>
+                  <div>0.914</div>
+                  <div class="score-bar"><div class="score-fill" style="width:91.4%;background:var(--blue);"></div></div>
+                </td>
+                <td style="color:var(--blue);">0.958</td>
+                <td style="color:var(--text2);">4.1s</td>
+              </tr>
+              <tr>
+                <td>Random Forest</td>
+                <td>
+                  <div>89.4%</div>
+                  <div class="score-bar"><div class="score-fill" style="width:89.4%;background:var(--yellow);"></div></div>
+                </td>
+                <td>
+                  <div>0.891</div>
+                  <div class="score-bar"><div class="score-fill" style="width:89.1%;background:var(--yellow);"></div></div>
+                </td>
+                <td style="color:var(--yellow);">0.943</td>
+                <td style="color:var(--text2);">8.7s</td>
+              </tr>
+              <tr>
+                <td>Logistic Reg.</td>
+                <td>
+                  <div>82.1%</div>
+                  <div class="score-bar"><div class="score-fill" style="width:82.1%;background:var(--text3);"></div></div>
+                </td>
+                <td>
+                  <div>0.817</div>
+                  <div class="score-bar"><div class="score-fill" style="width:81.7%;background:var(--text3);"></div></div>
+                </td>
+                <td style="color:var(--text2);">0.891</td>
+                <td style="color:var(--text2);">0.4s</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Claude Feature Engineering Suggestion -->
+    <div class="card" style="margin-top:18px;">
+      <div class="card-header">
+        <span class="card-title">🤖 Claude による特徴量エンジニアリング提案</span>
+        <span class="tag tag-purple">AI 生成</span>
+      </div>
+      <div class="card-body">
+        <div class="grid3">
+          <div style="background:var(--bg3);border-radius:8px;padding:14px;">
+            <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px;">📅 時系列特徴量</div>
+            <div style="font-size:12px;line-height:1.6;color:var(--text2);">
+              <code style="color:var(--green);">purchase_dayofweek</code><br>
+              <code style="color:var(--green);">is_weekend</code><br>
+              <code style="color:var(--green);">month_sin / month_cos</code><br>
+              <code style="color:var(--green);">days_since_last_visit</code>
+            </div>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:14px;">
+            <div style="font-size:12px;font-weight:700;color:var(--purple);margin-bottom:8px;">🧮 集計特徴量</div>
+            <div style="font-size:12px;line-height:1.6;color:var(--text2);">
+              <code style="color:var(--purple);">user_avg_order_value</code><br>
+              <code style="color:var(--purple);">category_purchase_count</code><br>
+              <code style="color:var(--purple);">rolling_7d_revenue</code><br>
+              <code style="color:var(--purple);">rfm_score</code>
+            </div>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:14px;">
+            <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:8px;">🔗 交互作用特徴量</div>
+            <div style="font-size:12px;line-height:1.6;color:var(--text2);">
+              <code style="color:var(--yellow);">age_x_category</code><br>
+              <code style="color:var(--yellow);">price_per_quantity</code><br>
+              <code style="color:var(--yellow);">discount_rate</code><br>
+              <code style="color:var(--yellow);">loyalty_tier_encoded</code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PANEL: AWS ==================== -->
+  <div id="panel-aws" class="panel">
+    <div class="script-grid">
+
+      <!-- S3 -->
+      <div class="script-card">
+        <div class="script-header">
+          <div class="script-title">
+            <div class="script-icon aws-orange">🪣</div>
+            S3バケット作成 &amp; ライフサイクル設定
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="tag tag-yellow">AWS CLI / boto3</span>
+            <button class="copy-btn" onclick="copyCode('s3-code', this)">コピー</button>
+          </div>
+        </div>
+        <div class="script-body">
+<pre class="code-block" id="s3-code"><span class="kw">import</span> boto3
+<span class="kw">import</span> json
+
+<span class="cm"># S3クライアント初期化</span>
+s3 = boto3.<span class="fn">client</span>(<span class="str">'s3'</span>, region_name=<span class="str">'ap-northeast-1'</span>)
+
+<span class="kw">def</span> <span class="fn">create_data_bucket</span>(bucket_name: str) -> <span class="kw">dict</span>:
+    <span class="cm">"""データレイク用バケットを作成してライフサイクル設定"""</span>
+
+    <span class="cm"># バケット作成</span>
+    s3.<span class="fn">create_bucket</span>(
+        Bucket=bucket_name,
+        CreateBucketConfiguration={<span class="str">'LocationConstraint'</span>: <span class="str">'ap-northeast-1'</span>}
+    )
+
+    <span class="cm"># バージョニング有効化</span>
+    s3.<span class="fn">put_bucket_versioning</span>(
+        Bucket=bucket_name,
+        VersioningConfiguration={<span class="str">'Status'</span>: <span class="str">'Enabled'</span>}
+    )
+
+    <span class="cm"># ライフサイクル設定（30日後にIA、90日後にGlacier）</span>
+    lifecycle_config = {
+        <span class="str">'Rules'</span>: [{
+            <span class="str">'ID'</span>: <span class="str">'DataArchiveRule'</span>,
+            <span class="str">'Status'</span>: <span class="str">'Enabled'</span>,
+            <span class="str">'Transitions'</span>: [
+                {<span class="str">'Days'</span>: <span class="num">30</span>, <span class="str">'StorageClass'</span>: <span class="str">'STANDARD_IA'</span>},
+                {<span class="str">'Days'</span>: <span class="num">90</span>, <span class="str">'StorageClass'</span>: <span class="str">'GLACIER'</span>}
+            ]
+        }]
+    }
+    s3.<span class="fn">put_bucket_lifecycle_configuration</span>(
+        Bucket=bucket_name,
+        LifecycleConfiguration=lifecycle_config
+    )
+
+    <span class="kw">print</span>(<span class="fn">f</span><span class="str">"✅ バケット作成完了: {bucket_name}"</span>)
+    <span class="kw">return</span> {<span class="str">'bucket'</span>: bucket_name, <span class="str">'status'</span>: <span class="str">'created'</span>}
+
+<span class="cm"># 実行例</span>
+<span class="fn">create_data_bucket</span>(<span class="str">"my-company-datalake-prod"</span>)</pre>
+        </div>
+      </div>
+
+      <!-- Lambda -->
+      <div class="script-card">
+        <div class="script-header">
+          <div class="script-title">
+            <div class="script-icon aws-orange">λ</div>
+            Lambda 関数デプロイ（ZIP自動パッケージング）
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="tag tag-blue">AWS Lambda</span>
+            <button class="copy-btn" onclick="copyCode('lambda-code', this)">コピー</button>
+          </div>
+        </div>
+        <div class="script-body">
+<pre class="code-block" id="lambda-code"><span class="kw">import</span> boto3, zipfile, os, json
+
+<span class="kw">def</span> <span class="fn">deploy_lambda</span>(
+    function_name: str,
+    handler_path: str,
+    role_arn: str,
+    env_vars: <span class="kw">dict</span> = {}
+) -> <span class="kw">dict</span>:
+    <span class="cm">"""Lambdaをパッケージングしてデプロイ or 更新"""</span>
+
+    lambda_client = boto3.<span class="fn">client</span>(<span class="str">'lambda'</span>, region_name=<span class="str">'ap-northeast-1'</span>)
+
+    <span class="cm"># ZIPパッケージ作成</span>
+    zip_path = <span class="str">f"/tmp/{function_name}.zip"</span>
+    <span class="kw">with</span> zipfile.<span class="fn">ZipFile</span>(zip_path, <span class="str">'w'</span>) <span class="kw">as</span> z:
+        z.<span class="fn">write</span>(handler_path, <span class="str">'lambda_function.py'</span>)
+
+    <span class="kw">with</span> <span class="fn">open</span>(zip_path, <span class="str">'rb'</span>) <span class="kw">as</span> f:
+        zip_bytes = f.<span class="fn">read</span>()
+
+    <span class="cm"># 既存チェック → 作成 or 更新</span>
+    <span class="kw">try</span>:
+        lambda_client.<span class="fn">get_function</span>(FunctionName=function_name)
+        <span class="cm"># 既存: コード更新</span>
+        res = lambda_client.<span class="fn">update_function_code</span>(
+            FunctionName=function_name,
+            ZipFile=zip_bytes
+        )
+        action = <span class="str">"updated"</span>
+    <span class="kw">except</span> lambda_client.exceptions.<span class="var">ResourceNotFoundException</span>:
+        <span class="cm"># 新規作成</span>
+        res = lambda_client.<span class="fn">create_function</span>(
+            FunctionName=function_name,
+            Runtime=<span class="str">'python3.12'</span>,
+            Role=role_arn,
+            Handler=<span class="str">'lambda_function.handler'</span>,
+            Code={<span class="str">'ZipFile'</span>: zip_bytes},
+            Timeout=<span class="num">30</span>,
+            Environment={<span class="str">'Variables'</span>: env_vars}
+        )
+        action = <span class="str">"created"</span>
+
+    <span class="kw">print</span>(<span class="fn">f</span><span class="str">"✅ Lambda {action}: {function_name}"</span>)
+    <span class="kw">return</span> {<span class="str">'function'</span>: function_name, <span class="str">'action'</span>: action}
+
+<span class="fn">deploy_lambda</span>(<span class="str">"data-processor"</span>, <span class="str">"./handler.py"</span>, <span class="str">"arn:aws:iam::123456789:role/LambdaRole"</span>)</pre>
+        </div>
+      </div>
+
+      <!-- CloudWatch -->
+      <div class="script-card">
+        <div class="script-header">
+          <div class="script-title">
+            <div class="script-icon aws-orange">🔔</div>
+            CloudWatch アラート一括設定
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="tag tag-red">CloudWatch</span>
+            <button class="copy-btn" onclick="copyCode('cw-code', this)">コピー</button>
+          </div>
+        </div>
+        <div class="script-body">
+<pre class="code-block" id="cw-code"><span class="kw">import</span> boto3
+
+cw = boto3.<span class="fn">client</span>(<span class="str">'cloudwatch'</span>, region_name=<span class="str">'ap-northeast-1'</span>)
+
+<span class="cm"># 設定したいアラートの定義</span>
+ALERTS = [
+    {
+        <span class="str">'name'</span>: <span class="str">'Lambda-ErrorRate-High'</span>,
+        <span class="str">'namespace'</span>: <span class="str">'AWS/Lambda'</span>,
+        <span class="str">'metric'</span>: <span class="str">'Errors'</span>,
+        <span class="str">'threshold'</span>: <span class="num">5</span>,
+        <span class="str">'period'</span>: <span class="num">300</span>,
+        <span class="str">'description'</span>: <span class="str">'Lambda エラー率が5件/5分超'</span>
+    },
+    {
+        <span class="str">'name'</span>: <span class="str">'RDS-CPU-High'</span>,
+        <span class="str">'namespace'</span>: <span class="str">'AWS/RDS'</span>,
+        <span class="str">'metric'</span>: <span class="str">'CPUUtilization'</span>,
+        <span class="str">'threshold'</span>: <span class="num">80</span>,
+        <span class="str">'period'</span>: <span class="num">60</span>,
+        <span class="str">'description'</span>: <span class="str">'RDS CPU 80%超'</span>
+    },
+    {
+        <span class="str">'name'</span>: <span class="str">'S3-4xxErrors-High'</span>,
+        <span class="str">'namespace'</span>: <span class="str">'AWS/S3'</span>,
+        <span class="str">'metric'</span>: <span class="str">'4xxErrors'</span>,
+        <span class="str">'threshold'</span>: <span class="num">100</span>,
+        <span class="str">'period'</span>: <span class="num">300</span>,
+        <span class="str">'description'</span>: <span class="str">'S3 4xxエラー多発'</span>
+    }
+]
+
+<span class="kw">def</span> <span class="fn">setup_alerts</span>(sns_topic_arn: str):
+    <span class="kw">for</span> alert <span class="kw">in</span> ALERTS:
+        cw.<span class="fn">put_metric_alarm</span>(
+            AlarmName=alert[<span class="str">'name'</span>],
+            AlarmDescription=alert[<span class="str">'description'</span>],
+            Namespace=alert[<span class="str">'namespace'</span>],
+            MetricName=alert[<span class="str">'metric'</span>],
+            Threshold=alert[<span class="str">'threshold'</span>],
+            Period=alert[<span class="str">'period'</span>],
+            EvaluationPeriods=<span class="num">1</span>,
+            ComparisonOperator=<span class="str">'GreaterThanThreshold'</span>,
+            Statistic=<span class="str">'Sum'</span>,
+            AlarmActions=[sns_topic_arn],
+            TreatMissingData=<span class="str">'notBreaching'</span>
+        )
+        <span class="kw">print</span>(<span class="fn">f</span><span class="str">"✅ アラート設定: {alert['name']}"</span>)
+
+<span class="fn">setup_alerts</span>(<span class="str">"arn:aws:sns:ap-northeast-1:123456789:alerts"</span>)</pre>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== TAB SWITCH ====================
+function switchTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+
+  if (name === 'ml') initMLCharts();
+}
+
+// ==================== ANALYSIS SIMULATION ====================
+const steps = [
+  { label: 'CSV パース中', time: 600 },
+  { label: '欠損値チェック', time: 800 },
+  { label: '統計量算出', time: 700 },
+  { label: '相関分析', time: 900 },
+  { label: 'Claude が洞察を生成中', time: 1200 }
+];
+
+const insights = [
+  { cls: '', text: '<strong>purchase_amount</strong> は右に歪んだ分布（歪度 2.3）。対数変換が効果的です。' },
+  { cls: 'warn', text: '<strong>customer_age</strong> に 8.4% の欠損。年齢中央値（34歳）での補完を推奨。' },
+  { cls: 'good', text: '<strong>product_category</strong> と <strong>revenue</strong> の相関が高い (r=0.78)。主要な予測変数です。' },
+  { cls: '', text: '週末の購買額は平日より <strong>+23%</strong> 高い。曜日特徴量の追加で精度向上が見込まれます。' },
+  { cls: 'good', text: 'リピーター（purchase_count ≥ 3）は <strong>LTV が 2.4倍</strong>。セグメント分割を推奨。' }
+];
+
+const missingData = [
+  { col: 'customer_age', missing: 105, total: 1247, pct: 8.4, cls: 'red' },
+  { col: 'zip_code', missing: 43, total: 1247, pct: 3.4, cls: '' },
+  { col: 'discount_flag', missing: 17, total: 1247, pct: 1.4, cls: '' },
+  { col: 'referral_source', missing: 9, total: 1247, pct: 0.7, cls: '' },
+  { col: 'shipping_time', missing: 0, total: 1247, pct: 0, cls: 'green' }
+];
+
+// Correlation matrix (5x5)
+const corrHeaders = ['revenue', 'purchase', 'age', 'visits', 'discount'];
+const corrValues = [
+  [1.00, 0.78, 0.31, 0.55, -0.22],
+  [0.78, 1.00, 0.18, 0.62, -0.35],
+  [0.31, 0.18, 1.00, 0.09, 0.04],
+  [0.55, 0.62, 0.09, 1.00, -0.11],
+  [-0.22, -0.35, 0.04, -0.11, 1.00]
+];
+
+function corrColor(v) {
+  if (v >= 0.7) return `rgba(16,185,129,${0.3 + v * 0.5})`;
+  if (v >= 0.3) return `rgba(59,130,246,${0.15 + v * 0.4})`;
+  if (v >= 0) return `rgba(55,65,81,0.6)`;
+  if (v >= -0.3) return `rgba(245,158,11,${0.1 + Math.abs(v) * 0.4})`;
+  return `rgba(239,68,68,${0.2 + Math.abs(v) * 0.5})`;
+}
+
+function startAnalysis() {
+  const result = document.getElementById('analysis-result');
+  const rightPanel = document.getElementById('right-panel');
+  const statusEl = document.getElementById('analysis-status');
+
+  result.style.display = 'block';
+  statusEl.textContent = '分析中...';
+  statusEl.className = 'tag tag-yellow';
+
+  // Reset
+  document.getElementById('insight-list').innerHTML = '';
+  document.getElementById('s-rows').textContent = '—';
+  document.getElementById('s-cols').textContent = '—';
+  document.getElementById('s-miss').textContent = '—';
+  rightPanel.style.display = 'none';
+
+  let delay = 0;
+  steps.forEach((step, i) => {
+    delay += step.time;
+    setTimeout(() => {
+      if (i === steps.length - 1) {
+        // All done
+        statusEl.textContent = '分析完了';
+        statusEl.className = 'tag tag-green';
+
+        // Stats
+        document.getElementById('s-rows').textContent = '1,247';
+        document.getElementById('s-cols').textContent = '18';
+        document.getElementById('s-miss').textContent = '8.4%';
+
+        // Insights
+        const list = document.getElementById('insight-list');
+        insights.forEach((ins, j) => {
+          setTimeout(() => {
+            const el = document.createElement('div');
+            el.className = 'insight-item ' + ins.cls;
+            el.innerHTML = ins.text;
+            el.style.opacity = 0;
+            el.style.transform = 'translateY(8px)';
+            list.appendChild(el);
+            requestAnimationFrame(() => {
+              el.style.transition = 'all .4s';
+              el.style.opacity = 1;
+              el.style.transform = 'translateY(0)';
+            });
+          }, j * 200);
+        });
+
+        // Right panel
+        rightPanel.style.display = 'block';
+
+        // Missing table
+        const tbody = document.getElementById('missing-table');
+        tbody.innerHTML = '';
+        missingData.forEach(row => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><code style="color:var(--green);font-size:12px;">${row.col}</code></td>
+            <td style="color:${row.missing > 0 ? 'var(--yellow)' : 'var(--green)'};">${row.missing}</td>
+            <td style="min-width:80px;">
+              <div>${row.pct}%</div>
+              <div class="pct-bar"><div class="pct-fill ${row.cls}" style="width:0%" data-w="${row.pct * 5}%"></div></div>
+            </td>`;
+          tbody.appendChild(tr);
+        });
+        setTimeout(() => {
+          document.querySelectorAll('.pct-fill[data-w]').forEach(el => {
+            el.style.width = el.dataset.w;
+          });
+        }, 100);
+
+        // Corr matrix
+        const corrGrid = document.getElementById('corr-grid');
+        corrGrid.innerHTML = '';
+        // Header row
+        corrGrid.style.gridTemplateColumns = `auto repeat(${corrHeaders.length}, 1fr)`;
+        corrGrid.innerHTML += `<div></div>` + corrHeaders.map(h => `<div class="conf-label" style="font-size:10px;">${h}</div>`).join('');
+        corrValues.forEach((row, ri) => {
+          corrGrid.innerHTML += `<div class="conf-label" style="font-size:10px;text-align:right;">${corrHeaders[ri]}</div>`;
+          row.forEach((v, ci) => {
+            const bg = corrColor(v);
+            const textColor = Math.abs(v) > 0.5 ? '#fff' : 'var(--text2)';
+            corrGrid.innerHTML += `<div class="corr-cell" style="background:${bg};color:${textColor};">${v.toFixed(2)}</div>`;
+          });
+        });
+      }
+    }, delay);
+  });
+}
+
+// ==================== ML CHARTS ====================
+const features = [
+  { name: 'purchase_amount', val: 0.312, color: '#3b82f6' },
+  { name: 'days_since_visit', val: 0.248, color: '#8b5cf6' },
+  { name: 'product_category', val: 0.187, color: '#10b981' },
+  { name: 'customer_age', val: 0.124, color: '#f59e0b' },
+  { name: 'is_weekend', val: 0.089, color: '#ef4444' },
+  { name: 'zip_region', val: 0.040, color: '#6b7280' }
+];
+
+let mlInited = false;
+function initMLCharts() {
+  if (mlInited) return;
+  mlInited = true;
+
+  const container = document.getElementById('feature-bars');
+  features.forEach(f => {
+    const pct = (f.val * 100).toFixed(1);
+    const div = document.createElement('div');
+    div.className = 'bar-row';
+    div.innerHTML = `
+      <div class="bar-label">${f.name}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:0%;background:${f.color};" data-w="${f.val / 0.312 * 100}%">
+          ${pct}%
+        </div>
+      </div>
+      <div class="bar-value" style="color:${f.color};">${f.val.toFixed(3)}</div>`;
+    container.appendChild(div);
+  });
+
+  setTimeout(() => {
+    document.querySelectorAll('.bar-fill[data-w]').forEach(el => {
+      el.style.transition = 'width 1s ease';
+      el.style.width = el.dataset.w;
+    });
+  }, 100);
+}
+
+// ==================== COPY CODE ====================
+function copyCode(id, btn) {
+  const pre = document.getElementById(id);
+  const text = pre.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ コピー済';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'コピー';
+      btn.classList.remove('copied');
+    }, 2000);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.textContent = '✓ コピー済';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'コピー'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
+</body>
+</html>

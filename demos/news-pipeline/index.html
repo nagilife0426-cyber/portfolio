@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>コンテンツ自動化パイプライン | デモ</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0e1a; --bg2: #111827; --bg3: #1f2937; --bg4: #374151;
+      --border2: #374151; --green: #10b981; --yellow: #f59e0b; --blue: #3b82f6;
+      --red: #ef4444; --purple: #8b5cf6; --text: #f9fafb; --text2: #9ca3af; --text3: #6b7280;
+      --orange: #f97316; --cyan: #06b6d4;
+      --r: 10px;
+    }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; min-height: 100vh; }
+
+    /* NAV */
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 28px; background: var(--bg2);
+      border-bottom: 1px solid var(--border2); position: sticky; top: 0; z-index: 100;
+    }
+    .nav-left { display: flex; align-items: center; gap: 16px; }
+    .nav-back { color: var(--text2); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px; transition: color .2s; }
+    .nav-back:hover { color: var(--text); }
+    .nav-logo { font-size: 16px; font-weight: 700; color: var(--orange); }
+    .nav-right { display: flex; align-items: center; gap: 8px; }
+    .badge-proto { background: var(--purple); color: #fff; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+    .badge-demo { background: var(--orange); color: #fff; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+
+    /* HERO */
+    .hero {
+      background: linear-gradient(135deg, #1a1000 0%, #0f1520 60%, #100a1a 100%);
+      border-bottom: 1px solid var(--border2);
+      padding: 28px 28px 24px;
+    }
+    .hero-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+    .hero-left { display: flex; align-items: center; gap: 16px; }
+    .hero-icon { font-size: 40px; }
+    .hero h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .hero p { color: var(--text2); font-size: 13px; }
+    .run-btn {
+      background: linear-gradient(135deg, var(--orange), #dc2626);
+      color: #fff; border: none; padding: 12px 24px; border-radius: var(--r);
+      font-size: 14px; font-weight: 700; cursor: pointer; transition: all .2s;
+      white-space: nowrap; flex-shrink: 0; display: flex; align-items: center; gap: 8px;
+    }
+    .run-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(249,115,22,.4); }
+    .run-btn:active { transform: translateY(0); }
+    .run-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+    /* MAIN LAYOUT */
+    .main-layout { max-width: 1200px; margin: 24px auto; padding: 0 28px; display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
+
+    /* STATS CARDS */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+    .stat-card { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r); padding: 16px; text-align: center; }
+    .stat-icon { font-size: 20px; margin-bottom: 6px; }
+    .stat-v { font-size: 28px; font-weight: 700; }
+    .stat-l { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+    /* PIPELINE FLOW */
+    .pipeline-wrap { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r); overflow: hidden; margin-bottom: 20px; }
+    .pipeline-header { padding: 14px 18px; border-bottom: 1px solid var(--border2); display: flex; align-items: center; justify-content: space-between; }
+    .pipeline-title { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .pipeline-body { padding: 24px 18px; }
+
+    .flow { display: flex; align-items: center; gap: 0; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 8px; }
+
+    .flow-step {
+      display: flex; flex-direction: column; align-items: center; cursor: pointer;
+      flex-shrink: 0;
+    }
+    .step-box {
+      width: 130px; background: var(--bg3); border: 2px solid var(--border2);
+      border-radius: var(--r); padding: 16px 12px; text-align: center;
+      transition: all .25s; position: relative;
+    }
+    .flow-step:hover .step-box { border-color: var(--orange); background: rgba(249,115,22,.06); }
+    .step-box.active { border-color: var(--orange); background: rgba(249,115,22,.1); }
+    .step-box.running { border-color: var(--yellow); background: rgba(245,158,11,.08); animation: borderPulse 1s infinite; }
+    .step-box.done { border-color: var(--green); background: rgba(16,185,129,.08); }
+    @keyframes borderPulse { 0%,100%{opacity:1;} 50%{opacity:.6;} }
+
+    .step-emoji { font-size: 28px; margin-bottom: 8px; }
+    .step-name { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+    .step-sub { font-size: 11px; color: var(--text2); }
+    .step-status {
+      position: absolute; top: -8px; right: -8px;
+      width: 20px; height: 20px; border-radius: 50%;
+      font-size: 11px; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; display: none;
+    }
+    .step-status.show { display: flex; }
+    .status-run { background: var(--yellow); color: #000; }
+    .status-done { background: var(--green); color: #fff; }
+
+    .flow-arrow { display: flex; align-items: center; padding: 0 6px; flex-shrink: 0; }
+    .arrow-line { width: 36px; height: 2px; background: var(--border2); position: relative; }
+    .arrow-line::after { content:''; position:absolute; right:-6px; top:-4px; border:5px solid transparent; border-left-color:var(--border2); }
+    .arrow-line.lit { background: var(--orange); }
+    .arrow-line.lit::after { border-left-color: var(--orange); }
+
+    /* DETAIL PANEL */
+    .detail-panel {
+      background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--r);
+      padding: 16px; margin-top: 16px; display: none;
+    }
+    .detail-panel.show { display: block; }
+    .detail-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .detail-desc { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 12px; }
+    .detail-config { background: var(--bg2); border-radius: 8px; padding: 12px; font-size: 12px; font-family: 'SF Mono', monospace; color: #a5d6ff; overflow-x: auto; }
+
+    /* POSTS LIST */
+    .posts-wrap { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r); overflow: hidden; }
+    .posts-header { padding: 14px 18px; border-bottom: 1px solid var(--border2); display: flex; align-items: center; justify-content: space-between; }
+    .post-item { padding: 14px 18px; border-bottom: 1px solid rgba(55,65,81,.5); display: flex; gap: 12px; }
+    .post-item:last-child { border-bottom: none; }
+    .post-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; background: var(--bg3); }
+    .post-content { flex: 1; }
+    .post-header-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .post-name { font-size: 13px; font-weight: 700; }
+    .post-handle { font-size: 12px; color: var(--text3); }
+    .post-time { font-size: 11px; color: var(--text3); margin-left: auto; }
+    .post-text { font-size: 13px; line-height: 1.5; color: var(--text2); }
+    .post-stats { display: flex; gap: 14px; margin-top: 8px; font-size: 12px; color: var(--text3); }
+    .post-tag { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 10px; margin-top: 6px; }
+
+    /* RIGHT PANEL: SETTINGS */
+    .settings-wrap { display: flex; flex-direction: column; gap: 16px; }
+    .settings-card { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r); overflow: hidden; }
+    .settings-card-header { padding: 12px 16px; border-bottom: 1px solid var(--border2); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .settings-card-body { padding: 14px 16px; }
+
+    .form-group { margin-bottom: 12px; }
+    .form-group:last-child { margin-bottom: 0; }
+    .form-label { font-size: 11px; color: var(--text2); font-weight: 600; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .05em; }
+    .form-input {
+      width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px;
+      padding: 8px 10px; font-size: 12px; color: var(--text); font-family: 'SF Mono', monospace;
+      outline: none; transition: border-color .2s;
+    }
+    .form-input:focus { border-color: var(--orange); }
+    .form-select {
+      width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px;
+      padding: 8px 10px; font-size: 12px; color: var(--text); outline: none;
+      appearance: none; cursor: pointer;
+    }
+    .form-select:focus { border-color: var(--orange); }
+
+    .save-btn {
+      width: 100%; background: var(--orange); color: #fff; border: none;
+      padding: 9px; border-radius: 6px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: opacity .2s; margin-top: 4px;
+    }
+    .save-btn:hover { opacity: .85; }
+
+    /* RSS LIST */
+    .rss-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(55,65,81,.4); font-size: 12px; }
+    .rss-item:last-child { border-bottom: none; }
+    .rss-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .rss-url { color: var(--text2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rss-status { font-size: 11px; font-weight: 700; }
+
+    /* TAG */
+    .tag { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 12px; }
+    .tag-orange { background: rgba(249,115,22,.15); color: var(--orange); }
+    .tag-green { background: rgba(16,185,129,.15); color: var(--green); }
+    .tag-blue { background: rgba(59,130,246,.15); color: var(--blue); }
+    .tag-purple { background: rgba(139,92,246,.15); color: var(--purple); }
+    .tag-yellow { background: rgba(245,158,11,.15); color: var(--yellow); }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; background: var(--bg3);
+      border: 1px solid var(--border2); border-radius: var(--r);
+      padding: 12px 18px; font-size: 13px; z-index: 1000;
+      transform: translateY(100px); opacity: 0; transition: all .3s;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .main-layout { grid-template-columns: 1fr; padding: 0 16px; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .hero { padding: 20px 16px; }
+      nav { padding: 12px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-left">
+    <a href="../../" class="nav-back">← ポートフォリオへ戻る</a>
+    <div class="nav-logo">⚡ Pipeline</div>
+  </div>
+  <div class="nav-right">
+    <span class="badge-proto">プロトタイプ</span>
+    <span class="badge-demo">DEMO</span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-icon">🔄</div>
+      <div>
+        <h1>コンテンツ自動化パイプライン</h1>
+        <p>RSS収集 → Claude AI要約 → Notion保存 → X自動投稿 を全自動化</p>
+      </div>
+    </div>
+    <button class="run-btn" id="run-btn" onclick="runPipeline()">
+      ▶ パイプライン実行
+    </button>
+  </div>
+</div>
+
+<div class="main-layout">
+  <div class="left-col">
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon">📰</div>
+        <div class="stat-v" style="color:var(--blue);" id="s-collected">24</div>
+        <div class="stat-l">収集記事数</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🤖</div>
+        <div class="stat-v" style="color:var(--purple);" id="s-summarized">24</div>
+        <div class="stat-l">要約済み</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📝</div>
+        <div class="stat-v" style="color:var(--green);" id="s-notion">18</div>
+        <div class="stat-l">Notion保存</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">𝕏</div>
+        <div class="stat-v" style="color:var(--orange);" id="s-posted">6</div>
+        <div class="stat-l">X投稿</div>
+      </div>
+    </div>
+
+    <!-- PIPELINE FLOW -->
+    <div class="pipeline-wrap">
+      <div class="pipeline-header">
+        <span class="pipeline-title">⚡ パイプラインフロー</span>
+        <span class="tag tag-green" id="pipe-status">待機中</span>
+      </div>
+      <div class="pipeline-body">
+        <div class="flow">
+          <!-- Step 1: RSS -->
+          <div class="flow-step" onclick="showDetail('rss')">
+            <div class="step-box" id="box-rss">
+              <div class="step-status" id="st-rss"></div>
+              <div class="step-emoji">📡</div>
+              <div class="step-name">RSS収集</div>
+              <div class="step-sub">5つのフィード</div>
+            </div>
+          </div>
+          <div class="flow-arrow"><div class="arrow-line" id="arr-1"></div></div>
+
+          <!-- Step 2: Claude -->
+          <div class="flow-step" onclick="showDetail('claude')">
+            <div class="step-box" id="box-claude">
+              <div class="step-status" id="st-claude"></div>
+              <div class="step-emoji">🤖</div>
+              <div class="step-name">Claude要約</div>
+              <div class="step-sub">AI 自動生成</div>
+            </div>
+          </div>
+          <div class="flow-arrow"><div class="arrow-line" id="arr-2"></div></div>
+
+          <!-- Step 3: Notion -->
+          <div class="flow-step" onclick="showDetail('notion')">
+            <div class="step-box" id="box-notion">
+              <div class="step-status" id="st-notion"></div>
+              <div class="step-emoji">📝</div>
+              <div class="step-name">Notion保存</div>
+              <div class="step-sub">DB 自動追加</div>
+            </div>
+          </div>
+          <div class="flow-arrow"><div class="arrow-line" id="arr-3"></div></div>
+
+          <!-- Step 4: X Post -->
+          <div class="flow-step" onclick="showDetail('xpost')">
+            <div class="step-box" id="box-xpost">
+              <div class="step-status" id="st-xpost"></div>
+              <div class="step-emoji">𝕏</div>
+              <div class="step-name">X自動投稿</div>
+              <div class="step-sub">スコア順に選出</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detail Panel -->
+        <div class="detail-panel" id="detail-panel">
+          <div class="detail-title" id="detail-title"></div>
+          <div class="detail-desc" id="detail-desc"></div>
+          <div class="detail-config" id="detail-config"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECENT POSTS -->
+    <div class="posts-wrap">
+      <div class="posts-header">
+        <span class="pipeline-title">𝕏 最近の自動投稿</span>
+        <span class="tag tag-orange">今日 6件</span>
+      </div>
+      <div id="posts-list">
+        <div class="post-item">
+          <div class="post-avatar">🤖</div>
+          <div class="post-content">
+            <div class="post-header-row">
+              <span class="post-name">さーもんP</span>
+              <span class="post-handle">@salmon_p_auto</span>
+              <span class="post-time">14:32</span>
+            </div>
+            <div class="post-text">【AI業界最新情報】OpenAIが新モデルを発表。コーディング能力が従来比3倍向上。プログラマーへの影響は？要点をまとめました。 #AI #生成AI #ChatGPT</div>
+            <div class="post-stats">
+              <span>♡ 12</span><span>🔁 4</span><span>👁 341</span>
+            </div>
+            <span class="post-tag tag-green">✓ 投稿済み</span>
+          </div>
+        </div>
+        <div class="post-item">
+          <div class="post-avatar">🤖</div>
+          <div class="post-content">
+            <div class="post-header-row">
+              <span class="post-name">さーもんP</span>
+              <span class="post-handle">@salmon_p_auto</span>
+              <span class="post-time">11:15</span>
+            </div>
+            <div class="post-text">【マーケティングTips】SNSのエンゲージメント率を2倍にした施策を公開。ポイントは「投稿時間」と「ハッシュタグ選定」でした。詳細はNotionにまとめています。 #マーケティング #SNS運用</div>
+            <div class="post-stats">
+              <span>♡ 28</span><span>🔁 11</span><span>👁 892</span>
+            </div>
+            <span class="post-tag tag-green">✓ 投稿済み</span>
+          </div>
+        </div>
+        <div class="post-item">
+          <div class="post-avatar">🤖</div>
+          <div class="post-content">
+            <div class="post-header-row">
+              <span class="post-name">さーもんP</span>
+              <span class="post-handle">@salmon_p_auto</span>
+              <span class="post-time">09:00</span>
+            </div>
+            <div class="post-text">おはようございます！本日の注目ニュース: Google が新しいSEOアルゴリズムをリリース。E-E-A-T評価がさらに重要に。コンテンツ戦略の見直しが必要かも。 #SEO #コンテンツマーケティング</div>
+            <div class="post-stats">
+              <span>♡ 7</span><span>🔁 2</span><span>👁 204</span>
+            </div>
+            <span class="post-tag tag-green">✓ 投稿済み</span>
+          </div>
+        </div>
+        <div class="post-item" id="new-post" style="display:none;">
+          <div class="post-avatar">🤖</div>
+          <div class="post-content">
+            <div class="post-header-row">
+              <span class="post-name">さーもんP</span>
+              <span class="post-handle">@salmon_p_auto</span>
+              <span class="post-time" id="new-post-time"></span>
+            </div>
+            <div class="post-text">【速報】Anthropicが最新モデル"Claude 3.7"を発表。エージェント機能が大幅強化。コード生成・データ分析・マルチモーダル全てで従来モデルを凌駕。 #Claude #AI #LLM</div>
+            <div class="post-stats">
+              <span>♡ 0</span><span>🔁 0</span><span>👁 0</span>
+            </div>
+            <span class="post-tag tag-yellow">⏳ 投稿中...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: SETTINGS -->
+  <div class="settings-wrap">
+    <!-- RSS Feeds -->
+    <div class="settings-card">
+      <div class="settings-card-header">📡 RSS フィード設定</div>
+      <div class="settings-card-body">
+        <div class="rss-item">
+          <div class="rss-dot" style="background:var(--green);"></div>
+          <div class="rss-url">techcrunch.com/feed/</div>
+          <div class="rss-status" style="color:var(--green);">ON</div>
+        </div>
+        <div class="rss-item">
+          <div class="rss-dot" style="background:var(--green);"></div>
+          <div class="rss-url">itmedia.co.jp/rss/2.0/</div>
+          <div class="rss-status" style="color:var(--green);">ON</div>
+        </div>
+        <div class="rss-item">
+          <div class="rss-dot" style="background:var(--green);"></div>
+          <div class="rss-url">gigazine.net/index.rdf</div>
+          <div class="rss-status" style="color:var(--green);">ON</div>
+        </div>
+        <div class="rss-item">
+          <div class="rss-dot" style="background:var(--yellow);"></div>
+          <div class="rss-url">wired.com/feed/rss</div>
+          <div class="rss-status" style="color:var(--yellow);">PAUSE</div>
+        </div>
+        <div class="rss-item">
+          <div class="rss-dot" style="background:var(--green);"></div>
+          <div class="rss-url">ainow.ai/feed/</div>
+          <div class="rss-status" style="color:var(--green);">ON</div>
+        </div>
+        <div class="form-group" style="margin-top:12px;">
+          <div class="form-label">新しいフィードを追加</div>
+          <input class="form-input" type="text" placeholder="https://example.com/feed.rss">
+        </div>
+        <button class="save-btn" onclick="showToast('フィードを追加しました')">+ 追加</button>
+      </div>
+    </div>
+
+    <!-- Post Settings -->
+    <div class="settings-card">
+      <div class="settings-card-header">⚙️ 投稿設定</div>
+      <div class="settings-card-body">
+        <div class="form-group">
+          <div class="form-label">投稿頻度</div>
+          <select class="form-select">
+            <option>1日3回（09:00 / 12:00 / 18:00）</option>
+            <option>1日2回（09:00 / 18:00）</option>
+            <option>1日1回（09:00）</option>
+            <option>カスタム</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <div class="form-label">最大投稿数 / 日</div>
+          <input class="form-input" type="number" value="6" min="1" max="20">
+        </div>
+        <div class="form-group">
+          <div class="form-label">投稿スコア閾値（0.0〜1.0）</div>
+          <input class="form-input" type="number" value="0.70" min="0" max="1" step="0.05">
+        </div>
+        <div class="form-group">
+          <div class="form-label">ハッシュタグ（カンマ区切り）</div>
+          <input class="form-input" type="text" value="#AI, #マーケティング, #SNS運用">
+        </div>
+        <button class="save-btn" onclick="showToast('設定を保存しました ✓')">保存</button>
+      </div>
+    </div>
+
+    <!-- Notion Settings -->
+    <div class="settings-card">
+      <div class="settings-card-header">📝 Notion 連携</div>
+      <div class="settings-card-body">
+        <div class="form-group">
+          <div class="form-label">データベース ID</div>
+          <input class="form-input" type="text" value="a1b2c3d4e5f6...">
+        </div>
+        <div class="form-group">
+          <div class="form-label">API トークン</div>
+          <input class="form-input" type="password" value="secret_xxxxxxxxxxxxxx">
+        </div>
+        <div class="form-group">
+          <div class="form-label">保存フィールド</div>
+          <select class="form-select">
+            <option>タイトル + 要約 + URL + タグ</option>
+            <option>タイトル + URL のみ</option>
+            <option>フル記事テキスト</option>
+          </select>
+        </div>
+        <button class="save-btn" onclick="showToast('Notion 連携テスト: 接続成功 ✓')">接続テスト</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== DETAIL PANEL DATA ====================
+const details = {
+  rss: {
+    emoji: '📡',
+    title: 'RSS収集モジュール',
+    desc: 'feedparser ライブラリで5つのRSSフィードを定期巡回。新着記事を検出し、重複排除（URL / タイトル類似度）を行ってから次ステップへ渡します。cron で15分ごとに実行。',
+    config: `# rss_collector.py\nfeeds = [\n    "https://techcrunch.com/feed/",\n    "https://itmedia.co.jp/rss/2.0/ai/",\n    "https://gigazine.net/index.rdf",\n    "https://ainow.ai/feed/"\n]\nschedule = "*/15 * * * *"   # 15分ごと\nduplicate_threshold = 0.85  # タイトル類似度`
+  },
+  claude: {
+    emoji: '🤖',
+    title: 'Claude 要約エンジン',
+    desc: 'Anthropic Claude API を使って記事を3〜5行に要約し、業務関連スコア（0.0〜1.0）を付与します。スコアが閾値（0.70）を超えた記事のみ後続ステップへ進みます。',
+    config: `# claude_summarizer.py\nmodel = "claude-opus-4-5"\nprompt = """\n記事をビジネス視点で3行以内に要約し、\n業務関連スコアを0.0〜1.0で評価せよ。\nJSON形式で返すこと。\n"""\nmax_tokens = 512\nthreshold_score = 0.70`
+  },
+  notion: {
+    emoji: '📝',
+    title: 'Notion 自動保存',
+    desc: 'Notion API を使って指定データベースに記事を自動追加。タイトル・要約・元URL・Claude スコア・タグを構造化して保存します。重複ページは作成しません。',
+    config: `# notion_writer.py\ndatabase_id = "a1b2c3d4e5f6..."\nfields = {\n    "タイトル": "title",\n    "要約": "rich_text",\n    "URL": "url",\n    "スコア": "number",\n    "公開日": "date",\n    "タグ": "multi_select"\n}`
+  },
+  xpost: {
+    emoji: '𝕏',
+    title: 'X 自動投稿モジュール',
+    desc: 'Twitter API v2 を使ってスコア上位の記事をX（Twitter）に自動投稿。1日の上限枚数・投稿時間・ハッシュタグを設定画面から管理できます。投稿後はエンゲージメントを記録。',
+    config: `# x_poster.py\napi_version = "v2"\nmax_posts_per_day = 6\nposting_times = ["09:00", "12:00", "18:00"]\nhashtags = ["#AI", "#マーケティング", "#SNS運用"]\nchar_limit = 280`
+  }
+};
+
+let activeDetail = null;
+
+function showDetail(key) {
+  const d = details[key];
+  const panel = document.getElementById('detail-panel');
+
+  // Toggle
+  if (activeDetail === key && panel.classList.contains('show')) {
+    panel.classList.remove('show');
+    activeDetail = null;
+    document.querySelectorAll('.step-box').forEach(b => b.classList.remove('active'));
+    return;
+  }
+
+  activeDetail = key;
+  document.querySelectorAll('.step-box').forEach(b => b.classList.remove('active'));
+  document.getElementById('box-' + key).classList.add('active');
+
+  document.getElementById('detail-title').textContent = d.emoji + '  ' + d.title;
+  document.getElementById('detail-desc').textContent = d.desc;
+  document.getElementById('detail-config').textContent = d.config;
+  panel.classList.add('show');
+}
+
+// ==================== PIPELINE ANIMATION ====================
+const pipelineSteps = [
+  { key: 'rss', label: 'RSS収集中...', duration: 1800 },
+  { key: 'claude', label: 'Claude 要約中...', duration: 2400 },
+  { key: 'notion', label: 'Notion 保存中...', duration: 1600 },
+  { key: 'xpost', label: 'X 投稿中...', duration: 1400 }
+];
+
+let isRunning = false;
+
+function runPipeline() {
+  if (isRunning) return;
+  isRunning = true;
+
+  const btn = document.getElementById('run-btn');
+  const statusEl = document.getElementById('pipe-status');
+  btn.disabled = true;
+  btn.textContent = '⏳ 実行中...';
+  statusEl.textContent = '実行中';
+  statusEl.className = 'tag tag-yellow';
+
+  // Reset all steps
+  pipelineSteps.forEach(s => {
+    const box = document.getElementById('box-' + s.key);
+    const st = document.getElementById('st-' + s.key);
+    box.className = 'step-box';
+    st.className = 'step-status';
+    st.textContent = '';
+  });
+  for (let i = 1; i <= 3; i++) {
+    document.getElementById('arr-' + i).classList.remove('lit');
+  }
+
+  // Hide new post
+  document.getElementById('new-post').style.display = 'none';
+
+  // Stats reset then count up
+  animateNumber('s-collected', 0, 24, 800);
+  animateNumber('s-summarized', 0, 0, 0);
+  animateNumber('s-notion', 0, 0, 0);
+  animateNumber('s-posted', 0, 0, 0);
+
+  let delay = 0;
+  pipelineSteps.forEach((step, i) => {
+    // Start step
+    setTimeout(() => {
+      const box = document.getElementById('box-' + step.key);
+      const st = document.getElementById('st-' + step.key);
+      box.classList.add('running');
+      st.className = 'step-status status-run show';
+      st.textContent = '●';
+      statusEl.textContent = step.label;
+
+      // Specific actions per step
+      if (step.key === 'claude') {
+        animateNumber('s-summarized', 0, 24, step.duration - 200);
+      }
+      if (step.key === 'notion') {
+        animateNumber('s-notion', 0, 18, step.duration - 200);
+      }
+      if (step.key === 'xpost') {
+        animateNumber('s-posted', 0, 7, step.duration - 200);
+        setTimeout(() => {
+          const now = new Date();
+          document.getElementById('new-post-time').textContent =
+            now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+          document.getElementById('new-post').style.display = 'flex';
+        }, step.duration - 600);
+      }
+    }, delay);
+
+    delay += step.duration;
+
+    // Complete step
+    setTimeout(() => {
+      const box = document.getElementById('box-' + step.key);
+      const st = document.getElementById('st-' + step.key);
+      box.classList.remove('running');
+      box.classList.add('done');
+      st.className = 'step-status status-done show';
+      st.textContent = '✓';
+
+      // Light up arrow
+      if (i < 3) {
+        document.getElementById('arr-' + (i + 1)).classList.add('lit');
+      }
+
+      // Final
+      if (i === pipelineSteps.length - 1) {
+        statusEl.textContent = '完了 ✓';
+        statusEl.className = 'tag tag-green';
+        btn.disabled = false;
+        btn.textContent = '▶ パイプライン実行';
+        isRunning = false;
+
+        // Update new post badge
+        const newPostTag = document.querySelector('#new-post .post-tag');
+        if (newPostTag) {
+          newPostTag.textContent = '✓ 投稿済み';
+          newPostTag.className = 'post-tag tag-green';
+        }
+
+        showToast('パイプライン完了: 7件投稿しました ✓');
+      }
+    }, delay);
+  });
+}
+
+// ==================== COUNT UP ANIMATION ====================
+function animateNumber(elId, from, to, duration) {
+  const el = document.getElementById(elId);
+  if (!el || duration === 0) {
+    if (el) el.textContent = to;
+    return;
+  }
+  const start = Date.now();
+  const timer = setInterval(() => {
+    const elapsed = Date.now() - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+    el.textContent = Math.round(from + (to - from) * eased);
+    if (progress >= 1) clearInterval(timer);
+  }, 16);
+}
+
+// ==================== TOAST ====================
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>

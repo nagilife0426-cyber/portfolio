@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI制作フロー管理システム | Demo</title>
+<style>
+:root {
+  --bg: #0a0e1a; --bg2: #111827; --bg3: #1f2937; --bg4: #374151;
+  --border: #1f2937; --border2: #374151;
+  --green: #10b981; --yellow: #f59e0b; --blue: #3b82f6;
+  --red: #ef4444; --purple: #8b5cf6; --text: #f9fafb; --text2: #9ca3af; --text3: #6b7280;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+
+/* NAV */
+nav {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border2);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.nav-left { display: flex; align-items: center; gap: 12px; }
+.nav-logo {
+  font-size: 16px; font-weight: 700; color: var(--text);
+  display: flex; align-items: center; gap: 8px;
+}
+.nav-logo .icon {
+  width: 32px; height: 32px; background: linear-gradient(135deg, var(--purple), var(--blue));
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.nav-right { display: flex; align-items: center; gap: 8px; }
+.badge {
+  padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; letter-spacing: .5px;
+}
+.badge-demo { background: rgba(59,130,246,.2); color: var(--blue); border: 1px solid rgba(59,130,246,.3); }
+.badge-proto { background: rgba(139,92,246,.2); color: var(--purple); border: 1px solid rgba(139,92,246,.3); }
+.back-link { color: var(--text2); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 4px; }
+.back-link:hover { color: var(--text); }
+
+/* KPI */
+.kpi-row {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 16px; padding: 20px 24px 0;
+}
+.kpi-card {
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: 12px;
+  padding: 16px 20px;
+}
+.kpi-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+.kpi-value { font-size: 28px; font-weight: 700; line-height: 1; }
+.kpi-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+.kpi-green { color: var(--green); }
+.kpi-blue { color: var(--blue); }
+.kpi-purple { color: var(--purple); }
+.kpi-yellow { color: var(--yellow); }
+
+/* TABS */
+.tabs-wrapper { padding: 20px 24px 0; }
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border2); }
+.tab {
+  padding: 10px 20px; font-size: 14px; cursor: pointer;
+  color: var(--text2); border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: all .2s; background: none; border-top: none; border-left: none; border-right: none;
+  font-family: inherit;
+}
+.tab.active { color: var(--purple); border-bottom-color: var(--purple); }
+.tab:hover:not(.active) { color: var(--text); }
+
+/* PANELS */
+.panel { display: none; padding: 24px; }
+.panel.active { display: block; }
+
+/* 制作依頼フォーム */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 720px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group.full { grid-column: 1 / -1; }
+label { font-size: 13px; color: var(--text2); }
+select, input[type="text"], textarea {
+  background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px;
+  color: var(--text); padding: 10px 12px; font-size: 14px; font-family: inherit;
+  outline: none; transition: border .2s;
+}
+select:focus, input:focus, textarea:focus { border-color: var(--purple); }
+textarea { resize: vertical; min-height: 80px; }
+.type-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+.type-pill {
+  padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border2);
+  background: var(--bg3); color: var(--text2); cursor: pointer; font-size: 13px;
+  transition: all .2s;
+}
+.type-pill.selected {
+  background: rgba(139,92,246,.2); border-color: var(--purple); color: var(--purple);
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--purple), var(--blue));
+  color: #fff; border: none; border-radius: 8px; padding: 12px 28px;
+  font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit;
+  transition: opacity .2s; display: flex; align-items: center; gap: 8px;
+}
+.btn-primary:hover { opacity: .9; }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Progress */
+.progress-box {
+  max-width: 720px; margin-top: 24px;
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: 12px;
+  padding: 24px; display: none;
+}
+.progress-box.show { display: block; }
+.progress-title { font-size: 14px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.progress-steps { display: flex; flex-direction: column; gap: 12px; }
+.progress-step { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--text2); }
+.step-icon {
+  width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--border2);
+  display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0;
+}
+.step-icon.done { background: var(--green); border-color: var(--green); color: #fff; }
+.step-icon.active { border-color: var(--purple); }
+.step-icon.spin { animation: spin 1s linear infinite; border-top-color: var(--purple); }
+@keyframes spin { to { transform: rotate(360deg); } }
+.progress-bar-wrap {
+  height: 6px; background: var(--bg3); border-radius: 3px; margin: 12px 0;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%; background: linear-gradient(90deg, var(--purple), var(--blue));
+  border-radius: 3px; transition: width .5s ease; width: 0%;
+}
+
+/* Result Preview */
+.result-box {
+  max-width: 720px; margin-top: 20px;
+  display: none; gap: 16px;
+}
+.result-box.show { display: grid; grid-template-columns: 1fr 1fr; }
+.result-card {
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: 12px; overflow: hidden;
+}
+.result-card-header {
+  padding: 12px 16px; border-bottom: 1px solid var(--border2);
+  font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px;
+}
+.result-card-body { padding: 16px; }
+
+/* LP wireframe */
+.wireframe { display: flex; flex-direction: column; gap: 8px; }
+.wf-hero {
+  background: linear-gradient(135deg, rgba(139,92,246,.3), rgba(59,130,246,.3));
+  border-radius: 6px; padding: 20px 16px; text-align: center;
+}
+.wf-hero-title {
+  background: var(--bg4); border-radius: 4px; height: 12px; margin: 0 auto 8px;
+  width: 70%;
+}
+.wf-hero-sub { background: var(--bg4); border-radius: 4px; height: 8px; width: 50%; margin: 0 auto 12px; }
+.wf-btn { background: var(--purple); border-radius: 4px; height: 28px; width: 100px; margin: 0 auto; }
+.wf-section { display: flex; gap: 8px; }
+.wf-card { background: var(--bg3); border-radius: 4px; flex: 1; height: 48px; }
+.wf-text { background: var(--bg4); border-radius: 4px; height: 6px; width: 80%; margin: 4px 0; }
+
+/* Banner mock */
+.banner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.banner-item {
+  border-radius: 6px; padding: 12px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  aspect-ratio: 4/3;
+}
+.banner-item:nth-child(1) { background: linear-gradient(135deg, #1e3a5f, #2d6a9f); }
+.banner-item:nth-child(2) { background: linear-gradient(135deg, #3d1a6e, #7c3aed); }
+.banner-item:nth-child(3) { background: linear-gradient(135deg, #1a3d2e, #10b981); }
+.banner-item:nth-child(4) { background: linear-gradient(135deg, #3d2a1a, #f59e0b); }
+.banner-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,.9); }
+.banner-bar { background: rgba(255,255,255,.3); border-radius: 2px; height: 4px; }
+
+/* ===== KANBAN ===== */
+.kanban { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; }
+.kanban::-webkit-scrollbar { height: 4px; }
+.kanban::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 2px; }
+.kanban-col { min-width: 200px; background: var(--bg2); border: 1px solid var(--border2); border-radius: 12px; padding: 12px; flex-shrink: 0; }
+.kanban-col-header {
+  font-size: 12px; font-weight: 700; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+  margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;
+}
+.col-count { background: var(--bg4); border-radius: 99px; padding: 2px 8px; font-size: 11px; }
+.kanban-card {
+  background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px;
+  padding: 12px; margin-bottom: 8px; cursor: grab;
+  transition: transform .2s, box-shadow .2s;
+}
+.kanban-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,.4); }
+.card-name { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.card-meta { display: flex; align-items: center; justify-content: space-between; }
+.card-tag {
+  font-size: 10px; padding: 2px 8px; border-radius: 99px; font-weight: 600;
+}
+.tag-lp { background: rgba(139,92,246,.2); color: var(--purple); }
+.tag-banner { background: rgba(59,130,246,.2); color: var(--blue); }
+.tag-video { background: rgba(16,185,129,.2); color: var(--green); }
+.card-assignee { font-size: 11px; color: var(--text3); }
+.card-progress { margin-top: 8px; }
+.card-progress-bar { height: 3px; background: var(--bg4); border-radius: 2px; }
+.card-progress-fill { height: 100%; border-radius: 2px; }
+
+.col-receive .kanban-col-header { color: var(--text2); }
+.col-ai .kanban-col-header { color: var(--blue); }
+.col-check .kanban-col-header { color: var(--yellow); }
+.col-fix .kanban-col-header { color: var(--red); }
+.col-done .kanban-col-header { color: var(--green); }
+
+/* ===== TEMPLATES ===== */
+.tpl-filters { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.filter-btn {
+  padding: 6px 14px; border-radius: 99px; font-size: 12px; cursor: pointer;
+  border: 1px solid var(--border2); background: var(--bg3); color: var(--text2);
+  font-family: inherit; transition: all .2s;
+}
+.filter-btn.active { background: rgba(139,92,246,.2); border-color: var(--purple); color: var(--purple); }
+.tpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+.tpl-card {
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: 12px;
+  padding: 16px; position: relative;
+}
+.tpl-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+.tpl-card-title { font-size: 14px; font-weight: 600; }
+.tpl-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.tpl-tag {
+  font-size: 10px; padding: 2px 8px; border-radius: 99px;
+  background: var(--bg3); color: var(--text3); border: 1px solid var(--border2);
+}
+.tpl-body {
+  background: var(--bg); border-radius: 6px; padding: 10px 12px;
+  font-size: 12px; color: var(--text2); line-height: 1.7; font-family: monospace;
+  max-height: 120px; overflow: hidden; position: relative;
+  border: 1px solid var(--border);
+}
+.tpl-body::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+  height: 32px; background: linear-gradient(transparent, var(--bg));
+}
+.tpl-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+.tpl-meta { font-size: 11px; color: var(--text3); }
+.btn-copy {
+  background: var(--bg3); border: 1px solid var(--border2); color: var(--text2);
+  border-radius: 6px; padding: 5px 12px; font-size: 12px; cursor: pointer;
+  font-family: inherit; transition: all .2s; display: flex; align-items: center; gap: 4px;
+}
+.btn-copy:hover { border-color: var(--purple); color: var(--purple); }
+.btn-copy.copied { border-color: var(--green); color: var(--green); }
+
+/* section title */
+.section-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; }
+
+@media (max-width: 768px) {
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .form-grid { grid-template-columns: 1fr; }
+  .result-box.show { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-left">
+    <div class="nav-logo">
+      <div class="icon">🤖</div>
+      AI制作フロー管理システム
+    </div>
+  </div>
+  <div class="nav-right">
+    <a href="../../" class="back-link">← ポートフォリオへ戻る</a>
+    <span class="badge badge-demo">DEMO</span>
+    <span class="badge badge-proto">PROTOTYPE</span>
+  </div>
+</nav>
+
+<!-- KPI -->
+<div class="kpi-row">
+  <div class="kpi-card">
+    <div class="kpi-label">今月の制作件数</div>
+    <div class="kpi-value kpi-purple" id="kpi-count">0</div>
+    <div class="kpi-sub">前月比 +20% ↑</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">平均納品日数</div>
+    <div class="kpi-value kpi-blue" id="kpi-days">—</div>
+    <div class="kpi-sub">業界平均 5.2日</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">AI活用率</div>
+    <div class="kpi-value kpi-green" id="kpi-ai">0%</div>
+    <div class="kpi-sub">自動化スコア A+</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">品質スコア</div>
+    <div class="kpi-value kpi-yellow" id="kpi-quality">—</div>
+    <div class="kpi-sub">クライアント満足度</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-wrapper">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('order', this)">📋 制作依頼</button>
+    <button class="tab" onclick="switchTab('flow', this)">🔄 制作フロー</button>
+    <button class="tab" onclick="switchTab('template', this)">📁 テンプレート管理</button>
+  </div>
+</div>
+
+<!-- PANEL: 制作依頼 -->
+<div class="panel active" id="panel-order">
+  <div class="section-title"><div class="dot" style="background:var(--purple)"></div>新規制作依頼</div>
+  <div class="form-grid">
+    <div class="form-group full">
+      <label>制作物の種別</label>
+      <div class="type-pills">
+        <div class="type-pill selected" onclick="selectType(this, 'LP')">🖥️ LP（ランディングページ）</div>
+        <div class="type-pill" onclick="selectType(this, 'バナー')">🎨 バナー広告</div>
+        <div class="type-pill" onclick="selectType(this, '動画')">🎬 動画シナリオ</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>業種・業態</label>
+      <select id="input-industry">
+        <option value="">選択してください</option>
+        <option>フランチャイズ・加盟店募集</option>
+        <option>美容・エステ・サロン</option>
+        <option>飲食・カフェ・レストラン</option>
+        <option>EC・通販・物販</option>
+        <option>不動産・住宅</option>
+        <option>教育・スクール</option>
+        <option>医療・クリニック</option>
+        <option>IT・SaaS・テック</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>ターゲット層</label>
+      <input type="text" id="input-target" placeholder="例: 30〜50代の経営者・独立希望者">
+    </div>
+    <div class="form-group">
+      <label>トーン・スタイル</label>
+      <select id="input-tone">
+        <option>信頼感・プロフェッショナル</option>
+        <option>親しみやすい・カジュアル</option>
+        <option>高級感・プレミアム</option>
+        <option>緊急性・行動訴求</option>
+        <option>データ重視・論理的</option>
+      </select>
+    </div>
+    <div class="form-group full">
+      <label>制作の背景・要望（任意）</label>
+      <textarea id="input-note" placeholder="クライアントの課題、強調したいポイント、参考にしたいイメージなどを入力"></textarea>
+    </div>
+    <div class="form-group full">
+      <button class="btn-primary" id="btn-start" onclick="startGeneration()">
+        <span>✨</span> AIで制作開始
+      </button>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-box" id="progress-box">
+    <div class="progress-title">⚡ AI制作処理中...</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progress-fill"></div>
+    </div>
+    <div class="progress-steps" id="progress-steps">
+      <div class="progress-step" id="step-1">
+        <div class="step-icon" id="step-icon-1">1</div>
+        <span>要件の分析・プロンプト構築</span>
+      </div>
+      <div class="progress-step" id="step-2">
+        <div class="step-icon" id="step-icon-2">2</div>
+        <span>AIコンテンツ生成（Claude API）</span>
+      </div>
+      <div class="progress-step" id="step-3">
+        <div class="step-icon" id="step-icon-3">3</div>
+        <span>構成・レイアウト最適化</span>
+      </div>
+      <div class="progress-step" id="step-4">
+        <div class="step-icon" id="step-icon-4">4</div>
+        <span>プレビュー生成・品質チェック</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div class="result-box" id="result-box">
+    <div class="result-card">
+      <div class="result-card-header">
+        <span>✅</span> LPワイヤーフレーム
+        <span class="badge badge-demo" style="margin-left:auto;">生成完了</span>
+      </div>
+      <div class="result-card-body">
+        <div class="wireframe">
+          <div class="wf-hero">
+            <div class="wf-hero-title"></div>
+            <div class="wf-hero-sub"></div>
+            <div class="wf-btn"></div>
+          </div>
+          <div class="wf-section">
+            <div class="wf-card"></div>
+            <div class="wf-card"></div>
+            <div class="wf-card"></div>
+          </div>
+          <div style="background:var(--bg3);padding:10px;border-radius:4px;">
+            <div class="wf-text"></div>
+            <div class="wf-text" style="width:60%"></div>
+            <div class="wf-text" style="width:90%"></div>
+          </div>
+          <div style="background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(59,130,246,.2));padding:12px;border-radius:4px;text-align:center;">
+            <div class="wf-text" style="margin:0 auto;width:40%"></div>
+            <div class="wf-btn" style="background:var(--blue);margin-top:8px"></div>
+          </div>
+        </div>
+        <div style="margin-top:12px;font-size:12px;color:var(--text2);">セクション構成: ヒーロー・特徴3点・実績・CTA</div>
+      </div>
+    </div>
+    <div class="result-card">
+      <div class="result-card-header">
+        <span>🎨</span> バナーモック（4種）
+        <span class="badge badge-demo" style="margin-left:auto;">生成完了</span>
+      </div>
+      <div class="result-card-body">
+        <div class="banner-grid">
+          <div class="banner-item">
+            <div class="banner-label">300×250</div>
+            <div><div class="banner-bar"></div></div>
+          </div>
+          <div class="banner-item">
+            <div class="banner-label">728×90</div>
+            <div><div class="banner-bar"></div></div>
+          </div>
+          <div class="banner-item">
+            <div class="banner-label">160×600</div>
+            <div><div class="banner-bar"></div></div>
+          </div>
+          <div class="banner-item">
+            <div class="banner-label">1200×628</div>
+            <div><div class="banner-bar"></div></div>
+          </div>
+        </div>
+        <div style="margin-top:12px;font-size:12px;color:var(--text2);">AI生成キャッチコピー: 「フランチャイズで独立の夢を叶える」</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL: 制作フロー (Kanban) -->
+<div class="panel" id="panel-flow">
+  <div class="section-title"><div class="dot" style="background:var(--blue)"></div>進行中案件（Kanbanボード）</div>
+  <div class="kanban">
+    <!-- 受注 -->
+    <div class="kanban-col col-receive">
+      <div class="kanban-col-header">
+        📥 受注
+        <span class="col-count">3</span>
+      </div>
+      <div class="kanban-card">
+        <div class="card-name">笠原FC・加盟店募集LP</div>
+        <div class="card-meta">
+          <span class="card-tag tag-lp">LP</span>
+          <span class="card-assignee">田中</span>
+        </div>
+        <div class="card-progress">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:3px;"><span>進捗</span><span>10%</span></div>
+          <div class="card-progress-bar"><div class="card-progress-fill" style="width:10%;background:var(--text3)"></div></div>
+        </div>
+      </div>
+      <div class="kanban-card">
+        <div class="card-name">秋のセール・バナー5点</div>
+        <div class="card-meta">
+          <span class="card-tag tag-banner">バナー</span>
+          <span class="card-assignee">鈴木</span>
+        </div>
+        <div class="card-progress">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:3px;"><span>進捗</span><span>5%</span></div>
+          <div class="card-progress-bar"><div class="card-progress-fill" style="width:5%;background:var(--text3)"></div></div>
+        </div>
+      </div>
+      <div class="kanban-card">
+        <div class="card-name">ブランド紹介動画シナリオ</div>
+        <div class="card-meta">
+          <span class="card-tag tag-video">動画</span>
+          <span class="card-assignee">山田</span>
+        </div>
+      </div>
+    </div>
+    <!-- AI生成 -->
+    <div class="kanban-col col-ai">
+      <div class="kanban-col-header">
+        🤖 AI生成中
+        <span class="col-count">2</span>
+      </div>
+      <div class="kanban-card">
+        <div class="card-name">新業態・コンセプトLP</div>
+        <div class="card-meta">
+          <span class="card-tag tag-lp">LP</span>
+          <span class="card-assignee">田中</span>
+        </div>
+        <div class="card-progress">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--blue);margin-bottom:3px;"><span>AI処理中</span><span>67%</span></div>
+          <div class="card-progress-bar"><div class="card-progress-fill" style="width:67%;background:var(--blue)"></div></div>
+        </div>
+      </div>
+      <div class="kanban-card">
+        <div class="card-name">Instagram広告バナー</div>
+        <div class="card-meta">
+          <span class="card-tag tag-banner">バナー</span>
+          <span class="card-assignee">佐藤</span>
+        </div>
+        <div class="card-progress">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--blue);margin-bottom:3px;"><span>AI処理中</span><span>42%</span></div>
+          <div class="card-progress-bar"><div class="card-progress-fill" style="width:42%;background:var(--blue)"></div></div>
+        </div>
+      </div>
+    </div>
+    <!-- 人間確認 -->
+    <div class="kanban-col col-check">
+      <div class="kanban-col-header">
+        👁️ 人間確認
+        <span class="col-count">2</span>
+      </div>
+      <div class="kanban-card">
+        <div class="card-name">FC本部向け説明LP</div>
+        <div class="card-meta">
+          <span class="card-tag tag-lp">LP</span>
+          <span class="card-assignee">山田</span>
+        </div>
+        <div class="card-progress">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--yellow);margin-bottom:3px;"><span>確認待ち</span><span>80%</span></div>
+          <div class="card-progress-bar"><div class="card-progress-fill" style="width:80%;background:var(--yellow)"></div></div>
+        </div>
+      </div>
+      <div class="kanban-card">
+        <div class="card-name">採用動画シナリオ v2</div>
+        <div class="card-meta">
+          <span class="card-tag tag-video">動画</span>
+          <span class="card-assignee">鈴木</span>
+        </div>
+        <div class="card-progress">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--yellow);margin-bottom:3px;"><span>確認待ち</span><span>75%</span></div>
+          <div class="card-progress-bar"><div class="card-progress-fill" style="width:75%;background:var(--yellow)"></div></div>
+        </div>
+      </div>
+    </div>
+    <!-- 修正 -->
+    <div class="kanban-col col-fix">
+      <div class="kanban-col-header">
+        ✏️ 修正
+        <span class="col-count">2</span>
+      </div>
+      <div class="kanban-card">
+        <div class="card-name">リスティング広告バナー</div>
+        <div class="card-meta">
+          <span class="card-tag tag-banner">バナー</span>
+          <span class="card-assignee">田中</span>
+        </div>
+        <div class="card-progress">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--red);margin-bottom:3px;"><span>修正中</span><span>90%</span></div>
+          <div class="card-progress-bar"><div class="card-progress-fill" style="width:90%;background:var(--red)"></div></div>
+        </div>
+      </div>
+      <div class="kanban-card">
+        <div class="card-name">加盟店向けメールLP</div>
+        <div class="card-meta">
+          <span class="card-tag tag-lp">LP</span>
+          <span class="card-assignee">山田</span>
+        </div>
+      </div>
+    </div>
+    <!-- 納品 -->
+    <div class="kanban-col col-done">
+      <div class="kanban-col-header">
+        ✅ 納品完了
+        <span class="col-count">3</span>
+      </div>
+      <div class="kanban-card" style="opacity:.7;">
+        <div class="card-name">春キャンペーンLP</div>
+        <div class="card-meta">
+          <span class="card-tag tag-lp">LP</span>
+          <span class="card-assignee">佐藤</span>
+        </div>
+        <div class="card-progress">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--green);margin-bottom:3px;"><span>完了</span><span>100%</span></div>
+          <div class="card-progress-bar"><div class="card-progress-fill" style="width:100%;background:var(--green)"></div></div>
+        </div>
+      </div>
+      <div class="kanban-card" style="opacity:.7;">
+        <div class="card-name">SNS広告バナー一式</div>
+        <div class="card-meta">
+          <span class="card-tag tag-banner">バナー</span>
+          <span class="card-assignee">鈴木</span>
+        </div>
+        <div class="card-progress">
+          <div class="card-progress-bar"><div class="card-progress-fill" style="width:100%;background:var(--green)"></div></div>
+        </div>
+      </div>
+      <div class="kanban-card" style="opacity:.7;">
+        <div class="card-name">会社紹介動画シナリオ</div>
+        <div class="card-meta">
+          <span class="card-tag tag-video">動画</span>
+          <span class="card-assignee">田中</span>
+        </div>
+        <div class="card-progress">
+          <div class="card-progress-bar"><div class="card-progress-fill" style="width:100%;background:var(--green)"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL: テンプレート管理 -->
+<div class="panel" id="panel-template">
+  <div class="section-title"><div class="dot" style="background:var(--green)"></div>プロンプトテンプレート一覧</div>
+  <div class="tpl-filters">
+    <button class="filter-btn active" onclick="filterTpl('all', this)">すべて</button>
+    <button class="filter-btn" onclick="filterTpl('lp', this)">LP</button>
+    <button class="filter-btn" onclick="filterTpl('banner', this)">バナー</button>
+    <button class="filter-btn" onclick="filterTpl('video', this)">動画</button>
+  </div>
+  <div class="tpl-grid" id="tpl-grid">
+    <!-- 動的生成 -->
+  </div>
+</div>
+
+<script>
+// ===== KPI アニメーション =====
+function animateKPI(id, endVal, suffix, decimals=0) {
+  const el = document.getElementById(id);
+  let start = 0; const dur = 1200; const step = 16;
+  const inc = endVal / (dur / step);
+  const timer = setInterval(() => {
+    start += inc;
+    if (start >= endVal) { start = endVal; clearInterval(timer); }
+    el.textContent = start.toFixed(decimals) + suffix;
+  }, step);
+}
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    animateKPI('kpi-count', 12, '件');
+    animateKPI('kpi-ai', 94, '%');
+  }, 300);
+  setTimeout(() => {
+    document.getElementById('kpi-days').textContent = '1.8日';
+    document.getElementById('kpi-quality').textContent = '4.7/5';
+  }, 1600);
+});
+
+// ===== TAB =====
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+// ===== 制作依頼 =====
+let selectedType = 'LP';
+function selectType(el, type) {
+  document.querySelectorAll('.type-pill').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedType = type;
+}
+
+function startGeneration() {
+  const btn = document.getElementById('btn-start');
+  btn.disabled = true;
+  document.getElementById('result-box').classList.remove('show');
+  const pb = document.getElementById('progress-box');
+  pb.classList.add('show');
+  const fill = document.getElementById('progress-fill');
+  const steps = [
+    { id: 'step-icon-1', pct: 25, delay: 0 },
+    { id: 'step-icon-2', pct: 55, delay: 1200 },
+    { id: 'step-icon-3', pct: 80, delay: 2600 },
+    { id: 'step-icon-4', pct: 100, delay: 3800 },
+  ];
+  steps.forEach((s, i) => {
+    setTimeout(() => {
+      const icon = document.getElementById(s.id);
+      icon.classList.add('spin');
+      fill.style.width = s.pct + '%';
+      if (i > 0) {
+        const prev = document.getElementById(steps[i-1].id);
+        prev.classList.remove('spin');
+        prev.classList.add('done');
+        prev.textContent = '✓';
+      }
+    }, s.delay);
+  });
+  setTimeout(() => {
+    const last = document.getElementById('step-icon-4');
+    last.classList.remove('spin');
+    last.classList.add('done');
+    last.textContent = '✓';
+    pb.classList.remove('show');
+    document.getElementById('result-box').classList.add('show');
+    btn.disabled = false;
+    // reset icons
+    steps.forEach((s, i) => {
+      setTimeout(() => {
+        const ic = document.getElementById(s.id);
+        ic.classList.remove('done','spin');
+        ic.textContent = i+1;
+      }, 100);
+    });
+  }, 5200);
+}
+
+// ===== テンプレート =====
+const templates = [
+  {
+    id: 'lp-fc', type: 'lp',
+    title: 'LP用プロンプト v2.1（FC向け）',
+    tags: ['LP', 'フランチャイズ', '加盟店募集', '汎用'],
+    uses: 47,
+    prompt: `あなたは優秀なLPライターです。
+以下の情報をもとに、加盟店募集LPの
+コピーとセクション構成を作成してください。
+
+[業種]: {industry}
+[ターゲット]: {target}
+[強み・USP]: {usp}
+[トーン]: {tone}
+
+## 出力形式
+1. メインキャッチコピー（3案）
+2. サブキャッチコピー
+3. セクション構成（7セクション）
+4. 各セクションの見出し+本文（150字）`
+  },
+  {
+    id: 'banner-sns', type: 'banner',
+    title: 'SNS広告バナー用プロンプト',
+    tags: ['バナー', 'Instagram', 'Facebook', '訴求'],
+    uses: 89,
+    prompt: `SNS広告バナーのコピーを作成してください。
+
+[商品/サービス]: {product}
+[ターゲット]: {target}
+[訴求ポイント]: {appeal}
+[サイズ]: 1080×1080px
+
+## 出力
+・メインコピー（15字以内）
+・サブコピー（30字以内）
+・CTA文言（3案）
+・ハッシュタグ（10個）`
+  },
+  {
+    id: 'video-scenario', type: 'video',
+    title: '動画シナリオ用プロンプト（60秒）',
+    tags: ['動画', 'シナリオ', 'YouTube', '60秒'],
+    uses: 23,
+    prompt: `60秒の動画シナリオを作成してください。
+
+[テーマ]: {theme}
+[ターゲット]: {target}
+[CTA]: {cta}
+
+## 構成（秒単位）
+0-5秒: フック（視聴者の注目を引く）
+6-20秒: 問題提起
+21-45秒: 解決策・サービス紹介
+46-55秒: 実績・信頼性
+56-60秒: CTA`
+  },
+  {
+    id: 'lp-beauty', type: 'lp',
+    title: 'LP用プロンプト（美容・サロン向け）',
+    tags: ['LP', '美容', 'サロン', '女性向け'],
+    uses: 31,
+    prompt: `美容サロン向けLPのコピーを作成してください。
+
+[サービス名]: {service}
+[ターゲット]: {target}（年代・性別・悩み）
+[強み]: {strength}
+[価格帯]: {price}
+
+## 重視するポイント
+- 共感→解決の流れ
+- ビフォーアフターの訴求
+- 安心感・信頼感の醸成
+- 初回限定オファーの強調`
+  },
+  {
+    id: 'banner-ec', type: 'banner',
+    title: 'EC・通販バナー用プロンプト',
+    tags: ['バナー', 'EC', '通販', 'セール'],
+    uses: 56,
+    prompt: `EC通販向けバナーコピーを作成してください。
+
+[商品名]: {product}
+[セール内容]: {sale}
+[期間]: {period}
+[ターゲット]: {target}
+
+## バリエーション
+A案: 価格訴求（〇〇%OFF強調）
+B案: 品質訴求（素材・こだわり強調）
+C案: 期間限定訴求（締め切り・希少性）`
+  },
+  {
+    id: 'video-recruit', type: 'video',
+    title: '採用動画シナリオ用プロンプト',
+    tags: ['動画', '採用', '求人', '30秒'],
+    uses: 18,
+    prompt: `採用・求人向け動画シナリオ（30秒）を
+作成してください。
+
+[会社名]: {company}
+[職種]: {position}
+[働く魅力]: {merit}
+[応募条件]: {condition}
+
+## 構成
+0-5秒: 社員の生の声（インパクト）
+6-15秒: 会社の雰囲気・職場環境
+16-25秒: 待遇・成長機会
+26-30秒: 応募方法・CTA`
+  },
+];
+
+let currentFilter = 'all';
+function renderTemplates() {
+  const grid = document.getElementById('tpl-grid');
+  const filtered = currentFilter === 'all' ? templates : templates.filter(t => t.type === currentFilter);
+  grid.innerHTML = filtered.map(t => `
+    <div class="tpl-card" data-type="${t.type}">
+      <div class="tpl-card-header">
+        <div>
+          <div class="tpl-card-title">${t.title}</div>
+          <div class="tpl-tags">${t.tags.map(tag => `<span class="tpl-tag">${tag}</span>`).join('')}</div>
+        </div>
+      </div>
+      <div class="tpl-body">${t.prompt.replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>
+      <div class="tpl-footer">
+        <span class="tpl-meta">使用回数: ${t.uses}回</span>
+        <button class="btn-copy" onclick="copyTemplate('${t.id}', this)">📋 コピー</button>
+      </div>
+    </div>
+  `).join('');
+}
+function filterTpl(type, el) {
+  currentFilter = type;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderTemplates();
+}
+function copyTemplate(id, btn) {
+  const tpl = templates.find(t => t.id === id);
+  if (!tpl) return;
+  navigator.clipboard.writeText(tpl.prompt).catch(() => {});
+  btn.textContent = '✅ コピー済み';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = '📋 コピー'; btn.classList.remove('copied'); }, 2000);
+}
+renderTemplates();
+</script>
+</body>
+</html>

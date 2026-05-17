@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amazon広告 AI分析ダッシュボード | Demo</title>
+<style>
+:root {
+  --bg: #0a0e1a; --bg2: #111827; --bg3: #1f2937; --bg4: #374151;
+  --border: #1f2937; --border2: #374151;
+  --green: #10b981; --yellow: #f59e0b; --blue: #3b82f6;
+  --red: #ef4444; --purple: #8b5cf6; --orange: #f97316;
+  --text: #f9fafb; --text2: #9ca3af; --text3: #6b7280;
+  --amazon: #ff9900;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+
+/* NAV */
+nav {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border2);
+  padding: 0 24px;
+  height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.nav-logo { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.nav-logo .icon {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--amazon), #ff6600);
+  border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px;
+}
+.nav-right { display: flex; align-items: center; gap: 8px; }
+.badge { padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; letter-spacing: .5px; }
+.badge-demo { background: rgba(59,130,246,.2); color: var(--blue); border: 1px solid rgba(59,130,246,.3); }
+.badge-proto { background: rgba(139,92,246,.2); color: var(--purple); border: 1px solid rgba(139,92,246,.3); }
+.back-link { color: var(--text2); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 4px; }
+.back-link:hover { color: var(--text); }
+
+/* KPI */
+.kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; padding: 20px 24px 0; }
+.kpi-card {
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: 12px;
+  padding: 16px 20px; position: relative; overflow: hidden;
+}
+.kpi-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}
+.kpi-green::before { background: var(--green); }
+.kpi-blue::before { background: var(--blue); }
+.kpi-yellow::before { background: var(--yellow); }
+.kpi-amazon::before { background: var(--amazon); }
+.kpi-label { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+.kpi-value { font-size: 26px; font-weight: 700; }
+.kpi-change { font-size: 11px; margin-top: 4px; }
+.up { color: var(--green); } .down { color: var(--red); }
+
+/* TABS */
+.tabs-wrapper { padding: 20px 24px 0; }
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border2); }
+.tab {
+  padding: 10px 20px; font-size: 14px; cursor: pointer;
+  color: var(--text2); border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: all .2s; background: none; border-top: none; border-left: none; border-right: none;
+  font-family: inherit;
+}
+.tab.active { color: var(--amazon); border-bottom-color: var(--amazon); }
+.tab:hover:not(.active) { color: var(--text); }
+
+/* PANELS */
+.panel { display: none; padding: 24px; }
+.panel.active { display: block; }
+
+/* section */
+.section-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ===== 広告分析 ===== */
+.analysis-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+
+/* Chart area */
+.chart-card {
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: 12px;
+  padding: 20px;
+}
+.chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.chart-title { font-size: 14px; font-weight: 600; }
+.chart-legend { display: flex; gap: 16px; font-size: 11px; color: var(--text2); }
+.legend-item { display: flex; align-items: center; gap: 4px; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* CSS line chart */
+.chart-area {
+  height: 180px; position: relative;
+  border-left: 1px solid var(--border2);
+  border-bottom: 1px solid var(--border2);
+  margin-left: 40px; margin-bottom: 24px;
+}
+.chart-y-labels {
+  position: absolute; left: -44px; top: 0; bottom: 0;
+  display: flex; flex-direction: column; justify-content: space-between;
+  font-size: 10px; color: var(--text3);
+}
+.chart-grid-line {
+  position: absolute; left: 0; right: 0; height: 1px;
+  background: var(--border); opacity: 0.5;
+}
+.chart-x-labels {
+  display: flex; justify-content: space-around; margin-left: 40px;
+  font-size: 10px; color: var(--text3);
+}
+.line-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: visible; }
+.line-path { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.dot-point { r: 3; }
+.area-fill { opacity: 0.15; }
+
+/* AI Insight */
+.insight-card {
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: 12px;
+  padding: 20px;
+}
+.insight-header {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; font-weight: 700; margin-bottom: 14px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--border2);
+}
+.ai-badge {
+  background: linear-gradient(135deg, var(--purple), var(--blue));
+  color: #fff; font-size: 10px; padding: 2px 8px; border-radius: 99px; font-weight: 700;
+}
+.insight-item {
+  background: var(--bg3); border-radius: 8px; padding: 12px; margin-bottom: 10px;
+  border-left: 3px solid;
+}
+.insight-item.green { border-color: var(--green); }
+.insight-item.yellow { border-color: var(--yellow); }
+.insight-item.red { border-color: var(--red); }
+.insight-label { font-size: 11px; font-weight: 700; margin-bottom: 4px; }
+.insight-item.green .insight-label { color: var(--green); }
+.insight-item.yellow .insight-label { color: var(--yellow); }
+.insight-item.red .insight-label { color: var(--red); }
+.insight-text { font-size: 12px; color: var(--text2); line-height: 1.6; }
+
+/* ===== 検索語句テーブル ===== */
+.table-wrapper {
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: 12px;
+  overflow: hidden;
+}
+.table-header-bar {
+  padding: 14px 20px; border-bottom: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.table-search {
+  background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px;
+  color: var(--text); padding: 7px 12px; font-size: 13px; font-family: inherit;
+  outline: none; width: 240px;
+}
+.table-search:focus { border-color: var(--amazon); }
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 700;
+  color: var(--text3); text-transform: uppercase; letter-spacing: .5px;
+  border-bottom: 1px solid var(--border2); background: var(--bg3);
+}
+tbody tr { border-bottom: 1px solid var(--border); }
+tbody tr:hover { background: var(--bg3); }
+tbody td { padding: 12px 16px; font-size: 13px; }
+.kw-text { font-weight: 600; color: var(--text); }
+.num { font-family: monospace; color: var(--text2); }
+.action-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 700;
+}
+.action-up { background: rgba(16,185,129,.15); color: var(--green); border: 1px solid rgba(16,185,129,.3); }
+.action-watch { background: rgba(245,158,11,.15); color: var(--yellow); border: 1px solid rgba(245,158,11,.3); }
+.action-exclude { background: rgba(239,68,68,.15); color: var(--red); border: 1px solid rgba(239,68,68,.3); }
+.acos-ok { color: var(--green); }
+.acos-warn { color: var(--yellow); }
+.acos-bad { color: var(--red); }
+
+/* ===== 自動化設定 ===== */
+.auto-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.auto-card {
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: 12px;
+  overflow: hidden;
+}
+.auto-card.full { grid-column: 1 / -1; }
+.auto-card-header {
+  padding: 14px 20px; border-bottom: 1px solid var(--border2);
+  font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px;
+}
+.auto-card-body { padding: 20px; }
+
+/* Code block */
+.code-block {
+  background: #0d1117; border-radius: 8px; border: 1px solid var(--border2);
+  overflow: hidden; font-family: 'Consolas', 'Monaco', monospace;
+}
+.code-header {
+  background: var(--bg3); padding: 8px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border2);
+}
+.code-lang { font-size: 11px; color: var(--text3); }
+.btn-copy {
+  background: var(--bg4); border: 1px solid var(--border2); color: var(--text2);
+  border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer;
+  font-family: inherit; transition: all .2s;
+}
+.btn-copy:hover { border-color: var(--amazon); color: var(--amazon); }
+.btn-copy.copied { border-color: var(--green); color: var(--green); }
+.code-body { padding: 16px; font-size: 12px; line-height: 1.7; overflow-x: auto; }
+.kw { color: #ff79c6; }
+.fn { color: #50fa7b; }
+.str { color: #f1fa8c; }
+.cm { color: #6272a4; font-style: italic; }
+.num-c { color: #bd93f9; }
+.prop { color: #8be9fd; }
+
+/* Schedule */
+.sched-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 13px; }
+.sched-label { color: var(--text2); width: 100px; flex-shrink: 0; }
+.sched-select {
+  background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px;
+  color: var(--text); padding: 7px 12px; font-size: 13px; font-family: inherit; outline: none;
+}
+.sched-select:focus { border-color: var(--amazon); }
+.toggle-wrap { display: flex; align-items: center; gap: 8px; }
+.toggle {
+  width: 40px; height: 22px; border-radius: 11px; background: var(--bg4);
+  position: relative; cursor: pointer; transition: background .2s; flex-shrink: 0;
+}
+.toggle.on { background: var(--green); }
+.toggle::after {
+  content: ''; width: 18px; height: 18px; background: #fff; border-radius: 50%;
+  position: absolute; top: 2px; left: 2px; transition: left .2s;
+}
+.toggle.on::after { left: 20px; }
+.notif-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.notif-label { font-size: 13px; flex: 1; }
+.notif-sub { font-size: 11px; color: var(--text3); }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.status-dot.off { background: var(--text3); }
+
+@media (max-width: 768px) {
+  .kpi-row { grid-template-columns: repeat(2,1fr); }
+  .analysis-grid { grid-template-columns: 1fr; }
+  .auto-grid { grid-template-columns: 1fr; }
+  .auto-card.full { grid-column: 1; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="nav-logo">
+      <div class="icon">📦</div>
+      Amazon広告 AI分析ダッシュボード
+    </div>
+  </div>
+  <div class="nav-right">
+    <a href="../../" class="back-link">← ポートフォリオへ戻る</a>
+    <span class="badge badge-demo">DEMO</span>
+    <span class="badge badge-proto">PROTOTYPE</span>
+  </div>
+</nav>
+
+<!-- KPI -->
+<div class="kpi-row">
+  <div class="kpi-card kpi-green">
+    <div class="kpi-label">ACOS</div>
+    <div class="kpi-value" style="color:var(--green)" id="kpi-acos">—</div>
+    <div class="kpi-change up">▼ 前週比 -2.3pt 改善</div>
+  </div>
+  <div class="kpi-card kpi-blue">
+    <div class="kpi-label">ROAS</div>
+    <div class="kpi-value" style="color:var(--blue)" id="kpi-roas">—</div>
+    <div class="kpi-change up">▲ 前週比 +41pt 向上</div>
+  </div>
+  <div class="kpi-card kpi-yellow">
+    <div class="kpi-label">TACoS</div>
+    <div class="kpi-value" style="color:var(--yellow)" id="kpi-tacos">—</div>
+    <div class="kpi-change up">▼ 前週比 -1.1pt 改善</div>
+  </div>
+  <div class="kpi-card kpi-amazon">
+    <div class="kpi-label">広告経由売上（月次）</div>
+    <div class="kpi-value" style="color:var(--amazon)" id="kpi-sales">—</div>
+    <div class="kpi-change up">▲ 前月比 +18.4% 増加</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-wrapper">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('analysis', this)">📊 広告分析</button>
+    <button class="tab" onclick="switchTab('keywords', this)">🔍 検索語句</button>
+    <button class="tab" onclick="switchTab('automation', this)">⚙️ 自動化設定</button>
+  </div>
+</div>
+
+<!-- PANEL: 広告分析 -->
+<div class="panel active" id="panel-analysis">
+  <div class="analysis-grid">
+    <div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">週次パフォーマンス推移（直近8週）</div>
+          <div class="chart-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>ACOS%</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>ROAS(×100)</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>TACoS%</div>
+          </div>
+        </div>
+        <div style="position:relative;">
+          <div class="chart-area" id="chart-area">
+            <div class="chart-y-labels">
+              <span>30</span><span>25</span><span>20</span><span>15</span><span>10</span><span>5</span><span>0</span>
+            </div>
+            <div class="chart-grid-line" style="top:0%"></div>
+            <div class="chart-grid-line" style="top:20%"></div>
+            <div class="chart-grid-line" style="top:40%"></div>
+            <div class="chart-grid-line" style="top:60%"></div>
+            <div class="chart-grid-line" style="top:80%"></div>
+            <svg class="line-svg" viewBox="0 0 700 180" preserveAspectRatio="none">
+              <!-- ACOS line -->
+              <polyline class="line-path" style="stroke:var(--green)"
+                points="44,108 144,102 244,90 344,84 444,78 544,66 644,54 694,43" />
+              <!-- ROAS line (÷20 to fit) -->
+              <polyline class="line-path" style="stroke:var(--blue)"
+                points="44,150 144,144 244,132 344,120 444,108 544,90 644,72 694,60" />
+              <!-- TACoS line -->
+              <polyline class="line-path" style="stroke:var(--yellow)"
+                points="44,120 144,114 244,108 344,102 444,96 544,84 644,72 694,65" />
+              <!-- dots ACOS -->
+              <circle cx="44" cy="108" r="3" fill="var(--green)"/>
+              <circle cx="144" cy="102" r="3" fill="var(--green)"/>
+              <circle cx="244" cy="90" r="3" fill="var(--green)"/>
+              <circle cx="344" cy="84" r="3" fill="var(--green)"/>
+              <circle cx="444" cy="78" r="3" fill="var(--green)"/>
+              <circle cx="544" cy="66" r="3" fill="var(--green)"/>
+              <circle cx="644" cy="54" r="3" fill="var(--green)"/>
+              <circle cx="694" cy="43" r="4" fill="var(--green)" stroke="#fff" stroke-width="2"/>
+            </svg>
+          </div>
+          <div class="chart-x-labels">
+            <span>W1</span><span>W2</span><span>W3</span><span>W4</span>
+            <span>W5</span><span>W6</span><span>W7</span><span>W8</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metrics summary -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px;">
+        <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:14px;">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">広告クリック数</div>
+          <div style="font-size:20px;font-weight:700;color:var(--text)">12,847</div>
+          <div style="font-size:11px;color:var(--green);">▲ +8.2%</div>
+        </div>
+        <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:14px;">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">CVR</div>
+          <div style="font-size:20px;font-weight:700;color:var(--text)">9.4%</div>
+          <div style="font-size:11px;color:var(--green);">▲ +1.1pt</div>
+        </div>
+        <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:14px;">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">CPC（平均）</div>
+          <div style="font-size:20px;font-weight:700;color:var(--text)">¥87</div>
+          <div style="font-size:11px;color:var(--green);">▼ -¥12</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Insight -->
+    <div class="insight-card">
+      <div class="insight-header">
+        <span>🤖</span> Claude AI インサイト
+        <span class="ai-badge">AI分析</span>
+      </div>
+      <div class="insight-item green">
+        <div class="insight-label">✅ ACOS改善提案</div>
+        <div class="insight-text">「サプリメント 効果」「プロテイン 国産」キーワードのACOSが12%未満と優秀。入札を+20%引き上げることで売上増が見込めます。</div>
+      </div>
+      <div class="insight-item yellow">
+        <div class="insight-label">⚠️ 入札調整推奨</div>
+        <div class="insight-text">「ダイエット 食品」の検索語句でACOSが31%に上昇。競合が入札を引き上げています。マッチタイプを完全一致に変更を推奨。</div>
+      </div>
+      <div class="insight-item red">
+        <div class="insight-label">🚨 除外キーワード追加</div>
+        <div class="insight-text">「プロテイン 安い 激安」「ダイエット 薬」の語句で15クリック・CV0件。即時除外キーワードへの追加を推奨します。</div>
+      </div>
+      <div class="insight-item green">
+        <div class="insight-label">📈 競合チャンス</div>
+        <div class="insight-text">競合ブランドAが先週入札を下げた形跡あり。「ブランド名 比較」系キーワードで上位表示のチャンスです。</div>
+      </div>
+      <div style="margin-top:14px;padding:10px;background:var(--bg3);border-radius:6px;font-size:11px;color:var(--text3);border:1px solid var(--border2);">
+        最終分析: 2026/05/17 09:00 | 次回自動分析: 2026/05/18 09:00
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL: 検索語句 -->
+<div class="panel" id="panel-keywords">
+  <div class="section-title"><div class="dot" style="background:var(--blue)"></div>検索語句レポート（Claude API 自動判定）</div>
+  <div class="table-wrapper">
+    <div class="table-header-bar">
+      <input type="text" class="table-search" placeholder="🔍 検索語句を絞り込む..." oninput="filterTable(this.value)">
+      <div style="font-size:12px;color:var(--text3);">計 <strong style="color:var(--text);" id="kw-count">18</strong> 語句 ｜ 分析期間: 直近30日</div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>検索語句</th>
+            <th>クリック数</th>
+            <th>CVR</th>
+            <th>ACOS</th>
+            <th>売上貢献</th>
+            <th>Claude AI 推奨アクション</th>
+          </tr>
+        </thead>
+        <tbody id="kw-tbody">
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL: 自動化設定 -->
+<div class="panel" id="panel-automation">
+  <div class="auto-grid">
+    <!-- GASコード -->
+    <div class="auto-card full">
+      <div class="auto-card-header">⚙️ GAS自動取得スクリプト（Amazonレポート連携）</div>
+      <div class="auto-card-body">
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-lang">Google Apps Script</span>
+            <button class="btn-copy" onclick="copyCode('gas-code', this)">📋 コピー</button>
+          </div>
+          <div class="code-body" id="gas-code">
+<span class="cm">// Amazon広告レポート自動取得 & スプレッドシート記録</span>
+<span class="cm">// 毎朝9時に自動実行（トリガー設定済み）</span>
+
+<span class="kw">const</span> <span class="prop">CONFIG</span> = {
+  <span class="prop">SPREADSHEET_ID</span>: <span class="str">'YOUR_SPREADSHEET_ID'</span>,
+  <span class="prop">SHEET_NAME</span>: <span class="str">'広告レポート'</span>,
+  <span class="prop">SLACK_WEBHOOK</span>: <span class="str">'https://hooks.slack.com/services/xxx'</span>,
+  <span class="prop">CLAUDE_API_KEY</span>: <span class="str">PropertiesService.getScriptProperties().getProperty('CLAUDE_KEY')</span>,
+};
+
+<span class="kw">function</span> <span class="fn">fetchAmazonReport</span>() {
+  <span class="kw">const</span> ss = SpreadsheetApp.<span class="fn">openById</span>(CONFIG.SPREADSHEET_ID);
+  <span class="kw">const</span> sheet = ss.<span class="fn">getSheetByName</span>(CONFIG.SHEET_NAME);
+
+  <span class="cm">// Amazonレポート取得（Advertising API経由）</span>
+  <span class="kw">const</span> report = <span class="fn">getAdvertisingReport</span>();
+
+  <span class="cm">// KPI計算</span>
+  <span class="kw">const</span> kpi = {
+    acos: (report.adSpend / report.adSales * <span class="num-c">100</span>).<span class="fn">toFixed</span>(<span class="num-c">1</span>),
+    roas: (report.adSales / report.adSpend * <span class="num-c">100</span>).<span class="fn">toFixed</span>(<span class="num-c">0</span>),
+    tacos: (report.adSpend / report.totalSales * <span class="num-c">100</span>).<span class="fn">toFixed</span>(<span class="num-c">1</span>),
+    date: <span class="kw">new</span> <span class="fn">Date</span>().<span class="fn">toLocaleDateString</span>(<span class="str">'ja-JP'</span>),
+  };
+
+  <span class="cm">// スプレッドシートに記録</span>
+  sheet.<span class="fn">appendRow</span>([
+    kpi.date, kpi.acos, kpi.roas, kpi.tacos,
+    report.clicks, report.orders, report.adSpend, report.adSales
+  ]);
+
+  <span class="cm">// Claude APIでAI分析・改善提案を生成</span>
+  <span class="kw">const</span> insight = <span class="fn">generateClaudeInsight</span>(kpi, report.keywords);
+
+  <span class="cm">// Slack通知送信</span>
+  <span class="fn">sendSlackNotification</span>(kpi, insight);
+
+  Logger.<span class="fn">log</span>(<span class="str">`レポート記録完了: ACOS ${kpi.acos}% / ROAS ${kpi.roas}%`</span>);
+}
+
+<span class="kw">function</span> <span class="fn">generateClaudeInsight</span>(kpi, keywords) {
+  <span class="kw">const</span> payload = {
+    model: <span class="str">'claude-opus-4-5'</span>,
+    max_tokens: <span class="num-c">500</span>,
+    messages: [{
+      role: <span class="str">'user'</span>,
+      content: <span class="str">`Amazon広告KPIを分析してください。
+ACOS: ${kpi.acos}% / ROAS: ${kpi.roas}% / TACoS: ${kpi.tacos}%
+上位キーワード: ${JSON.stringify(keywords.slice(0,5))}
+改善提案を3点、簡潔にリストアップしてください。`</span>
+    }]
+  };
+  <span class="kw">const</span> res = UrlFetchApp.<span class="fn">fetch</span>(<span class="str">'https://api.anthropic.com/v1/messages'</span>, {
+    method: <span class="str">'post'</span>,
+    contentType: <span class="str">'application/json'</span>,
+    headers: { <span class="str">'x-api-key'</span>: CONFIG.CLAUDE_API_KEY, <span class="str">'anthropic-version'</span>: <span class="str">'2023-06-01'</span> },
+    payload: JSON.<span class="fn">stringify</span>(payload),
+  });
+  <span class="kw">return</span> JSON.<span class="fn">parse</span>(res.<span class="fn">getContentText</span>()).content[<span class="num-c">0</span>].text;
+}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedule -->
+    <div class="auto-card">
+      <div class="auto-card-header">🕐 実行スケジュール設定</div>
+      <div class="auto-card-body">
+        <div class="sched-row">
+          <span class="sched-label">実行頻度</span>
+          <select class="sched-select">
+            <option>毎日</option><option>毎週月曜</option><option>毎週（平日）</option>
+          </select>
+        </div>
+        <div class="sched-row">
+          <span class="sched-label">実行時刻</span>
+          <select class="sched-select">
+            <option>09:00</option><option>06:00</option><option>12:00</option><option>21:00</option>
+          </select>
+        </div>
+        <div class="sched-row">
+          <span class="sched-label">レポート期間</span>
+          <select class="sched-select">
+            <option>前日分</option><option>直近7日</option><option>直近30日</option>
+          </select>
+        </div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border2);">
+          <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">現在のステータス</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;"></div>
+            アクティブ — 次回実行: 2026/05/18 09:00
+          </div>
+        </div>
+        <style>@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}</style>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="auto-card">
+      <div class="auto-card-header">🔔 通知設定</div>
+      <div class="auto-card-body">
+        <div class="notif-row">
+          <div class="status-dot"></div>
+          <div class="flex-1">
+            <div class="notif-label">Slack通知</div>
+            <div class="notif-sub">#amazon-ads-report チャンネル</div>
+          </div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="notif-row">
+          <div class="status-dot off"></div>
+          <div>
+            <div class="notif-label">LINE通知</div>
+            <div class="notif-sub">LINE Notify 未設定</div>
+          </div>
+          <div class="toggle" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="notif-row">
+          <div class="status-dot"></div>
+          <div>
+            <div class="notif-label">メール通知</div>
+            <div class="notif-sub">example@gmail.com</div>
+          </div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div style="margin-top:14px;padding:10px;background:var(--bg3);border-radius:6px;border:1px solid var(--border2);">
+          <div style="font-size:11px;font-weight:700;color:var(--yellow);margin-bottom:4px;">⚠️ アラート条件</div>
+          <div style="font-size:12px;color:var(--text2);">ACOS > 25% または ROAS < 400% で即時アラート送信</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== KPI アニメーション =====
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('kpi-acos').textContent = '18.4%';
+    document.getElementById('kpi-roas').textContent = '543%';
+    document.getElementById('kpi-tacos').textContent = '12.1%';
+  }, 400);
+  setTimeout(() => {
+    let s = 0, target = 2847000;
+    const t = setInterval(() => {
+      s += 80000;
+      if (s >= target) { s = target; clearInterval(t); }
+      document.getElementById('kpi-sales').textContent = '¥' + s.toLocaleString();
+    }, 20);
+  }, 400);
+});
+
+// ===== TABS =====
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+// ===== 検索語句テーブル =====
+const keywords = [
+  { kw: 'プロテイン 国産 無添加', clicks: 847, cvr: '14.2%', acos: '11.3%', sales: '¥284,000', action: 'up', actionLabel: '入札UP推奨' },
+  { kw: 'サプリメント 効果 ランキング', clicks: 623, cvr: '12.8%', acos: '13.7%', sales: '¥198,000', action: 'up', actionLabel: '入札UP推奨' },
+  { kw: 'プロテイン ダイエット 女性', clicks: 512, cvr: '9.4%', acos: '16.2%', sales: '¥143,000', action: 'up', actionLabel: '入札UP推奨' },
+  { kw: 'ビタミンC 1000mg タイムリリース', clicks: 389, cvr: '11.1%', acos: '17.8%', sales: '¥92,000', action: 'watch', actionLabel: '要観察' },
+  { kw: 'アミノ酸 サプリ 比較', clicks: 341, cvr: '7.8%', acos: '19.4%', sales: '¥78,000', action: 'watch', actionLabel: '要観察' },
+  { kw: 'プロテイン おすすめ 2024', clicks: 298, cvr: '8.2%', acos: '21.3%', sales: '¥67,000', action: 'watch', actionLabel: '要観察' },
+  { kw: 'ダイエット サプリ 口コミ', clicks: 276, cvr: '6.1%', acos: '24.7%', sales: '¥54,000', action: 'watch', actionLabel: '要観察' },
+  { kw: 'マルチビタミン 安い', clicks: 234, cvr: '4.2%', acos: '28.9%', sales: '¥38,000', action: 'exclude', actionLabel: '除外推奨' },
+  { kw: 'プロテイン 激安 セール', clicks: 189, cvr: '2.1%', acos: '41.2%', sales: '¥22,000', action: 'exclude', actionLabel: '除外推奨' },
+  { kw: 'ダイエット 薬 おすすめ', clicks: 156, cvr: '0.8%', acos: '87.4%', sales: '¥8,000', action: 'exclude', actionLabel: '除外推奨' },
+  { kw: 'サプリ 副作用 なし', clicks: 143, cvr: '3.4%', acos: '33.1%', sales: '¥19,000', action: 'exclude', actionLabel: '除外推奨' },
+  { kw: 'EAA 国産 おすすめ', clicks: 312, cvr: '13.7%', acos: '14.9%', sales: '¥98,000', action: 'up', actionLabel: '入札UP推奨' },
+  { kw: 'BCAAサプリ 飲み方', clicks: 204, cvr: '8.9%', acos: '18.6%', sales: '¥47,000', action: 'watch', actionLabel: '要観察' },
+  { kw: 'コラーゲン サプリ 効果 口コミ', clicks: 267, cvr: '10.4%', acos: '20.1%', sales: '¥61,000', action: 'watch', actionLabel: '要観察' },
+  { kw: 'プロテイン 女性 ダイエット 国産', clicks: 445, cvr: '15.3%', acos: '12.8%', sales: '¥187,000', action: 'up', actionLabel: '入札UP推奨' },
+  { kw: 'サプリ 安い 大容量', clicks: 178, cvr: '3.1%', acos: '35.6%', sales: '¥28,000', action: 'exclude', actionLabel: '除外推奨' },
+  { kw: 'マグネシウム サプリ おすすめ', clicks: 231, cvr: '9.6%', acos: '16.8%', sales: '¥53,000', action: 'watch', actionLabel: '要観察' },
+  { kw: 'タンパク質 補給 サプリ', clicks: 389, cvr: '11.8%', acos: '15.2%', sales: '¥112,000', action: 'up', actionLabel: '入札UP推奨' },
+];
+
+function getAcosClass(acosStr) {
+  const v = parseFloat(acosStr);
+  if (v < 18) return 'acos-ok';
+  if (v < 28) return 'acos-warn';
+  return 'acos-bad';
+}
+function getActionClass(action) {
+  if (action === 'up') return 'action-up';
+  if (action === 'watch') return 'action-watch';
+  return 'action-exclude';
+}
+function getActionIcon(action) {
+  if (action === 'up') return '↑';
+  if (action === 'watch') return '◉';
+  return '✕';
+}
+
+let currentKW = keywords;
+function renderTable(data) {
+  const tbody = document.getElementById('kw-tbody');
+  tbody.innerHTML = data.map(kw => `
+    <tr>
+      <td><span class="kw-text">${kw.kw}</span></td>
+      <td class="num">${kw.clicks.toLocaleString()}</td>
+      <td class="num">${kw.cvr}</td>
+      <td class="num ${getAcosClass(kw.acos)}">${kw.acos}</td>
+      <td class="num">${kw.sales}</td>
+      <td><span class="action-tag ${getActionClass(kw.action)}">${getActionIcon(kw.action)} ${kw.actionLabel}</span></td>
+    </tr>
+  `).join('');
+  document.getElementById('kw-count').textContent = data.length;
+}
+function filterTable(q) {
+  const filtered = keywords.filter(k => k.kw.includes(q));
+  renderTable(filtered);
+}
+renderTable(keywords);
+
+// ===== コードコピー =====
+function copyCode(id, btn) {
+  const el = document.getElementById(id);
+  const text = el.innerText;
+  navigator.clipboard.writeText(text).catch(() => {});
+  btn.textContent = '✅ コピー済み';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = '📋 コピー'; btn.classList.remove('copied'); }, 2000);
+}
+</script>
+</body>
+</html>
