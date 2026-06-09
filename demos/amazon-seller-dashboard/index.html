@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amazon セラー ダッシュボード — Demo</title>
+  <style>
+    /* ========== Reset & Base ========== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #1a73e8;
+      --primary-dark: #1557b0;
+      --success: #137333;
+      --warning: #b06000;
+      --danger: #c5221f;
+      --neutral: #5f6368;
+      --bg: #f1f3f4;
+      --surface: #ffffff;
+      --border: #dadce0;
+      --text: #202124;
+      --text-secondary: #5f6368;
+      --accent-blue-light: #e8f0fe;
+      --accent-green-light: #e6f4ea;
+      --accent-orange-light: #fce8b2;
+      --accent-red-light: #fce8e6;
+    }
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ========== Layout ========== */
+    .app-header {
+      background: var(--primary);
+      color: #fff;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 4px rgba(0,0,0,.2);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .app-header h1 { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+    .header-badge {
+      background: rgba(255,255,255,.25);
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .header-right { font-size: 12px; opacity: .85; }
+
+    .container { max-width: 1400px; margin: 0 auto; padding: 24px 24px 48px; }
+
+    /* ========== Period selector ========== */
+    .period-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      font-size: 13px;
+      color: var(--neutral);
+    }
+    .period-bar strong { color: var(--text); font-size: 14px; }
+    .period-pill {
+      background: var(--accent-blue-light);
+      color: var(--primary);
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    /* ========== KPI Cards ========== */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      transition: box-shadow .2s;
+    }
+    .kpi-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+    .kpi-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .kpi-label .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .kpi-value {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+    .kpi-sub { font-size: 12px; color: var(--text-secondary); }
+    .kpi-trend { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; margin-top: 4px; }
+    .kpi-trend.up { color: var(--success); }
+    .kpi-trend.down { color: var(--danger); }
+
+    .color-blue { color: var(--primary); }
+    .color-green { color: var(--success); }
+    .color-orange { color: #e8710a; }
+    .color-neutral { color: var(--neutral); }
+    .color-red { color: var(--danger); }
+
+    /* ========== Section ========== */
+    .section { margin-bottom: 32px; }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title::before {
+      content: '';
+      display: inline-block;
+      width: 4px; height: 18px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+
+    /* ========== Chart area ========== */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 900px) { .chart-grid { grid-template-columns: 1fr; } }
+
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .chart-title { font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 16px; }
+
+    /* SVGバーチャート */
+    .bar-chart-wrap { overflow-x: auto; }
+    .bar-chart { display: flex; align-items: flex-end; gap: 20px; height: 160px; padding: 0 8px; }
+    .bar-group { display: flex; flex-direction: column; align-items: center; flex: 1; }
+    .bar-bars { display: flex; align-items: flex-end; gap: 4px; height: 140px; }
+    .bar { border-radius: 4px 4px 0 0; min-width: 24px; transition: opacity .2s; position: relative; }
+    .bar:hover { opacity: .8; }
+    .bar-label { font-size: 11px; color: var(--text-secondary); margin-top: 6px; text-align: center; }
+    .bar-val { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 600; white-space: nowrap; }
+
+    .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+    /* Donut chart（SVG） */
+    .donut-wrap { display: flex; align-items: center; gap: 24px; }
+    .donut-legend { flex: 1; }
+    .donut-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .donut-item:last-child { border-bottom: none; }
+    .donut-color { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+    .donut-name { flex: 1; }
+    .donut-pct { font-weight: 700; font-size: 13px; }
+
+    /* ========== Tables ========== */
+    .table-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th {
+      background: var(--primary);
+      color: #fff;
+      padding: 10px 12px;
+      text-align: right;
+      font-weight: 600;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    thead th:first-child { text-align: left; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+    tbody tr:hover { background: var(--accent-blue-light); }
+    tbody tr:nth-child(even) { background: #fafafa; }
+    tbody tr:nth-child(even):hover { background: var(--accent-blue-light); }
+    td { padding: 10px 12px; text-align: right; vertical-align: middle; }
+    td:first-child { text-align: left; }
+    .td-name { max-width: 200px; }
+    .td-name small { display: block; font-size: 11px; color: var(--text-secondary); }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-success { background: var(--accent-green-light); color: var(--success); }
+    .badge-warning { background: var(--accent-orange-light); color: var(--warning); }
+    .badge-danger  { background: var(--accent-red-light);    color: var(--danger); }
+    .badge-neutral { background: #f1f3f4; color: var(--neutral); }
+
+    /* Progress bar */
+    .progress { width: 80px; height: 6px; background: #e0e0e0; border-radius: 3px; display: inline-block; vertical-align: middle; margin-right: 4px; }
+    .progress-fill { height: 100%; border-radius: 3px; }
+
+    /* ========== Inventory alert ========== */
+    .alert-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .alert-card {
+      border-radius: 10px;
+      padding: 14px 16px;
+      border-left: 4px solid;
+    }
+    .alert-card.critical { background: var(--accent-red-light); border-color: var(--danger); }
+    .alert-card.warning  { background: var(--accent-orange-light); border-color: var(--warning); }
+    .alert-card .ac-name { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+    .alert-card .ac-detail { font-size: 12px; color: var(--text-secondary); display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+    .alert-card .ac-days {
+      font-size: 22px;
+      font-weight: 700;
+      display: inline;
+    }
+    .alert-card.critical .ac-days { color: var(--danger); }
+    .alert-card.warning  .ac-days { color: var(--warning); }
+
+    /* ========== Footer ========== */
+    .demo-footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      border-top: 1px solid var(--border);
+      margin-top: 32px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ====== Header ====== -->
+<header class="app-header">
+  <h1>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+    </svg>
+    Amazon セラー ダッシュボード
+    <span class="header-badge">DEMO</span>
+  </h1>
+  <div class="header-right">サンプルデータ（2024年Q1）| GAS版 / VBA版 対応</div>
+</header>
+
+<div class="container">
+
+  <!-- ====== Period bar ====== -->
+  <div class="period-bar">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <strong>集計期間：</strong>
+    <span class="period-pill">2024年1月 〜 2024年3月（Q1）</span>
+    <span>取扱商品: 20品目 ／ 集計行数: 85件（売上） + 60件（広告） + 20件（在庫）</span>
+  </div>
+
+  <!-- ====== KPI Cards ====== -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label"><span class="dot" style="background:var(--primary)"></span>純売上（Q1合計）</div>
+      <div class="kpi-value color-blue">¥1,523,420</div>
+      <div class="kpi-sub">返品控除後 ／ 前月比</div>
+      <div class="kpi-trend up">▲ 18.4%（3月 vs 1月）</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label"><span class="dot" style="background:var(--success)"></span>粗利（Q1合計）</div>
+      <div class="kpi-value color-green">¥498,750</div>
+      <div class="kpi-sub">粗利率: <strong>32.7%</strong></div>
+      <div class="kpi-trend up">▲ 売上-原価-手数料-FBA-広告費</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label"><span class="dot" style="background:#e8710a"></span>ACoS（全体）</div>
+      <div class="kpi-value color-orange">18.9%</div>
+      <div class="kpi-sub">広告費 ¥195,850 ／ 広告売上 ¥1,036,620</div>
+      <div class="kpi-trend up">月次改善傾向</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label"><span class="dot" style="background:var(--neutral)"></span>総注文件数</div>
+      <div class="kpi-value color-neutral">258件</div>
+      <div class="kpi-sub">販売数量: 412個 ／ 返品: 4件</div>
+      <div class="kpi-trend up">▲ 返品率 1.5%</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label"><span class="dot" style="background:var(--danger)"></span>在庫アラート</div>
+      <div class="kpi-value color-red">5品</div>
+      <div class="kpi-sub">内 緊急（10日以内）: 3品</div>
+      <div class="kpi-trend down">早急な仕入れ検討を推奨</div>
+    </div>
+  </div>
+
+  <!-- ====== Charts ====== -->
+  <div class="chart-grid">
+
+    <!-- 月別売上・粗利バーチャート -->
+    <div class="chart-card">
+      <div class="chart-title">月別 売上・粗利・広告費 推移</div>
+      <div class="bar-chart-wrap">
+        <div class="bar-chart" id="monthly-chart" style="align-items:flex-end; justify-content:center;">
+          <!-- JS で描画 -->
+        </div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot" style="background:#1a73e8"></span>純売上</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#137333"></span>粗利</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#e8710a"></span>広告費</div>
+      </div>
+    </div>
+
+    <!-- コスト内訳ドーナツ -->
+    <div class="chart-card">
+      <div class="chart-title">費用内訳（Q1合計）</div>
+      <div class="donut-wrap">
+        <svg id="donut-svg" width="140" height="140" viewBox="0 0 140 140"></svg>
+        <div class="donut-legend" id="donut-legend"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ====== Monthly Table ====== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">月別集計</div>
+    </div>
+    <div class="table-card">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th style="text-align:left">月</th>
+              <th>純売上</th>
+              <th>粗利</th>
+              <th>粗利率</th>
+              <th>Amazon手数料</th>
+              <th>FBA費用</th>
+              <th>原価</th>
+              <th>広告費</th>
+              <th>広告売上</th>
+              <th>ACoS</th>
+              <th>注文件数</th>
+              <th>数量</th>
+            </tr>
+          </thead>
+          <tbody id="monthly-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Product Table ====== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">商品別パフォーマンス（売上高順）</div>
+    </div>
+    <div class="table-card">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th style="text-align:left">#</th>
+              <th style="text-align:left">商品名</th>
+              <th>純売上</th>
+              <th>粗利</th>
+              <th>粗利率</th>
+              <th>Amazon手数料</th>
+              <th>原価</th>
+              <th>広告費</th>
+              <th>ACoS</th>
+              <th>FBA在庫</th>
+              <th>在庫日数</th>
+            </tr>
+          </thead>
+          <tbody id="product-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Inventory Alert ====== -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title" id="alert-title">在庫アラート</div>
+    </div>
+    <div class="alert-grid" id="alert-grid"></div>
+  </div>
+
+</div><!-- /container -->
+
+<div class="demo-footer">
+  このデモはサンプルデータ（架空）を使用しています。実際のAmazonセラーセントラルデータとは無関係です。<br>
+  <strong>Amazon集計ツール v1.0 — GAS版 / Excel VBA版 対応 | 開発: Tomoya &amp; Co.</strong>
+</div>
+
+<script>
+// ============================================================
+// サンプルデータ（sample_data/ の集計結果）
+// ============================================================
+
+const MONTHLY = [
+  { month: '2024-01', label: '1月', revenue: 409820, grossProfit: 125440, grossProfitRate: 30.6, amazonFee: 51980, fba: 17200, cogs: 150440, adSpend: 55130, adSales: 271640, acos: 20.3, orders: 78, qty: 124 },
+  { month: '2024-02', label: '2月', revenue: 489760, grossProfit: 157620, grossProfitRate: 32.2, amazonFee: 62850, fba: 19800, cogs: 185640, adSpend: 63670, adSales: 366000, acos: 17.4, orders: 85, qty: 141 },
+  { month: '2024-03', label: '3月', revenue: 623840, grossProfit: 215690, grossProfitRate: 34.6, amazonFee: 81820, fba: 24800, cogs: 225330, adSpend: 76050, adSales: 500650, acos: 15.2, orders: 95, qty: 147 },
+];
+
+const PRODUCTS = [
+  { rank:1, asin:'B008TTUUVV', sku:'SKU-009', name:'ワイヤレスイヤホン スポーツ用', revenue:200600, grossProfit:58420, grossProfitRate:29.1, amazonFee:30090, cogs:95200, adSpend:43200, acos:22.8, fbaStock:56, daysUntilStockout:12 },
+  { rank:2, asin:'B013GGHHUU', sku:'SKU-014', name:'USB-Cハブ 7in1',              revenue:176000, grossProfit:57820, grossProfitRate:32.8, amazonFee:26400, cogs:75400, adSpend:30720, acos:18.5, fbaStock:65, daysUntilStockout:18 },
+  { rank:3, asin:'B012EEFFVV', sku:'SKU-013', name:'アウトドア折りたたみチェア',  revenue:140400, grossProfit:32180, grossProfitRate:22.9, amazonFee:21060, cogs:70000, adSpend:17920, acos:17.5, fbaStock:38, daysUntilStockout:16 },
+  { rank:4, asin:'B004HHIIJJ', sku:'SKU-005', name:'ポータブル充電器 10000mAh',   revenue:130050, grossProfit:30450, grossProfitRate:23.4, amazonFee:19508, cogs:57600, adSpend:27400, acos:25.0, fbaStock:88, daysUntilStockout:34 },
+  { rank:5, asin:'B001AABBCC', sku:'SKU-001', name:'ステンレス水筒 500ml シルバー', revenue:116800, grossProfit:38900, grossProfitRate:33.3, amazonFee:17520, cogs:42900, adSpend:22195, acos:18.6, fbaStock:145, daysUntilStockout:50 },
+  { rank:6, asin:'B001AABBCD', sku:'SKU-002', name:'ステンレス水筒 500ml ブラック', revenue:109600, grossProfit:36250, grossProfitRate:33.1, amazonFee:16440, cogs:40600, adSpend:14540, acos:16.7, fbaStock:98,  daysUntilStockout:45 },
+  { rank:7, asin:'B005KKLLMM', sku:'SKU-006', name:'LEDデスクライト USB給電',       revenue:99600,  grossProfit:26810, grossProfitRate:26.9, amazonFee:14940, cogs:45000, adSpend:16230, acos:25.0, fbaStock:72,  daysUntilStockout:35 },
+  { rank:8, asin:'B010AABBZZ', sku:'SKU-011', name:'ノイズキャンセリングイヤーマフ', revenue:90000,  grossProfit:26250, grossProfitRate:29.2, amazonFee:13500, cogs:45000, adSpend:9750,  acos:18.7, fbaStock:95,  daysUntilStockout:51 },
+  { rank:9, asin:'B002CCDDEE', sku:'SKU-003', name:'シリコン製スマホスタンド',       revenue:88170,  grossProfit:34720, grossProfitRate:39.4, amazonFee:13226, cogs:22500, adSpend:11676, acos:17.7, fbaStock:210, daysUntilStockout:49 },
+  { rank:10,asin:'B003EEFFGG', sku:'SKU-004', name:'マイクロファイバータオル 3枚組', revenue:76720,  grossProfit:28940, grossProfitRate:37.7, amazonFee:11508, cogs:25600, adSpend:5010,  acos:12.8, fbaStock:185, daysUntilStockout:62 },
+  { rank:11,asin:'B009WWXXYY', sku:'SKU-010', name:'車用スマホホルダー 磁気式',     revenue:55440,  grossProfit:18650, grossProfitRate:33.6, amazonFee:8316,  cogs:18600, adSpend:7700,  acos:19.4, fbaStock:142, daysUntilStockout:63 },
+  { rank:12,asin:'B014IIIJJTT', sku:'SKU-015',name:'ゲーミングマウスパッド XL',     revenue:53440,  grossProfit:15260, grossProfitRate:28.6, amazonFee:8016,  cogs:24200, adSpend:14550, acos:23.9, fbaStock:112, daysUntilStockout:39 },
+  { rank:13,asin:'B011CCDDWW', sku:'SKU-012', name:'キッチンスポンジ 10個入り',      revenue:48510,  grossProfit:22680, grossProfitRate:46.7, amazonFee:7277,  cogs:10800, adSpend:6010,  acos:9.3,  fbaStock:450, daysUntilStockout:77 },
+  { rank:14,asin:'B016MMNNRR', sku:'SKU-017', name:'防水スマホケース 汎用',          revenue:47880,  grossProfit:15940, grossProfitRate:33.3, amazonFee:7182,  cogs:15000, adSpend:10700, acos:19.0, fbaStock:168, daysUntilStockout:47 },
+  { rank:15,asin:'B015KKLLSS', sku:'SKU-016', name:'折りたたみショッピングバッグ',   revenue:47520,  grossProfit:22130, grossProfitRate:46.6, amazonFee:7128,  cogs:10000, adSpend:2950,  acos:6.4,  fbaStock:285, daysUntilStockout:58 },
+  { rank:16,asin:'B018QQRRPP', sku:'SKU-019', name:'アロマディフューザー USB式',    revenue:45880,  grossProfit:14260, grossProfitRate:31.1, amazonFee:6882,  cogs:16000, adSpend:7900,  acos:14.9, fbaStock:95,  daysUntilStockout:46 },
+  { rank:17,asin:'B019SSTTUQ', sku:'SKU-020', name:'電動鼻毛カッター',              revenue:43910,  grossProfit:16440, grossProfitRate:37.4, amazonFee:6587,  cogs:12000, adSpend:9076,  acos:14.5, fbaStock:115, daysUntilStockout:45 },
+  { rank:18,asin:'B006NNOOPP', sku:'SKU-007', name:'折りたたみ傘 コンパクト',       revenue:37800,  grossProfit:14520, grossProfitRate:38.4, amazonFee:5670,  cogs:12600, adSpend:4485,  acos:13.9, fbaStock:195, daysUntilStockout:61 },
+  { rank:19,asin:'B017OOPPQQ', sku:'SKU-018', name:'ステンレスストロー 8本セット',  revenue:25470,  grossProfit:11030, grossProfitRate:43.3, amazonFee:3821,  cogs:6300,  adSpend:2220,  acos:7.9,  fbaStock:225, daysUntilStockout:79 },
+  { rank:20,asin:'B007QQRRSS', sku:'SKU-008', name:'ウォーターボトルブラシ セット', revenue:22370,  grossProfit:9380,  grossProfitRate:41.9, amazonFee:3356,  cogs:6400,  adSpend:2420,  acos:14.3, fbaStock:320, daysUntilStockout:83 },
+];
+
+const COST_BREAKDOWN = [
+  { label: '原価',         color: '#1a73e8', value: 618850 },
+  { label: 'Amazon手数料', color: '#4285f4', value: 196350 },
+  { label: '広告費',       color: '#e8710a', value: 195850 },
+  { label: 'FBA配送・保管', color: '#34a853', value: 61800  },
+];
+
+// ============================================================
+// ユーティリティ
+// ============================================================
+
+const fmt = v => '¥' + Math.round(v).toLocaleString('ja-JP');
+const fmtK = v => {
+  if (v >= 1000000) return '¥' + (v / 1000000).toFixed(1) + 'M';
+  if (v >= 1000) return '¥' + (v / 1000).toFixed(0) + 'K';
+  return '¥' + v;
+};
+const pct = v => v.toFixed(1) + '%';
+
+function profitBadge(rate) {
+  if (rate >= 30) return `<span class="badge badge-success">${pct(rate)}</span>`;
+  if (rate >= 15) return `<span class="badge badge-warning">${pct(rate)}</span>`;
+  return `<span class="badge badge-danger">${pct(rate)}</span>`;
+}
+function stockBadge(days) {
+  if (days <= 0) return `<span class="badge badge-neutral">-</span>`;
+  if (days <= 10) return `<span class="badge badge-danger">🔴 ${days}日</span>`;
+  if (days <= 20) return `<span class="badge badge-warning">🟡 ${days}日</span>`;
+  return `<span class="badge badge-success">${days}日</span>`;
+}
+function acosBadge(v) {
+  if (v <= 15) return `<span class="badge badge-success">${pct(v)}</span>`;
+  if (v <= 25) return `<span class="badge badge-warning">${pct(v)}</span>`;
+  return `<span class="badge badge-danger">${pct(v)}</span>`;
+}
+
+// ============================================================
+// 月別バーチャート（SVGなしピュアCSS）
+// ============================================================
+
+function renderBarChart() {
+  const container = document.getElementById('monthly-chart');
+  const maxVal = Math.max(...MONTHLY.map(m => m.revenue));
+  const h = 140;
+
+  MONTHLY.forEach(m => {
+    const rv = Math.round(m.revenue / maxVal * h);
+    const gv = Math.round(m.grossProfit / maxVal * h);
+    const av = Math.round(m.adSpend / maxVal * h);
+
+    container.insertAdjacentHTML('beforeend', `
+      <div class="bar-group">
+        <div class="bar-bars">
+          <div class="bar" style="height:${rv}px;width:30px;background:#1a73e8;" title="純売上: ${fmt(m.revenue)}">
+            <span class="bar-val" style="color:#1a73e8">${fmtK(m.revenue)}</span>
+          </div>
+          <div class="bar" style="height:${gv}px;width:30px;background:#137333;" title="粗利: ${fmt(m.grossProfit)}">
+            <span class="bar-val" style="color:#137333">${fmtK(m.grossProfit)}</span>
+          </div>
+          <div class="bar" style="height:${av}px;width:20px;background:#e8710a;" title="広告費: ${fmt(m.adSpend)}">
+            <span class="bar-val" style="color:#e8710a">${fmtK(m.adSpend)}</span>
+          </div>
+        </div>
+        <div class="bar-label">${m.label}</div>
+      </div>
+    `);
+  });
+}
+
+// ============================================================
+// コスト内訳ドーナツ（SVG）
+// ============================================================
+
+function renderDonut() {
+  const svg = document.getElementById('donut-svg');
+  const legend = document.getElementById('donut-legend');
+  const total = COST_BREAKDOWN.reduce((s, d) => s + d.value, 0);
+  const cx = 70, cy = 70, r = 52, rInner = 34;
+
+  let startAngle = -Math.PI / 2;
+  let svgPaths = '';
+
+  COST_BREAKDOWN.forEach((d, i) => {
+    const frac = d.value / total;
+    const endAngle = startAngle + frac * 2 * Math.PI;
+    const x1 = cx + r * Math.cos(startAngle);
+    const y1 = cy + r * Math.sin(startAngle);
+    const x2 = cx + r * Math.cos(endAngle);
+    const y2 = cy + r * Math.sin(endAngle);
+    const xi1 = cx + rInner * Math.cos(endAngle);
+    const yi1 = cy + rInner * Math.sin(endAngle);
+    const xi2 = cx + rInner * Math.cos(startAngle);
+    const yi2 = cy + rInner * Math.sin(startAngle);
+    const large = frac > 0.5 ? 1 : 0;
+    const path = `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} L ${xi1} ${yi1} A ${rInner} ${rInner} 0 ${large} 0 ${xi2} ${yi2} Z`;
+    svgPaths += `<path d="${path}" fill="${d.color}" stroke="#fff" stroke-width="2" opacity="0.9"/>`;
+    startAngle = endAngle;
+
+    legend.insertAdjacentHTML('beforeend', `
+      <div class="donut-item">
+        <span class="donut-color" style="background:${d.color}"></span>
+        <span class="donut-name">${d.label}</span>
+        <span class="donut-pct">${pct(frac * 100)}</span>
+      </div>
+    `);
+  });
+
+  svg.innerHTML = svgPaths + `<text x="${cx}" y="${cy-6}" text-anchor="middle" font-size="10" fill="#5f6368">合計</text><text x="${cx}" y="${cy+10}" text-anchor="middle" font-size="11" font-weight="bold" fill="#202124">¥1.07M</text>`;
+}
+
+// ============================================================
+// 月別テーブル
+// ============================================================
+
+function renderMonthlyTable() {
+  const tbody = document.getElementById('monthly-tbody');
+  MONTHLY.forEach(m => {
+    tbody.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td><strong>${m.label}</strong></td>
+        <td>${fmt(m.revenue)}</td>
+        <td>${fmt(m.grossProfit)}</td>
+        <td>${profitBadge(m.grossProfitRate)}</td>
+        <td>${fmt(m.amazonFee)}</td>
+        <td>${fmt(m.fba)}</td>
+        <td>${fmt(m.cogs)}</td>
+        <td>${fmt(m.adSpend)}</td>
+        <td>${fmt(m.adSales)}</td>
+        <td>${acosBadge(m.acos)}</td>
+        <td>${m.orders}件</td>
+        <td>${m.qty}個</td>
+      </tr>
+    `);
+  });
+
+  // 合計行
+  const totRev = MONTHLY.reduce((s,m)=>s+m.revenue,0);
+  const totGP  = MONTHLY.reduce((s,m)=>s+m.grossProfit,0);
+  const totFee = MONTHLY.reduce((s,m)=>s+m.amazonFee,0);
+  const totFBA = MONTHLY.reduce((s,m)=>s+m.fba,0);
+  const totCOG = MONTHLY.reduce((s,m)=>s+m.cogs,0);
+  const totAd  = MONTHLY.reduce((s,m)=>s+m.adSpend,0);
+  const totAdS = MONTHLY.reduce((s,m)=>s+m.adSales,0);
+  const totOrd = MONTHLY.reduce((s,m)=>s+m.orders,0);
+  const totQty = MONTHLY.reduce((s,m)=>s+m.qty,0);
+  const gpr = (totGP/totRev*100).toFixed(1);
+  const acos = (totAd/totAdS*100).toFixed(1);
+
+  tbody.insertAdjacentHTML('beforeend', `
+    <tr style="background:#e8f0fe;font-weight:700">
+      <td>Q1 合計</td>
+      <td>${fmt(totRev)}</td>
+      <td>${fmt(totGP)}</td>
+      <td><span class="badge badge-success">${gpr}%</span></td>
+      <td>${fmt(totFee)}</td>
+      <td>${fmt(totFBA)}</td>
+      <td>${fmt(totCOG)}</td>
+      <td>${fmt(totAd)}</td>
+      <td>${fmt(totAdS)}</td>
+      <td><span class="badge badge-warning">${acos}%</span></td>
+      <td>${totOrd}件</td>
+      <td>${totQty}個</td>
+    </tr>
+  `);
+}
+
+// ============================================================
+// 商品別テーブル
+// ============================================================
+
+function renderProductTable() {
+  const tbody = document.getElementById('product-tbody');
+  PRODUCTS.forEach(p => {
+    const progressWidth = Math.round(p.revenue / PRODUCTS[0].revenue * 80);
+    tbody.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td><span class="badge badge-neutral">${p.rank}</span></td>
+        <td class="td-name">
+          <strong>${p.name}</strong>
+          <small>${p.asin} / ${p.sku}</small>
+        </td>
+        <td>
+          <span class="progress"><span class="progress-fill" style="width:${progressWidth}px;background:var(--primary)"></span></span>
+          ${fmt(p.revenue)}
+        </td>
+        <td>${fmt(p.grossProfit)}</td>
+        <td>${profitBadge(p.grossProfitRate)}</td>
+        <td>${fmt(p.amazonFee)}</td>
+        <td>${fmt(p.cogs)}</td>
+        <td>${fmt(p.adSpend)}</td>
+        <td>${acosBadge(p.acos)}</td>
+        <td>${p.fbaStock}個</td>
+        <td>${stockBadge(p.daysUntilStockout)}</td>
+      </tr>
+    `);
+  });
+}
+
+// ============================================================
+// 在庫アラート
+// ============================================================
+
+function renderInventoryAlerts() {
+  const alerts = PRODUCTS.filter(p => p.daysUntilStockout > 0 && p.daysUntilStockout <= 20)
+    .sort((a, b) => a.daysUntilStockout - b.daysUntilStockout);
+
+  const grid = document.getElementById('alert-grid');
+  const title = document.getElementById('alert-title');
+  title.textContent = `在庫アラート（${alerts.length}品 — 要注意）`;
+
+  if (alerts.length === 0) {
+    grid.innerHTML = '<p style="color:var(--success);font-weight:600">全商品の在庫は正常です。</p>';
+    return;
+  }
+
+  alerts.forEach(p => {
+    const isCritical = p.daysUntilStockout <= 10;
+    grid.insertAdjacentHTML('beforeend', `
+      <div class="alert-card ${isCritical ? 'critical' : 'warning'}">
+        <div class="ac-name">${isCritical ? '🔴' : '🟡'} ${p.name}</div>
+        <div>在庫切れまで <span class="ac-days">${p.daysUntilStockout}</span> 日</div>
+        <div class="ac-detail">
+          <span>現在庫: ${p.fbaStock}個</span>
+          <span>ASIN: ${p.asin}</span>
+          <span>売上貢献: ${fmt(p.revenue)}</span>
+        </div>
+      </div>
+    `);
+  });
+}
+
+// ============================================================
+// 初期化
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderBarChart();
+  renderDonut();
+  renderMonthlyTable();
+  renderProductTable();
+  renderInventoryAlerts();
+});
+</script>
+</body>
+</html>

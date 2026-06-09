@@ -1,0 +1,23 @@
+{
+  "sample_id": "sample_03",
+  "text": "2年前の私も、独立なんて夢のまた夢でした。\n\n会社の安定を手放す怖さ、収入の見通しゼロ、\n周りに「向いてないよ」と言われた日も。\n\nでも今、フリーランス2年目で月収は会社員時代の1.3倍。\n\n転身で一番大切なことは「準備しながら動くこと」。\n完璧に準備できた人なんて誰もいません。\n\nフリーランス転身を考えている方、話しましょう🤝\n\n#フリーランス #独立 #副業から独立 #転身 #個人事業主",
+  "quality": {
+    "passed": true,
+    "checks": [
+      {"name": "check_length", "passed": true, "message": "文字数OK: 192文字"},
+      {"name": "check_ng_words", "passed": true, "message": "NGワードなし"},
+      {"name": "check_duplicate", "passed": true, "message": "重複なし"}
+    ]
+  },
+  "status": "approved",
+  "metadata": {
+    "model": "claude-haiku-4-5",
+    "attempt": 1,
+    "input_tokens": 324,
+    "output_tokens": 215,
+    "theme": "フリーランス転身",
+    "tone": "共感・体験談風",
+    "target": "独立を考えているサラリーマン"
+  },
+  "created_at": "2026-06-08T10:10:00+00:00"
+}

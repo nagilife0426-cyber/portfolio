@@ -1,0 +1,23 @@
+{
+  "sample_id": "sample_09",
+  "text": "「仕事が辛い」と感じる日が増えていませんか？\n\n実はそれ、あなたが弱いんじゃなくて\n「働き方」が合っていないだけかもしれません。\n\nストレスフリーな働き方のためにやめた3つのこと：\n・完璧主義をやめた\n・全員に好かれようとするのをやめた\n・「できません」を言えるようになった\n\n仕事は人生の全てじゃない。\n自分が心地よい働き方を、一緒に探しましょう🍀\n\n#働き方改革 #ストレスフリー #仕事 #メンタルヘルス #生き方",
+  "quality": {
+    "passed": true,
+    "checks": [
+      {"name": "check_length", "passed": true, "message": "文字数OK: 219文字"},
+      {"name": "check_ng_words", "passed": true, "message": "NGワードなし"},
+      {"name": "check_duplicate", "passed": true, "message": "重複なし"}
+    ]
+  },
+  "status": "draft",
+  "metadata": {
+    "model": "claude-haiku-4-5",
+    "attempt": 1,
+    "input_tokens": 308,
+    "output_tokens": 228,
+    "theme": "ストレスフリーな働き方",
+    "tone": "共感・癒し系",
+    "target": "仕事に疲れた人"
+  },
+  "created_at": "2026-06-08T10:40:00+00:00"
+}

@@ -1,0 +1,23 @@
+{
+  "sample_id": "sample_05",
+  "text": "AI、使ってますか？🤖\n\n私がClaude＋ChatGPTで仕事を変えた3つの使い方：\n\n① メール文章の下書きを30秒で作成\n② 会議の議事録を音声入力→AI整形で5分に短縮\n③ データ分析のPythonコードを自動生成\n\n「AIが仕事を奪う」ではなく、\n「AIを使いこなした人が10倍速くなる」時代です。\n\n今日から試せることから始めましょう🚀\n\n#AI活用 #仕事効率化 #ChatGPT #Claude #生産性",
+  "quality": {
+    "passed": true,
+    "checks": [
+      {"name": "check_length", "passed": true, "message": "文字数OK: 198文字"},
+      {"name": "check_ng_words", "passed": true, "message": "NGワードなし"},
+      {"name": "check_duplicate", "passed": true, "message": "重複なし"}
+    ]
+  },
+  "status": "draft",
+  "metadata": {
+    "model": "claude-haiku-4-5",
+    "attempt": 1,
+    "input_tokens": 315,
+    "output_tokens": 221,
+    "theme": "AI活用仕事術",
+    "tone": "テンション高め・先進的",
+    "target": "ITに興味あるビジネスパーソン"
+  },
+  "created_at": "2026-06-08T10:20:00+00:00"
+}

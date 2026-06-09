@@ -1,0 +1,23 @@
+{
+  "sample_id": "sample_10",
+  "text": "SNSを集客に使いたいけど、何を投稿すればいい？\n\nこれが一番多い相談です。\n\n答えはシンプル：「お客様が抱える悩みの解決策」を投稿する。\n\n間違いやすいのは「商品・サービスの紹介」を投稿すること。\nそれは広告であってコンテンツじゃない。\n\nフォロワーが求めているのは「自分の悩みが解決できるかも」という希望💡\n\nまず「お客様が何に困っているか」を3つ書き出してみてください。\nそれがそのままコンテンツになります。\n\n#SNS集客 #Instagram #Threads #マーケティング #個人事業主",
+  "quality": {
+    "passed": true,
+    "checks": [
+      {"name": "check_length", "passed": true, "message": "文字数OK: 239文字"},
+      {"name": "check_ng_words", "passed": true, "message": "NGワードなし"},
+      {"name": "check_duplicate", "passed": true, "message": "重複なし"}
+    ]
+  },
+  "status": "approved",
+  "metadata": {
+    "model": "claude-haiku-4-5",
+    "attempt": 1,
+    "input_tokens": 322,
+    "output_tokens": 246,
+    "theme": "SNS集客の基本",
+    "tone": "教育系・わかりやすく",
+    "target": "SNS運用を始めたい個人事業主"
+  },
+  "created_at": "2026-06-08T10:45:00+00:00"
+}

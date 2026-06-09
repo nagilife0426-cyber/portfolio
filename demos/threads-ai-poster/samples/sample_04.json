@@ -1,0 +1,23 @@
+{
+  "sample_id": "sample_04",
+  "text": "朝5時起きを続けて3ヶ月。変わったこと☀️\n\n・読書が週3冊できるようになった\n・副業の作業時間が1時間確保できた\n・夜のSNSダラ見が自然と減った\n・1日のメンタルが安定した\n\n最初の1週間は地獄でした（笑）\nでも21日続けたら習慣になりました。\n\n朝活を始めたい方、まず明日だけ30分早起きしてみてください🌅\n\n#朝活 #早起き #習慣化 #モーニングルーティン #自己投資",
+  "quality": {
+    "passed": true,
+    "checks": [
+      {"name": "check_length", "passed": true, "message": "文字数OK: 186文字"},
+      {"name": "check_ng_words", "passed": true, "message": "NGワードなし"},
+      {"name": "check_duplicate", "passed": true, "message": "重複なし"}
+    ]
+  },
+  "status": "approved",
+  "metadata": {
+    "model": "claude-haiku-4-5",
+    "attempt": 1,
+    "input_tokens": 287,
+    "output_tokens": 203,
+    "theme": "朝活の習慣化",
+    "tone": "爽やか・モーニングルーティン",
+    "target": "朝が苦手な人"
+  },
+  "created_at": "2026-06-08T10:15:00+00:00"
+}

@@ -1,0 +1,23 @@
+{
+  "sample_id": "sample_02",
+  "text": "「時間がない」が口癖になっていませんか？🕐\n\nそれ、実は「時間の使い方」の問題かもしれません。\n\n✅ 朝30分のルーティン確立\n✅ スマホ通知をオフにする時間帯を作る\n✅ 1日のタスクを3つに絞る\n\nこれだけで生産性が変わります。\n残業が当たり前だった私が定時退社できた方法です。\n\n#時間管理 #生産性向上 #残業ゼロ #仕事術 #タスク管理",
+  "quality": {
+    "passed": true,
+    "checks": [
+      {"name": "check_length", "passed": true, "message": "文字数OK: 164文字"},
+      {"name": "check_ng_words", "passed": true, "message": "NGワードなし"},
+      {"name": "check_duplicate", "passed": true, "message": "重複なし"}
+    ]
+  },
+  "status": "draft",
+  "metadata": {
+    "model": "claude-haiku-4-5",
+    "attempt": 1,
+    "input_tokens": 298,
+    "output_tokens": 191,
+    "theme": "時間管理術",
+    "tone": "落ち着いた・知的",
+    "target": "残業が多い30代"
+  },
+  "created_at": "2026-06-08T10:05:00+00:00"
+}

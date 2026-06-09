@@ -1,0 +1,23 @@
+{
+  "sample_id": "sample_06",
+  "text": "モノを100個手放して気づいたこと。\n\n「これ、1年使ってないな」と思ったものは、\nほぼ100%、この先も使いません。\n\n手放すと部屋が広くなるだけじゃなく、\n頭の中もスッキリします。\n\n断捨離は「捨てる」ではなく、\n「本当に大切なものを残す」作業。\n\n今週末、引き出しをひとつ開けてみませんか？\nそこから始まります✨\n\n#ミニマリスト #断捨離 #シンプルライフ #片付け #暮らし",
+  "quality": {
+    "passed": true,
+    "checks": [
+      {"name": "check_length", "passed": true, "message": "文字数OK: 192文字"},
+      {"name": "check_ng_words", "passed": true, "message": "NGワードなし"},
+      {"name": "check_duplicate", "passed": true, "message": "重複なし"}
+    ]
+  },
+  "status": "draft",
+  "metadata": {
+    "model": "claude-haiku-4-5",
+    "attempt": 1,
+    "input_tokens": 296,
+    "output_tokens": 208,
+    "theme": "ミニマリスト生活",
+    "tone": "穏やか・丁寧",
+    "target": "モノを減らしたい人"
+  },
+  "created_at": "2026-06-08T10:25:00+00:00"
+}

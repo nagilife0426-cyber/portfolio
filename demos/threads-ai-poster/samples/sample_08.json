@@ -1,0 +1,23 @@
+{
+  "sample_id": "sample_08",
+  "text": "副業で月5万達成するまでにやった3つのこと💰\n\n① クラウドワークスで最初の1件を受注（単価500円でもOK）\n② 実績を作って単価を3倍に交渉\n③ 固定クライアント2社を確保\n\n最初の3ヶ月は月1〜2万。\n半年で月5万を安定して超えました。\n\nポイントは「完璧を待たずに始めること」。\nスキルは案件をこなしながら上がります。\n\n副業始めたい方、最初の一歩を応援します🙌\n\n#副業 #副業月収 #クラウドワークス #フリーランス #副業初心者",
+  "quality": {
+    "passed": true,
+    "checks": [
+      {"name": "check_length", "passed": true, "message": "文字数OK: 214文字"},
+      {"name": "check_ng_words", "passed": true, "message": "NGワードなし"},
+      {"name": "check_duplicate", "passed": true, "message": "重複なし"}
+    ]
+  },
+  "status": "approved",
+  "metadata": {
+    "model": "claude-haiku-4-5",
+    "attempt": 1,
+    "input_tokens": 318,
+    "output_tokens": 232,
+    "theme": "副業月5万達成",
+    "tone": "実績ベース・信頼感",
+    "target": "副業初心者"
+  },
+  "created_at": "2026-06-08T10:35:00+00:00"
+}

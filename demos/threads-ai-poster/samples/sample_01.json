@@ -1,0 +1,23 @@
+{
+  "sample_id": "sample_01",
+  "text": "副業を始めたいけど何からすればいい？\n\n実は最初の一歩は「スキルの棚卸し」だけ✨\n今の仕事で得た経験、全部立派な武器になります。\n\nライター・デザイン・プログラミング・コーチング...\nどれも最初は0からスタートした人ばかり。\n\n大切なのは完璧なスキルより、まずやってみること！\n今日から一緒に始めましょう💪\n\n#副業 #副業初心者 #フリーランス #スキルアップ #働き方改革",
+  "quality": {
+    "passed": true,
+    "checks": [
+      {"name": "check_length", "passed": true, "message": "文字数OK: 143文字"},
+      {"name": "check_ng_words", "passed": true, "message": "NGワードなし"},
+      {"name": "check_duplicate", "passed": true, "message": "重複なし"}
+    ]
+  },
+  "status": "draft",
+  "metadata": {
+    "model": "claude-haiku-4-5",
+    "attempt": 1,
+    "input_tokens": 312,
+    "output_tokens": 178,
+    "theme": "副業の始め方",
+    "tone": "元気・背中を押す",
+    "target": "副業に興味のある会社員"
+  },
+  "created_at": "2026-06-08T10:00:00+00:00"
+}

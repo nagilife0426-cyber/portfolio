@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>法人データ収集ツール デモ | Tomoya & Co.</title>
+  <style>
+    /* ─── リセット・ベース ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Hiragino Sans', 'Meiryo', 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      color: #1a202c;
+      min-height: 100vh;
+    }
+
+    /* ─── ヘッダー ─── */
+    header {
+      background: linear-gradient(135deg, #2d3748 0%, #1a365d 100%);
+      color: white;
+      padding: 24px 40px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    }
+    header .logo {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    header .badge {
+      background: #48bb78;
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 99px;
+      letter-spacing: 0.5px;
+    }
+    header .sub {
+      margin-left: auto;
+      font-size: 13px;
+      opacity: 0.75;
+    }
+
+    /* ─── メインレイアウト ─── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 24px 64px;
+    }
+
+    /* ─── カード ─── */
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+      padding: 28px 32px;
+      margin-bottom: 24px;
+    }
+    .card h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card h2 .icon { font-size: 18px; }
+
+    /* ─── 入力エリア ─── */
+    .input-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+    }
+    .input-group {
+      flex: 1;
+    }
+    .input-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 6px;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      padding: 10px 14px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: vertical;
+      transition: border-color .2s;
+    }
+    textarea:focus { outline: none; border-color: #4299e1; }
+
+    /* ─── ボタン ─── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 22px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: #4299e1;
+      color: white;
+    }
+    .btn-primary:hover { background: #3182ce; transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #4a5568;
+    }
+    .btn-secondary:hover { background: #cbd5e0; }
+    .btn-success {
+      background: #48bb78;
+      color: white;
+    }
+    .btn-success:hover { background: #38a169; }
+
+    /* ─── 進捗バー ─── */
+    .progress-wrap {
+      display: none;
+      margin-top: 16px;
+    }
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #718096;
+      margin-bottom: 6px;
+    }
+    .progress-bar-bg {
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4299e1, #48bb78);
+      border-radius: 99px;
+      transition: width .4s ease;
+      width: 0%;
+    }
+
+    /* ─── ステータスバッジ ─── */
+    .status-badges {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    .badge-stat {
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 18px;
+      text-align: center;
+      min-width: 110px;
+    }
+    .badge-stat .num {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .badge-stat .label { font-size: 12px; color: #718096; margin-top: 4px; }
+    .complete .num  { color: #38a169; }
+    .partial .num   { color: #d69e2e; }
+    .failed .num    { color: #e53e3e; }
+    .total .num     { color: #3182ce; }
+
+    /* ─── テーブル ─── */
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead th {
+      background: #f7fafc;
+      border-bottom: 2px solid #e2e8f0;
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+      color: #4a5568;
+      white-space: nowrap;
+    }
+    tbody tr {
+      border-bottom: 1px solid #f0f4f8;
+      transition: background .15s;
+    }
+    tbody tr:hover { background: #f7fafc; }
+    tbody td {
+      padding: 10px 14px;
+      vertical-align: middle;
+    }
+    .score-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .score-complete  { background: #c6f6d5; color: #276749; }
+    .score-partial   { background: #fefcbf; color: #744210; }
+    .score-failed    { background: #fed7d7; color: #742a2a; }
+
+    .confidence-bar {
+      display: inline-flex;
+      gap: 3px;
+      vertical-align: middle;
+    }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #e2e8f0;
+    }
+    .dot.filled { background: #48bb78; }
+    .dot.half   { background: #d69e2e; }
+
+    /* ─── フッターアクション ─── */
+    .table-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 16px;
+    }
+
+    /* ─── フィーチャーリスト ─── */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 8px;
+    }
+    .feature-item {
+      background: #f7fafc;
+      border-radius: 8px;
+      padding: 16px;
+      border-left: 4px solid #4299e1;
+    }
+    .feature-item h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 6px;
+    }
+    .feature-item p { font-size: 12px; color: #718096; line-height: 1.6; }
+
+    /* ─── コンプライアンス ─── */
+    .compliance-list {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .compliance-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      color: #4a5568;
+      background: #f0fff4;
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+    .compliance-list li .check { color: #38a169; font-size: 15px; flex-shrink: 0; }
+
+    /* ─── フッター ─── */
+    footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 12px;
+      color: #a0aec0;
+    }
+
+    /* ─── アニメーション ─── */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeIn .3s ease; }
+
+    /* ─── ログエリア ─── */
+    #log-area {
+      background: #1a202c;
+      color: #a0aec0;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.8;
+      max-height: 180px;
+      overflow-y: auto;
+      display: none;
+      margin-top: 12px;
+    }
+    #log-area .log-ok  { color: #68d391; }
+    #log-area .log-warn{ color: #f6e05e; }
+    #log-area .log-err { color: #fc8181; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">法人データ収集ツール</div>
+  <span class="badge">DEMO</span>
+  <span class="sub">Tomoya &amp; Co. / CW応募デモ</span>
+</header>
+
+<main>
+
+  <!-- ── 入力パネル ── -->
+  <div class="card">
+    <h2><span class="icon">📋</span>企業名リスト入力</h2>
+    <div class="input-row">
+      <div class="input-group">
+        <label>企業名（1行1社）</label>
+        <textarea id="company-input" placeholder="例:
+株式会社○○商事
+△△工業株式会社
+合同会社□□サービス"></textarea>
+      </div>
+    </div>
+    <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="startDemo()">▶ デモ実行（サンプルデータで動作確認）</button>
+      <button class="btn btn-secondary" onclick="loadSample()">サンプルデータ読込</button>
+      <button class="btn btn-secondary" onclick="clearAll()">クリア</button>
+    </div>
+
+    <!-- 進捗バー -->
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-meta">
+        <span id="progress-label">処理中... 0 / 0 件</span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-fill"></div>
+      </div>
+    </div>
+
+    <!-- ログ -->
+    <div id="log-area"></div>
+  </div>
+
+  <!-- ── 集計パネル ── -->
+  <div class="card" id="stats-card" style="display:none;">
+    <h2><span class="icon">📊</span>抽出結果サマリ</h2>
+    <div class="status-badges">
+      <div class="badge-stat total">
+        <div class="num" id="stat-total">0</div>
+        <div class="label">処理件数</div>
+      </div>
+      <div class="badge-stat complete">
+        <div class="num" id="stat-complete">0</div>
+        <div class="label">完全取得</div>
+      </div>
+      <div class="badge-stat partial">
+        <div class="num" id="stat-partial">0</div>
+        <div class="label">要確認</div>
+      </div>
+      <div class="badge-stat failed">
+        <div class="num" id="stat-failed">0</div>
+        <div class="label">取得失敗</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 結果テーブル ── -->
+  <div class="card" id="result-card" style="display:none;">
+    <h2><span class="icon">📄</span>抽出結果一覧</h2>
+    <p style="font-size:12px; color:#718096; margin-bottom:12px;">
+      ※ このデモはダミーデータで動作しています。実運用時は各社の公式HPから自動収集します。
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>企業名</th>
+            <th>郵便番号</th>
+            <th>住所</th>
+            <th>代表者名</th>
+            <th>信頼度</th>
+            <th>ステータス</th>
+          </tr>
+        </thead>
+        <tbody id="result-tbody"></tbody>
+      </table>
+    </div>
+    <div class="table-actions">
+      <button class="btn btn-secondary" onclick="downloadCSV()">⬇ CSVダウンロード</button>
+      <button class="btn btn-success" onclick="downloadManualCSV()">⬇ 要確認リスト</button>
+    </div>
+  </div>
+
+  <!-- ── 機能説明 ── -->
+  <div class="card">
+    <h2><span class="icon">⚙️</span>ツールの仕組み</h2>
+    <div class="feature-grid">
+      <div class="feature-item">
+        <h3>HP自動特定</h3>
+        <p>企業名でDuckDuckGo検索し、上位ドメインから.co.jp/.jp を優先して公式HPを推定</p>
+      </div>
+      <div class="feature-item">
+        <h3>概要ページ自動遷移</h3>
+        <p>トップページのリンクを解析し「会社概要」「company」等のページへ自動遷移</p>
+      </div>
+      <div class="feature-item">
+        <h3>多形式HTML対応</h3>
+        <p>table/th-td・dl/dt-dd・p/span 平文の3形式に対応。表記ゆれに強い正規表現で抽出</p>
+      </div>
+      <div class="feature-item">
+        <h3>代表者名ヒューリスティック</h3>
+        <p>「代表取締役」「CEO」「代表者」等14種のラベルを検索し近傍の氏名を取得</p>
+      </div>
+      <div class="feature-item">
+        <h3>信頼度スコアリング</h3>
+        <p>全3項目揃い→完全 / 一部→要確認 / 0件→取得失敗の3段階で出力を分類</p>
+      </div>
+      <div class="feature-item">
+        <h3>途中再開・進捗保存</h3>
+        <p>progress.json で処理済みを管理。中断しても --resume で続きから再開可能</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── コンプライアンス ── -->
+  <div class="card">
+    <h2><span class="icon">🛡️</span>法令・規約遵守</h2>
+    <ul class="compliance-list">
+      <li><span class="check">✓</span>robots.txt を毎回確認・Disallowパスはスキップ</li>
+      <li><span class="check">✓</span>アクセス間隔 3〜5 秒のランダムスリープ</li>
+      <li><span class="check">✓</span>各社の公開情報（企業HP）のみ取得</li>
+      <li><span class="check">✓</span>User-Agent に連絡先を明示</li>
+      <li><span class="check">✓</span>同一サーバーへの過負荷を防ぐリトライ制限</li>
+      <li><span class="check">✓</span>個人情報（非公開情報）の取得は行わない</li>
+    </ul>
+  </div>
+
+</main>
+
+<footer>
+  Tomoya &amp; Co. / クラウドワークス応募デモ（ローカル動作のみ・外部送信なし）
+</footer>
+
+<script>
+// ──────────────────────────────────────────
+// ダミーデータ（デモ用）
+// ──────────────────────────────────────────
+const SAMPLE_COMPANIES = [
+  "株式会社サンプル商事",
+  "有限会社テスト工業",
+  "合同会社フューチャーネット",
+  "株式会社レアケース",
+  "XYZホールディングス株式会社",
+  "デモ株式会社",
+  "架空建設株式会社",
+];
+
+// 実際の抽出結果を模したダミーデータ
+const DUMMY_RESULTS = {
+  "株式会社サンプル商事": {
+    postal: "100-0001",
+    address: "東京都千代田区千代田1丁目1番地 サンプルビル3F",
+    rep: "山田 太郎",
+    url: "https://sample-shoji.co.jp/company",
+    score: "complete",
+    confidence: 3,
+  },
+  "有限会社テスト工業": {
+    postal: "530-0001",
+    address: "大阪府大阪市北区梅田2丁目4番9号 テストタワー10F",
+    rep: "鈴木 花子",
+    url: "https://test-kogyo.co.jp/about",
+    score: "complete",
+    confidence: 3,
+  },
+  "合同会社フューチャーネット": {
+    postal: "460-0008",
+    address: "愛知県名古屋市中区栄3丁目15番33号 フューチャービル5F",
+    rep: "佐藤 次郎",
+    url: "https://future-net.co.jp/company",
+    score: "complete",
+    confidence: 3,
+  },
+  "株式会社レアケース": {
+    postal: "812-0011",
+    address: "福岡県福岡市博多区博多駅前2丁目9番28号",
+    rep: "",
+    url: "https://rare-case.co.jp/info",
+    score: "partial",
+    confidence: 2,
+  },
+  "XYZホールディングス株式会社": {
+    postal: "220-0012",
+    address: "神奈川県横浜市西区みなとみらい2丁目3番3号 みなとみらいBC 18F",
+    rep: "田中 三郎",
+    url: "https://xyz-hd.co.jp/company",
+    score: "complete",
+    confidence: 3,
+  },
+  "デモ株式会社": {
+    postal: "",
+    address: "",
+    rep: "",
+    url: "https://demo.co.jp/",
+    score: "failed",
+    confidence: 0,
+  },
+  "架空建設株式会社": {
+    postal: "060-0001",
+    address: "北海道札幌市中央区北1条西2丁目",
+    rep: "",
+    url: "https://kako-kensetsu.co.jp/gaiyou",
+    score: "partial",
+    confidence: 2,
+  },
+};
+
+// ──────────────────────────────────────────
+// ユーティリティ
+// ──────────────────────────────────────────
+
+function getCompanyList() {
+  return document.getElementById("company-input").value
+    .split("\n")
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+function addLog(msg, type = "") {
+  const el = document.getElementById("log-area");
+  el.style.display = "block";
+  const line = document.createElement("div");
+  if (type) line.className = `log-${type}`;
+  const ts = new Date().toLocaleTimeString("ja-JP");
+  line.textContent = `[${ts}] ${msg}`;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+
+function sleep(ms) {
+  return new Promise(res => setTimeout(res, ms));
+}
+
+// ──────────────────────────────────────────
+// メインデモ処理
+// ──────────────────────────────────────────
+
+let allResults = [];
+
+async function startDemo() {
+  const companies = getCompanyList();
+  if (!companies.length) {
+    alert("企業名を入力してください（または「サンプルデータ読込」をクリック）");
+    return;
+  }
+
+  // リセット
+  allResults = [];
+  document.getElementById("result-tbody").innerHTML = "";
+  document.getElementById("log-area").innerHTML = "";
+  document.getElementById("log-area").style.display = "none";
+  document.getElementById("stats-card").style.display = "none";
+  document.getElementById("result-card").style.display = "none";
+
+  // 進捗バー表示
+  const progressWrap = document.getElementById("progress-wrap");
+  progressWrap.style.display = "block";
+
+  addLog("処理開始 — " + companies.length + " 件", "ok");
+  addLog("robots.txt 確認・アクセス間隔設定済み", "ok");
+
+  for (let i = 0; i < companies.length; i++) {
+    const name = companies[i];
+    const pct = Math.round((i / companies.length) * 100);
+    document.getElementById("progress-fill").style.width = pct + "%";
+    document.getElementById("progress-label").textContent =
+      `処理中... ${i + 1} / ${companies.length} 件`;
+    document.getElementById("progress-pct").textContent = pct + "%";
+
+    addLog(`[${i+1}/${companies.length}] 検索中: ${name}`);
+    await sleep(300 + Math.random() * 400);  // デモ用アニメーション遅延
+
+    // ダミーデータ取得（実運用時はここがHTTPリクエスト）
+    const dummy = DUMMY_RESULTS[name] || {
+      postal: "（データなし）",
+      address: "（データなし）",
+      rep: "",
+      url: "",
+      score: "failed",
+      confidence: 0,
+    };
+
+    const result = { name, ...dummy };
+    allResults.push(result);
+
+    const scoreLabel = {complete:"完全", partial:"要確認", failed:"取得失敗"}[dummy.score];
+    const logType = {complete:"ok", partial:"warn", failed:"err"}[dummy.score];
+    addLog(`  → ${scoreLabel}: 郵便番号=${dummy.postal || "未取得"}, 代表者=${dummy.rep || "未取得"}`, logType);
+
+    appendRow(i + 1, result);
+
+    // 集計更新
+    updateStats();
+  }
+
+  document.getElementById("progress-fill").style.width = "100%";
+  document.getElementById("progress-label").textContent =
+    `完了 — ${companies.length} 件処理しました`;
+  document.getElementById("progress-pct").textContent = "100%";
+  addLog("処理完了 ✓", "ok");
+}
+
+function appendRow(idx, r) {
+  const tbody = document.getElementById("result-tbody");
+  const tr = document.createElement("tr");
+  tr.className = "fade-in";
+
+  const scoreClass = {complete:"score-complete", partial:"score-partial", failed:"score-failed"}[r.score];
+  const scoreText  = {complete:"完全", partial:"要確認", failed:"取得失敗"}[r.score];
+
+  const dots = [1,2,3].map(n =>
+    `<span class="dot ${n <= r.confidence ? (r.confidence === 3 ? "filled" : "half") : ""}"></span>`
+  ).join("");
+
+  tr.innerHTML = `
+    <td style="color:#a0aec0">${idx}</td>
+    <td style="font-weight:600">${esc(r.name)}</td>
+    <td>${esc(r.postal)}</td>
+    <td style="max-width:280px; word-break:break-all">${esc(r.address)}</td>
+    <td>${esc(r.rep) || '<span style="color:#a0aec0">—</span>'}</td>
+    <td><span class="confidence-bar">${dots}</span></td>
+    <td><span class="score-badge ${scoreClass}">${scoreText}</span></td>
+  `;
+  tbody.appendChild(tr);
+
+  document.getElementById("result-card").style.display = "block";
+}
+
+function updateStats() {
+  const total    = allResults.length;
+  const complete = allResults.filter(r => r.score === "complete").length;
+  const partial  = allResults.filter(r => r.score === "partial").length;
+  const failed   = allResults.filter(r => r.score === "failed").length;
+
+  document.getElementById("stat-total").textContent    = total;
+  document.getElementById("stat-complete").textContent = complete;
+  document.getElementById("stat-partial").textContent  = partial;
+  document.getElementById("stat-failed").textContent   = failed;
+  document.getElementById("stats-card").style.display  = "block";
+}
+
+// ──────────────────────────────────────────
+// CSVダウンロード
+// ──────────────────────────────────────────
+
+function toCSV(rows) {
+  const header = ["企業名","郵便番号","住所","代表者名","URL","ステータス"];
+  const lines  = [header.join(",")];
+  for (const r of rows) {
+    lines.push([
+      `"${r.name}"`,
+      `"${r.postal}"`,
+      `"${r.address}"`,
+      `"${r.rep}"`,
+      `"${r.url}"`,
+      `"${{complete:"完全", partial:"要確認", failed:"取得失敗"}[r.score]}"`,
+    ].join(","));
+  }
+  return "﻿" + lines.join("\r\n");  // BOM付きUTF-8（Excel対応）
+}
+
+function triggerDownload(content, filename) {
+  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadCSV() {
+  if (!allResults.length) return alert("先にデモを実行してください");
+  triggerDownload(toCSV(allResults), "company_data_all.csv");
+}
+
+function downloadManualCSV() {
+  if (!allResults.length) return alert("先にデモを実行してください");
+  const manual = allResults.filter(r => r.score !== "complete");
+  if (!manual.length) return alert("要確認・失敗件数: 0件です");
+  triggerDownload(toCSV(manual), "company_data_manual_check.csv");
+}
+
+// ──────────────────────────────────────────
+// ヘルパー
+// ──────────────────────────────────────────
+
+function loadSample() {
+  document.getElementById("company-input").value = SAMPLE_COMPANIES.join("\n");
+}
+
+function clearAll() {
+  document.getElementById("company-input").value = "";
+  document.getElementById("result-tbody").innerHTML = "";
+  document.getElementById("log-area").innerHTML = "";
+  document.getElementById("log-area").style.display = "none";
+  document.getElementById("stats-card").style.display = "none";
+  document.getElementById("result-card").style.display = "none";
+  document.getElementById("progress-wrap").style.display = "none";
+  allResults = [];
+}
+
+function esc(str) {
+  return String(str || "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;");
+}
+</script>
+
+</body>
+</html>

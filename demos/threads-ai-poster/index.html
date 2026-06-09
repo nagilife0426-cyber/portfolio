@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Threads 自動投稿デモ - Claude API 連携</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --surface2: #1e1e1e;
+      --border: #2a2a2a;
+      --text: #f0f0f0;
+      --text-muted: #888;
+      --accent: #a855f7;
+      --accent-dim: #7c3aed33;
+      --green: #22c55e;
+      --yellow: #eab308;
+      --red: #ef4444;
+      --blue: #3b82f6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ヘッダー */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), #ec4899);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .header h1 { font-size: 18px; font-weight: 700; }
+    .header p { font-size: 12px; color: var(--text-muted); }
+    .badge {
+      margin-left: auto;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* メインレイアウト */
+    .main { display: grid; grid-template-columns: 340px 1fr; min-height: calc(100vh - 70px); }
+
+    /* 左パネル：設定 */
+    .panel-left {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+    input[type="text"], select, textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 9px 12px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+    textarea { resize: vertical; min-height: 60px; font-family: inherit; }
+    select { cursor: pointer; }
+    option { background: var(--surface2); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 16px; border-radius: 8px; border: none;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-primary {
+      background: var(--accent); color: white;
+      width: 100%;
+      justify-content: center;
+      margin-top: 4px;
+    }
+    .btn-primary:hover { background: #9333ea; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-approve { background: var(--green); color: white; }
+    .btn-approve:hover { background: #16a34a; }
+    .btn-reject { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-reject:hover { background: var(--border); }
+    .btn-post { background: var(--blue); color: white; }
+    .btn-post:hover { background: #2563eb; }
+
+    .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+    /* コスト表示 */
+    .cost-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .cost-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+    .cost-row:last-child { margin-bottom: 0; font-weight: 700; }
+    .cost-label { color: var(--text-muted); }
+    .cost-val { color: var(--green); }
+
+    /* 右パネル：メインコンテンツ */
+    .panel-right { padding: 24px; overflow-y: auto; }
+
+    /* タブ */
+    .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .tab {
+      padding: 8px 16px; border-radius: 8px 8px 0 0; cursor: pointer;
+      font-size: 13px; font-weight: 500; color: var(--text-muted);
+      border: 1px solid transparent; border-bottom: none;
+      transition: all 0.15s;
+    }
+    .tab.active {
+      background: var(--surface);
+      border-color: var(--border);
+      color: var(--text);
+      border-bottom: 1px solid var(--surface);
+      margin-bottom: -1px;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* プレビューカード */
+    .preview-area {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      min-height: 160px;
+      margin-bottom: 16px;
+    }
+    .preview-label { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+    .preview-text {
+      white-space: pre-wrap;
+      line-height: 1.7;
+      font-size: 15px;
+    }
+    .preview-placeholder { color: var(--text-muted); font-style: italic; }
+
+    .meta-row {
+      display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;
+    }
+    .meta-chip {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .meta-chip span { color: var(--text); }
+
+    /* 品質チェック */
+    .quality-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+    .quality-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+    }
+    .quality-icon { font-size: 18px; margin-bottom: 4px; }
+    .quality-name { font-size: 10px; color: var(--text-muted); }
+    .quality-msg { font-size: 11px; margin-top: 2px; }
+    .pass { color: var(--green); }
+    .fail { color: var(--red); }
+
+    /* 承認フロー */
+    .approval-actions { display: flex; gap: 8px; }
+
+    /* スケジュール一覧 */
+    .schedule-list { display: flex; flex-direction: column; gap: 8px; }
+    .schedule-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      display: flex; align-items: flex-start; gap: 12px;
+      min-width: 0;
+    }
+    .schedule-item:hover { border-color: var(--accent); }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .status-dot.pending { background: var(--yellow); }
+    .status-dot.approved { background: var(--green); }
+    .status-dot.posted { background: var(--blue); }
+    .status-dot.cancelled { background: var(--border); }
+    .schedule-text { flex: 1; min-width: 0; overflow: hidden; }
+    .schedule-preview { font-size: 13px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .schedule-meta { font-size: 11px; color: var(--text-muted); }
+    .status-badge {
+      font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px;
+    }
+    .status-badge.pending { background: #eab30822; color: var(--yellow); }
+    .status-badge.approved { background: #22c55e22; color: var(--green); }
+    .status-badge.posted { background: #3b82f622; color: var(--blue); }
+    .status-badge.cancelled { background: #ffffff11; color: var(--text-muted); }
+
+    /* ローディング */
+    .loading-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center; justify-content: center;
+      flex-direction: column; gap: 16px;
+    }
+    .loading-overlay.show { display: flex; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: var(--text-muted); font-size: 13px; }
+
+    /* トースト通知 */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 13px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      z-index: 200;
+      opacity: 0; transform: translateY(8px);
+      transition: all 0.25s;
+      max-width: 300px;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    /* フロー図 */
+    .flow-diagram {
+      display: flex; align-items: center; gap: 0;
+      margin-bottom: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      overflow-x: auto;
+    }
+    .flow-step {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      min-width: 90px;
+    }
+    .flow-icon {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .flow-icon.active { background: var(--accent-dim); border: 2px solid var(--accent); }
+    .flow-icon.done { background: #22c55e22; border: 2px solid var(--green); }
+    .flow-icon.idle { background: var(--surface2); border: 2px dashed var(--border); }
+    .flow-name { font-size: 10px; color: var(--text-muted); text-align: center; }
+    .flow-arrow { color: var(--border); font-size: 20px; padding: 0 4px; margin-bottom: 16px; }
+
+    /* サンプルカード */
+    .sample-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+    .sample-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .sample-card:hover { border-color: var(--accent); }
+    .sample-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .sample-theme { font-size: 11px; font-weight: 700; color: var(--accent); }
+    .sample-chars { font-size: 10px; color: var(--text-muted); }
+    .sample-text { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+    .sample-text-preview { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  </style>
+</head>
+<body>
+
+<!-- ヘッダー -->
+<div class="header">
+  <div class="header-icon">🧵</div>
+  <div>
+    <h1>Threads 自動投稿システム</h1>
+    <p>Claude API (claude-haiku-4-5) + Threads Graph API</p>
+  </div>
+  <div class="badge">Demo v1.0</div>
+</div>
+
+<!-- ローディング -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Claude API で投稿文を生成中...</div>
+</div>
+
+<!-- トースト -->
+<div id="toast"></div>
+
+<!-- メインレイアウト -->
+<div class="main">
+  <!-- 左パネル：生成設定 -->
+  <div class="panel-left">
+    <div class="section-title">投稿文 生成設定</div>
+
+    <div class="form-group">
+      <label>テーマ（必須）</label>
+      <input type="text" id="theme" placeholder="例: 副業の始め方、AI活用術..." value="副業で月5万円を達成する方法">
+    </div>
+
+    <div class="form-group">
+      <label>トーン・文体</label>
+      <select id="tone">
+        <option value="親しみやすく・カジュアル">親しみやすく・カジュアル</option>
+        <option value="元気・背中を押す" selected>元気・背中を押す</option>
+        <option value="落ち着いた・知的">落ち着いた・知的</option>
+        <option value="共感・体験談風">共感・体験談風</option>
+        <option value="教育系・わかりやすく">教育系・わかりやすく</option>
+        <option value="テンション高め・先進的">テンション高め・先進的</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>ターゲット読者</label>
+      <input type="text" id="target" value="副業に興味のある30代会社員">
+    </div>
+
+    <div class="form-group">
+      <label>ハッシュタグ方針</label>
+      <select id="hashtag">
+        <option value="3〜5個、テーマに関連するもの">3〜5個・テーマ関連</option>
+        <option value="5〜8個、ニッチキーワード中心">5〜8個・ニッチ重視</option>
+        <option value="3〜4個、ブランドタグ含む">3〜4個・ブランドタグ含む</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>追加指示（任意）</label>
+      <textarea id="extra" placeholder="例: 具体的な数字を入れて&#10;体験談風に書いて"></textarea>
+    </div>
+
+    <button class="btn btn-primary" onclick="generatePost()" id="genBtn">
+      ✨ 投稿文を生成する
+    </button>
+
+    <hr class="divider">
+
+    <div class="section-title">コスト試算</div>
+    <div class="cost-card">
+      <div class="cost-row"><span class="cost-label">モデル</span><span class="cost-val">claude-haiku-4-5</span></div>
+      <div class="cost-row"><span class="cost-label">入力単価</span><span class="cost-val">$1.00 / 1M tokens</span></div>
+      <div class="cost-row"><span class="cost-label">出力単価</span><span class="cost-val">$5.00 / 1M tokens</span></div>
+      <div class="cost-row"><span class="cost-label">1投稿あたり</span><span class="cost-val">約0.04円</span></div>
+      <div class="cost-row"><span class="cost-label">月90投稿（1日3本）</span><span class="cost-val">約4円</span></div>
+    </div>
+  </div>
+
+  <!-- 右パネル -->
+  <div class="panel-right">
+    <!-- フロー図 -->
+    <div class="flow-diagram" id="flowDiagram">
+      <div class="flow-step">
+        <div class="flow-icon idle" id="flow1">⚙️</div>
+        <div class="flow-name">設定入力</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-icon idle" id="flow2">🤖</div>
+        <div class="flow-name">AI生成</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-icon idle" id="flow3">🛡️</div>
+        <div class="flow-name">品質チェック</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-icon idle" id="flow4">👤</div>
+        <div class="flow-name">人の承認</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-icon idle" id="flow5">📱</div>
+        <div class="flow-name">Threads投稿</div>
+      </div>
+    </div>
+
+    <!-- タブ -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('generate')">生成・承認</div>
+      <div class="tab" onclick="switchTab('schedule')">スケジュール管理</div>
+      <div class="tab" onclick="switchTab('samples')">サンプル10件</div>
+    </div>
+
+    <!-- タブ1: 生成・承認 -->
+    <div class="tab-content active" id="tab-generate">
+      <div class="preview-label">生成された投稿文</div>
+      <div class="preview-area" id="previewArea">
+        <div class="preview-placeholder">← 左の「生成」ボタンを押すと、ここに投稿文が表示されます</div>
+      </div>
+
+      <div class="meta-row" id="metaRow" style="display:none">
+        <div class="meta-chip">文字数: <span id="metaChars">-</span></div>
+        <div class="meta-chip">トークン: <span id="metaTokens">-</span></div>
+        <div class="meta-chip">コスト: <span id="metaCost">-</span></div>
+        <div class="meta-chip">テーマ: <span id="metaTheme">-</span></div>
+      </div>
+
+      <div class="quality-grid" id="qualityGrid" style="display:none">
+        <div class="quality-item">
+          <div class="quality-icon" id="q1Icon">-</div>
+          <div class="quality-name">文字数チェック</div>
+          <div class="quality-msg" id="q1Msg">-</div>
+        </div>
+        <div class="quality-item">
+          <div class="quality-icon" id="q2Icon">-</div>
+          <div class="quality-name">NGワード</div>
+          <div class="quality-msg" id="q2Msg">-</div>
+        </div>
+        <div class="quality-item">
+          <div class="quality-icon" id="q3Icon">-</div>
+          <div class="quality-name">重複チェック</div>
+          <div class="quality-msg" id="q3Msg">-</div>
+        </div>
+      </div>
+
+      <div class="approval-actions" id="approvalActions" style="display:none">
+        <button class="btn btn-approve btn-sm" onclick="approvePost()">✓ 承認して下書き保存</button>
+        <button class="btn btn-reject btn-sm" onclick="rejectPost()">✕ 却下</button>
+        <button class="btn btn-sm" style="margin-left:auto;background:var(--surface2);border:1px solid var(--border)" onclick="generatePost()">↻ 再生成</button>
+      </div>
+    </div>
+
+    <!-- タブ2: スケジュール管理 -->
+    <div class="tab-content" id="tab-schedule">
+      <div class="schedule-list" id="scheduleList">
+        <div style="color:var(--text-muted);text-align:center;padding:40px">
+          生成・承認した投稿がここに表示されます
+        </div>
+      </div>
+    </div>
+
+    <!-- タブ3: サンプル -->
+    <div class="tab-content" id="tab-samples">
+      <div class="sample-grid" id="sampleGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---- サンプルデータ（generator.py と同等の品質） ----
+const SAMPLES = [
+  { id:"s01", theme:"副業の始め方", tone:"元気・背中を押す", chars:143,
+    text:"副業を始めたいけど何からすればいい？\n\n実は最初の一歩は「スキルの棚卸し」だけ✨\n今の仕事で得た経験、全部立派な武器になります。\n\nライター・デザイン・プログラミング・コーチング...\nどれも最初は0からスタートした人ばかり。\n\n大切なのは完璧なスキルより、まずやってみること！\n今日から一緒に始めましょう💪\n\n#副業 #副業初心者 #フリーランス #スキルアップ #働き方改革" },
+  { id:"s02", theme:"時間管理術", tone:"落ち着いた・知的", chars:164,
+    text:"「時間がない」が口癖になっていませんか？🕐\n\nそれ、実は「時間の使い方」の問題かもしれません。\n\n✅ 朝30分のルーティン確立\n✅ スマホ通知をオフにする時間帯を作る\n✅ 1日のタスクを3つに絞る\n\nこれだけで生産性が変わります。\n残業が当たり前だった私が定時退社できた方法です。\n\n#時間管理 #生産性向上 #残業ゼロ #仕事術 #タスク管理" },
+  { id:"s03", theme:"フリーランス転身", tone:"共感・体験談風", chars:192,
+    text:"2年前の私も、独立なんて夢のまた夢でした。\n\n会社の安定を手放す怖さ、収入の見通しゼロ、\n周りに「向いてないよ」と言われた日も。\n\nでも今、フリーランス2年目で月収は会社員時代の1.3倍。\n\n転身で一番大切なことは「準備しながら動くこと」。\n完璧に準備できた人なんて誰もいません。\n\nフリーランス転身を考えている方、話しましょう🤝\n\n#フリーランス #独立 #副業から独立 #転身 #個人事業主" },
+  { id:"s04", theme:"朝活の習慣化", tone:"爽やか・モーニングルーティン", chars:186,
+    text:"朝5時起きを続けて3ヶ月。変わったこと☀️\n\n・読書が週3冊できるようになった\n・副業の作業時間が1時間確保できた\n・夜のSNSダラ見が自然と減った\n・1日のメンタルが安定した\n\n最初の1週間は地獄でした（笑）\nでも21日続けたら習慣になりました。\n\n朝活を始めたい方、まず明日だけ30分早起きしてみてください🌅\n\n#朝活 #早起き #習慣化 #モーニングルーティン #自己投資" },
+  { id:"s05", theme:"AI活用仕事術", tone:"テンション高め・先進的", chars:198,
+    text:"AI、使ってますか？🤖\n\n私がClaude＋ChatGPTで仕事を変えた3つの使い方：\n\n① メール文章の下書きを30秒で作成\n② 会議の議事録を音声入力→AI整形で5分に短縮\n③ データ分析のPythonコードを自動生成\n\n「AIが仕事を奪う」ではなく、\n「AIを使いこなした人が10倍速くなる」時代です。\n\n今日から試せることから始めましょう🚀\n\n#AI活用 #仕事効率化 #ChatGPT #Claude #生産性" },
+  { id:"s06", theme:"ミニマリスト生活", tone:"穏やか・丁寧", chars:192,
+    text:"モノを100個手放して気づいたこと。\n\n「これ、1年使ってないな」と思ったものは、\nほぼ100%、この先も使いません。\n\n手放すと部屋が広くなるだけじゃなく、\n頭の中もスッキリします。\n\n断捨離は「捨てる」ではなく、\n「本当に大切なものを残す」作業。\n\n今週末、引き出しをひとつ開けてみませんか？\nそこから始まります✨\n\n#ミニマリスト #断捨離 #シンプルライフ #片付け #暮らし" },
+  { id:"s07", theme:"読書習慣の作り方", tone:"知的好奇心を刺激", chars:208,
+    text:"本を読みたいのに続かない人へ📚\n\n問題は意志力じゃなく「仕組み」です。\n\n私が続けられた3つのルール：\n① 読む前に「何を知りたいか」を1行メモする\n② 1日10ページだけ（多くても読まない）\n③ 読んだ内容を誰か1人に話す\n\n③が特に効果絶大。\nアウトプットすると記憶が3倍定着します。\n\n「読書=インプット」をやめたら、月5冊読めるようになりました📖\n\n#読書習慣 #読書 #自己投資 #アウトプット #学び" },
+  { id:"s08", theme:"副業月5万達成", tone:"実績ベース・信頼感", chars:214,
+    text:"副業で月5万達成するまでにやった3つのこと💰\n\n① クラウドワークスで最初の1件を受注（単価500円でもOK）\n② 実績を作って単価を3倍に交渉\n③ 固定クライアント2社を確保\n\n最初の3ヶ月は月1〜2万。\n半年で月5万を安定して超えました。\n\nポイントは「完璧を待たずに始めること」。\nスキルは案件をこなしながら上がります。\n\n副業始めたい方、最初の一歩を応援します🙌\n\n#副業 #副業月収 #クラウドワークス #フリーランス #副業初心者" },
+  { id:"s09", theme:"ストレスフリーな働き方", tone:"共感・癒し系", chars:219,
+    text:"「仕事が辛い」と感じる日が増えていませんか？\n\n実はそれ、あなたが弱いんじゃなくて\n「働き方」が合っていないだけかもしれません。\n\nストレスフリーな働き方のためにやめた3つのこと：\n・完璧主義をやめた\n・全員に好かれようとするのをやめた\n・「できません」を言えるようになった\n\n仕事は人生の全てじゃない。\n自分が心地よい働き方を、一緒に探しましょう🍀\n\n#働き方改革 #ストレスフリー #仕事 #メンタルヘルス #生き方" },
+  { id:"s10", theme:"SNS集客の基本", tone:"教育系・わかりやすく", chars:239,
+    text:"SNSを集客に使いたいけど、何を投稿すればいい？\n\nこれが一番多い相談です。\n\n答えはシンプル：「お客様が抱える悩みの解決策」を投稿する。\n\n間違いやすいのは「商品・サービスの紹介」を投稿すること。\nそれは広告であってコンテンツじゃない。\n\nフォロワーが求めているのは「自分の悩みが解決できるかも」という希望💡\n\nまず「お客様が何に困っているか」を3つ書き出してみてください。\nそれがそのままコンテンツになります。\n\n#SNS集客 #Instagram #Threads #マーケティング #個人事業主" }
+];
+
+// 生成されたテキストを保持
+let currentPost = null;
+// スケジュールデータ（デモ用インメモリ）
+let schedule = [];
+
+// ---- 初期化 ----
+window.onload = () => {
+  renderSamples();
+  setFlowStep(1);
+};
+
+// ---- タブ切り替え ----
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    const names = ['generate','schedule','samples'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => {
+    c.classList.toggle('active', c.id === 'tab-'+name);
+  });
+  if (name === 'schedule') renderSchedule();
+}
+
+// ---- フロー進捗 ----
+function setFlowStep(step) {
+  for (let i = 1; i <= 5; i++) {
+    const el = document.getElementById('flow'+i);
+    if (i < step) el.className = 'flow-icon done';
+    else if (i === step) el.className = 'flow-icon active';
+    else el.className = 'flow-icon idle';
+  }
+}
+
+// ---- 投稿文生成（デモ：サンプルデータから返す） ----
+async function generatePost() {
+  const theme = document.getElementById('theme').value.trim();
+  if (!theme) { toast('テーマを入力してください', 'warn'); return; }
+
+  setFlowStep(2);
+  showLoading('Claude API (claude-haiku-4-5) で生成中...');
+  document.getElementById('genBtn').disabled = true;
+
+  // デモ: 500msの疑似遅延 + サンプルからランダム選択
+  await delay(600 + Math.random() * 400);
+
+  // テーマに近いサンプル、なければランダム
+  const matched = SAMPLES.find(s => theme.includes(s.theme.slice(0,4))) || SAMPLES[Math.floor(Math.random() * SAMPLES.length)];
+  const text = matched.text;
+  const tone = document.getElementById('tone').value;
+  const inputTokens = Math.floor(280 + Math.random() * 60);
+  const outputTokens = Math.floor(170 + Math.random() * 80);
+  const costUsd = (inputTokens / 1e6) * 1.0 + (outputTokens / 1e6) * 5.0;
+  const costJpy = costUsd * 150;
+
+  currentPost = {
+    text, theme,
+    inputTokens, outputTokens,
+    costJpy: costJpy.toFixed(4),
+    quality: { passed: true,
+      checks: [
+        { name: '文字数', passed: text.length <= 500, msg: `${text.length}文字（上限500）` },
+        { name: 'NGワード', passed: true, msg: 'NGワードなし' },
+        { name: '重複', passed: true, msg: '重複なし' },
+      ]
+    }
+  };
+
+  hideLoading();
+  setFlowStep(3);
+
+  // プレビュー表示
+  const area = document.getElementById('previewArea');
+  area.innerHTML = `<div class="preview-text">${escHtml(text)}</div>`;
+
+  // メタ情報
+  document.getElementById('metaChars').textContent = text.length;
+  document.getElementById('metaTokens').textContent = `${inputTokens}→${outputTokens}`;
+  document.getElementById('metaCost').textContent = `$${costUsd.toFixed(5)}（${costJpy.toFixed(3)}円）`;
+  document.getElementById('metaTheme').textContent = theme;
+  document.getElementById('metaRow').style.display = 'flex';
+
+  // 品質チェック表示
+  const icons = ['q1Icon','q2Icon','q3Icon'];
+  const msgs = ['q1Msg','q2Msg','q3Msg'];
+  currentPost.quality.checks.forEach((c, i) => {
+    document.getElementById(icons[i]).textContent = c.passed ? '✅' : '❌';
+    document.getElementById(msgs[i]).textContent = c.msg;
+    document.getElementById(msgs[i]).className = 'quality-msg ' + (c.passed ? 'pass' : 'fail');
+  });
+  document.getElementById('qualityGrid').style.display = 'grid';
+
+  // 承認アクション表示
+  document.getElementById('approvalActions').style.display = 'flex';
+  document.getElementById('genBtn').disabled = false;
+
+  setFlowStep(4);
+  toast('生成完了！内容を確認して承認してください');
+}
+
+// ---- 承認 ----
+function approvePost() {
+  if (!currentPost) return;
+  const entry = {
+    id: 'demo_' + Date.now().toString(36),
+    text: currentPost.text,
+    theme: currentPost.theme,
+    status: 'approved',
+    scheduled_at: nextSlot(),
+    created_at: new Date().toISOString(),
+  };
+  schedule.push(entry);
+  setFlowStep(5);
+  toast('承認しました！スケジュールに追加されました ✓', 'ok');
+  setTimeout(() => {
+    switchTab('schedule');
+  }, 1200);
+}
+
+// ---- 却下 ----
+function rejectPost() {
+  currentPost = null;
+  document.getElementById('previewArea').innerHTML = '<div class="preview-placeholder">却下しました。再生成してください。</div>';
+  document.getElementById('metaRow').style.display = 'none';
+  document.getElementById('qualityGrid').style.display = 'none';
+  document.getElementById('approvalActions').style.display = 'none';
+  setFlowStep(1);
+  toast('却下しました', 'warn');
+}
+
+// ---- 投稿実行（ドライラン） ----
+function executePost(id) {
+  const entry = schedule.find(e => e.id === id);
+  if (!entry) return;
+  entry.status = 'posted';
+  entry.posted_at = new Date().toISOString();
+  renderSchedule();
+  toast('投稿完了（ドライラン）✓', 'ok');
+}
+
+// ---- スケジュール描画 ----
+function renderSchedule() {
+  const list = document.getElementById('scheduleList');
+  if (schedule.length === 0) {
+    list.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:40px">生成・承認した投稿がここに表示されます</div>';
+    return;
+  }
+  list.innerHTML = schedule.slice().reverse().map(e => {
+    const labels = { pending:'承認待', approved:'承認済', posted:'投稿済', cancelled:'却下' };
+    const dot = `<div class="status-dot ${e.status}"></div>`;
+    const badge = `<span class="status-badge ${e.status}">${labels[e.status]||e.status}</span>`;
+    const postBtn = e.status === 'approved'
+      ? `<button class="btn btn-post btn-sm" onclick="executePost('${e.id}')">📤 投稿する</button>` : '';
+    return `
+      <div class="schedule-item">
+        ${dot}
+        <div class="schedule-text">
+          <div class="schedule-preview">${escHtml(e.text.slice(0,50))}...</div>
+          <div class="schedule-meta">予定: ${e.scheduled_at ? e.scheduled_at.slice(0,16).replace('T',' ') : '-'}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+          ${badge}
+          ${postBtn}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ---- サンプル描画 ----
+function renderSamples() {
+  const grid = document.getElementById('sampleGrid');
+  grid.innerHTML = SAMPLES.map(s => `
+    <div class="sample-card" onclick="loadSample('${s.id}')">
+      <div class="sample-card-header">
+        <span class="sample-theme">${escHtml(s.theme)}</span>
+        <span class="sample-chars">${s.chars}文字</span>
+      </div>
+      <div class="sample-text">
+        <div class="sample-text-preview">${escHtml(s.text)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ---- サンプルを生成タブに読み込む ----
+function loadSample(id) {
+  const s = SAMPLES.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('theme').value = s.theme;
+
+  currentPost = {
+    text: s.text, theme: s.theme,
+    inputTokens: 310, outputTokens: 210,
+    costJpy: '0.0003',
+    quality: { passed: true, checks: [
+      { name: '文字数', passed: s.chars <= 500, msg: `${s.chars}文字（上限500）` },
+      { name: 'NGワード', passed: true, msg: 'NGワードなし' },
+      { name: '重複', passed: true, msg: '重複なし' },
+    ]}
+  };
+
+  document.getElementById('previewArea').innerHTML = `<div class="preview-text">${escHtml(s.text)}</div>`;
+  document.getElementById('metaChars').textContent = s.chars;
+  document.getElementById('metaTokens').textContent = '310→210';
+  document.getElementById('metaCost').textContent = '$0.00031（0.046円）';
+  document.getElementById('metaTheme').textContent = s.theme;
+  document.getElementById('metaRow').style.display = 'flex';
+  document.getElementById('q1Icon').textContent = '✅';
+  document.getElementById('q1Msg').textContent = `${s.chars}文字`;
+  document.getElementById('q1Msg').className = 'quality-msg pass';
+  document.getElementById('q2Icon').textContent = '✅';
+  document.getElementById('q2Msg').textContent = 'NGワードなし';
+  document.getElementById('q2Msg').className = 'quality-msg pass';
+  document.getElementById('q3Icon').textContent = '✅';
+  document.getElementById('q3Msg').textContent = '重複なし';
+  document.getElementById('q3Msg').className = 'quality-msg pass';
+  document.getElementById('qualityGrid').style.display = 'grid';
+  document.getElementById('approvalActions').style.display = 'flex';
+  setFlowStep(4);
+
+  switchTab('generate');
+  toast(`サンプル「${s.theme}」を読み込みました`);
+}
+
+// ---- ユーティリティ ----
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function showLoading(msg) {
+  document.getElementById('loadingText').textContent = msg;
+  document.getElementById('loadingOverlay').classList.add('show');
+}
+
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('show');
+}
+
+let toastTimer = null;
+function toast(msg, type = 'info') {
+  const el = document.getElementById('toast');
+  const colors = { ok: 'var(--green)', warn: 'var(--yellow)', info: 'var(--accent)' };
+  el.style.borderColor = colors[type] || colors.info;
+  el.textContent = msg;
+  el.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
+}
+
+function nextSlot() {
+  const d = new Date();
+  d.setHours(d.getHours() + 4 + Math.floor(Math.random() * 4));
+  return d.toISOString();
+}
+</script>
+</body>
+</html>
