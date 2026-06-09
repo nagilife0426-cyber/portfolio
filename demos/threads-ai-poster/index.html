@@ -761,5 +761,427 @@ function nextSlot() {
   return d.toISOString();
 }
 </script>
+
+<!-- ========== 制作仕様・自動化の仕組み ========== -->
+<style>
+  /* spec- プレフィックスで既存スタイルとの衝突を回避 */
+  .spec-section {
+    background: #0d0d1a;
+    border-top: 1px solid #2a2a4a;
+    padding: 56px 24px 72px;
+  }
+  .spec-inner {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .spec-heading {
+    font-size: 22px;
+    font-weight: 700;
+    color: #f0f0f0;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .spec-heading-note {
+    font-size: 12px;
+    color: #888;
+    font-weight: 400;
+    margin-bottom: 40px;
+    padding-left: 34px;
+  }
+
+  /* ブロック見出し */
+  .spec-block-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #a855f7;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .spec-block-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 14px;
+    background: linear-gradient(180deg, #a855f7, #3b82f6);
+    border-radius: 2px;
+  }
+
+  /* カードグリッド（システム構成） */
+  .spec-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 40px;
+  }
+  .spec-card {
+    background: #141424;
+    border: 1px solid #2a2a4a;
+    border-radius: 12px;
+    padding: 18px 16px;
+  }
+  .spec-card-icon {
+    font-size: 26px;
+    margin-bottom: 10px;
+  }
+  .spec-card-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #f0f0f0;
+    margin-bottom: 6px;
+  }
+  .spec-card-role {
+    font-size: 12px;
+    color: #888;
+    line-height: 1.6;
+  }
+
+  /* フロー図 */
+  .spec-flow-wrap {
+    margin-bottom: 40px;
+  }
+  .spec-flow {
+    display: flex;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    gap: 0;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .spec-flow-step {
+    flex: 1;
+    min-width: 130px;
+    background: #141424;
+    border: 1px solid #2a2a4a;
+    border-radius: 10px;
+    padding: 14px 12px;
+    text-align: center;
+  }
+  .spec-flow-step.spec-highlight {
+    background: #1a1030;
+    border-color: #a855f7;
+    box-shadow: 0 0 0 1px #a855f733;
+  }
+  .spec-flow-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #2a2a4a;
+    font-size: 11px;
+    font-weight: 700;
+    color: #888;
+    margin-bottom: 8px;
+  }
+  .spec-flow-step.spec-highlight .spec-flow-num {
+    background: #7c3aed;
+    color: #fff;
+  }
+  .spec-flow-icon {
+    font-size: 22px;
+    margin-bottom: 6px;
+  }
+  .spec-flow-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #f0f0f0;
+    margin-bottom: 4px;
+  }
+  .spec-flow-desc {
+    font-size: 10px;
+    color: #888;
+    line-height: 1.5;
+  }
+  .spec-flow-step.spec-highlight .spec-flow-label {
+    color: #c084fc;
+  }
+  .spec-flow-arrow {
+    display: flex;
+    align-items: center;
+    color: #3a3a5a;
+    font-size: 20px;
+    padding: 0 4px;
+    flex-shrink: 0;
+    margin-bottom: 0;
+  }
+
+  /* 安全設計コールアウト */
+  .spec-callout {
+    background: #0f1a10;
+    border: 1px solid #22c55e44;
+    border-left: 3px solid #22c55e;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 14px;
+    font-size: 13px;
+    color: #86efac;
+    line-height: 1.7;
+  }
+  .spec-callout strong {
+    color: #22c55e;
+  }
+
+  /* 運用・コスト */
+  .spec-ops-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+    margin-bottom: 40px;
+  }
+  .spec-ops-item {
+    background: #141424;
+    border: 1px solid #2a2a4a;
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .spec-ops-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .spec-ops-body {}
+  .spec-ops-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #f0f0f0;
+    margin-bottom: 4px;
+  }
+  .spec-ops-desc {
+    font-size: 12px;
+    color: #888;
+    line-height: 1.6;
+  }
+
+  /* 制作の進め方 */
+  .spec-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 40px;
+  }
+  .spec-step {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .spec-step-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .spec-step-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed, #3b82f6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .spec-step-line {
+    width: 2px;
+    flex: 1;
+    min-height: 24px;
+    background: linear-gradient(180deg, #7c3aed44, transparent);
+    margin: 4px 0;
+  }
+  .spec-step:last-child .spec-step-line {
+    display: none;
+  }
+  .spec-step-body {
+    padding-top: 6px;
+    padding-bottom: 20px;
+  }
+  .spec-step-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #f0f0f0;
+    margin-bottom: 4px;
+  }
+  .spec-step-desc {
+    font-size: 12px;
+    color: #888;
+    line-height: 1.6;
+  }
+
+  /* 区切り線 */
+  .spec-divider {
+    border: none;
+    border-top: 1px solid #2a2a4a;
+    margin: 36px 0;
+  }
+
+  /* レスポンシブ */
+  @media (max-width: 600px) {
+    .spec-flow {
+      flex-direction: column;
+      gap: 6px;
+    }
+    .spec-flow-step {
+      min-width: 0;
+    }
+    .spec-flow-arrow {
+      transform: rotate(90deg);
+      justify-content: center;
+      height: 18px;
+      padding: 0;
+    }
+    .spec-section {
+      padding: 40px 16px 56px;
+    }
+  }
+</style>
+
+<div class="spec-section">
+  <div class="spec-inner">
+
+    <div class="spec-heading">📋 制作仕様・自動化の仕組み</div>
+    <div class="spec-heading-note">このデモが製品化された場合の構成・安全設計・運用コストについて、発注者向けにまとめています。</div>
+
+    <!-- 1. システム構成 -->
+    <div class="spec-block-title">1. システム構成（3つの部品）</div>
+    <div class="spec-cards">
+      <div class="spec-card">
+        <div class="spec-card-icon">🤖</div>
+        <div class="spec-card-name">Claude（文章を作るAI）</div>
+        <div class="spec-card-role">テーマ・トーン・ターゲットをもとに、Threads向け投稿文を自動で生成します。軽量モデル（claude-haiku）を使うため、高速かつ低コストで動作します。</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-icon">👤</div>
+        <div class="spec-card-name">承認画面</div>
+        <div class="spec-card-role">投稿前に必ず人が内容を確認・判断する画面です。ここで「承認」しない限り、投稿は実行されません。誤投稿を防ぐ最重要の安全装置です。</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-icon">📱</div>
+        <div class="spec-card-name">Threads API<br><small style="font-size:11px;color:#666">（公式投稿窓口）</small></div>
+        <div class="spec-card-role">Metaが提供するThreadsの公式APIです。承認済みの文章を、指定した時間にThreadsへ届ける役割を担います。</div>
+      </div>
+    </div>
+
+    <hr class="spec-divider">
+
+    <!-- 2. 投稿までの流れ＋安全設計 -->
+    <div class="spec-block-title">2. 投稿までの流れ（5ステップ）と安全設計</div>
+    <div class="spec-flow-wrap">
+      <div class="spec-flow">
+        <div class="spec-flow-step">
+          <div class="spec-flow-num">1</div>
+          <div class="spec-flow-icon">⚙️</div>
+          <div class="spec-flow-label">設定</div>
+          <div class="spec-flow-desc">テーマ・トーン・ターゲットを入力</div>
+        </div>
+        <div class="spec-flow-arrow">→</div>
+        <div class="spec-flow-step">
+          <div class="spec-flow-num">2</div>
+          <div class="spec-flow-icon">✨</div>
+          <div class="spec-flow-label">AI生成</div>
+          <div class="spec-flow-desc">Claudeが投稿文を自動生成</div>
+        </div>
+        <div class="spec-flow-arrow">→</div>
+        <div class="spec-flow-step">
+          <div class="spec-flow-num">3</div>
+          <div class="spec-flow-icon">🛡️</div>
+          <div class="spec-flow-label">自動チェック</div>
+          <div class="spec-flow-desc">文字数・NGワード・重複を検査</div>
+        </div>
+        <div class="spec-flow-arrow">→</div>
+        <div class="spec-flow-step spec-highlight">
+          <div class="spec-flow-num">4</div>
+          <div class="spec-flow-icon">👁️</div>
+          <div class="spec-flow-label">★ 人の承認</div>
+          <div class="spec-flow-desc">必ずここで人が確認します</div>
+        </div>
+        <div class="spec-flow-arrow">→</div>
+        <div class="spec-flow-step">
+          <div class="spec-flow-num">5</div>
+          <div class="spec-flow-icon">🚀</div>
+          <div class="spec-flow-label">自動投稿</div>
+          <div class="spec-flow-desc">指定時刻にThreadsへ投稿</div>
+        </div>
+      </div>
+
+      <div class="spec-callout">
+        <strong>「AIが勝手に暴走して投稿することはない」設計です。</strong><br>
+        ステップ4の「人の承認」を通過しない限り、投稿は一切実行されません。AIはあくまで「下書き作成」の補助役。最終判断は常に人が行います。
+      </div>
+    </div>
+
+    <hr class="spec-divider">
+
+    <!-- 3. 運用・コスト -->
+    <div class="spec-block-title">3. 運用・コスト</div>
+    <div class="spec-ops-grid">
+      <div class="spec-ops-item">
+        <div class="spec-ops-icon">💴</div>
+        <div class="spec-ops-body">
+          <div class="spec-ops-title">文章生成コストは月数円程度</div>
+          <div class="spec-ops-desc">軽量モデル（claude-haiku）を使用するため、1投稿あたり約0.04円。1日3本・月90投稿でも約4円です。APIの利用料のみで追加費用は発生しません。</div>
+        </div>
+      </div>
+      <div class="spec-ops-item">
+        <div class="spec-ops-icon">🔧</div>
+        <div class="spec-ops-body">
+          <div class="spec-ops-title">テーマ・トーンの変更は設定を変えるだけ</div>
+          <div class="spec-ops-desc">投稿テーマの追加やトーン（文体）の調整は、プログラムの設定値を変えるだけで対応できます。都度の開発作業は不要です。</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="spec-divider">
+
+    <!-- 4. 制作の進め方 -->
+    <div class="spec-block-title">4. 制作の進め方（3ステップ）</div>
+    <div class="spec-steps">
+      <div class="spec-step">
+        <div class="spec-step-connector">
+          <div class="spec-step-circle">1</div>
+          <div class="spec-step-line"></div>
+        </div>
+        <div class="spec-step-body">
+          <div class="spec-step-title">要件確認</div>
+          <div class="spec-step-desc">投稿の目的（集客先・訴求内容）、1日の投稿本数、Threadsアカウントとの連携方法などをヒアリングします。</div>
+        </div>
+      </div>
+      <div class="spec-step">
+        <div class="spec-step-connector">
+          <div class="spec-step-circle">2</div>
+          <div class="spec-step-line"></div>
+        </div>
+        <div class="spec-step-body">
+          <div class="spec-step-title">実装</div>
+          <div class="spec-step-desc">生成プロンプト設計 → 承認フロー構築 → 自動投稿スケジューラー実装 → テスト投稿で動作確認を行います。</div>
+        </div>
+      </div>
+      <div class="spec-step">
+        <div class="spec-step-connector">
+          <div class="spec-step-circle">3</div>
+          <div class="spec-step-line"></div>
+        </div>
+        <div class="spec-step-body">
+          <div class="spec-step-title">納品・サポート</div>
+          <div class="spec-step-desc">プログラム一式＋使い方マニュアルをセットで納品します。納品後の投稿テーマ追加・トーン調整のサポートも対応可能です。</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<!-- ========== /制作仕様・自動化の仕組み ========== -->
+
 </body>
 </html>

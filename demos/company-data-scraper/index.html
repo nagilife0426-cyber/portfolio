@@ -739,5 +739,453 @@ function esc(str) {
 }
 </script>
 
+
+<!-- ════════════════════════════════════════════════════════
+     制作仕様・自動化の仕組み（クライアント向け説明セクション）
+     クラス名プレフィックス: spec-
+     ════════════════════════════════════════════════════════ -->
+<style>
+  /* ─── spec セクション共通 ─── */
+  .spec-section {
+    background: #f0f4f8;
+    padding: 56px 24px 72px;
+    border-top: 3px solid #2d3748;
+  }
+  .spec-section .spec-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .spec-section-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #1a365d;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .spec-section-lead {
+    font-size: 14px;
+    color: #4a5568;
+    margin-bottom: 40px;
+    line-height: 1.7;
+  }
+
+  /* ─── 大見出し（各ブロック） ─── */
+  .spec-block-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #2d3748;
+    margin-bottom: 20px;
+    padding-left: 12px;
+    border-left: 4px solid #4299e1;
+    line-height: 1.4;
+  }
+
+  /* ─── カードベース ─── */
+  .spec-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+    padding: 28px 32px;
+    margin-bottom: 28px;
+  }
+  @media (max-width: 600px) {
+    .spec-card { padding: 20px 18px; }
+  }
+
+  /* ─── 1. システム構成図 ─── */
+  .spec-arch {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 4px;
+  }
+  .spec-arch-box {
+    background: #ebf8ff;
+    border: 2px solid #bee3f8;
+    border-radius: 10px;
+    padding: 16px 20px;
+    text-align: center;
+    min-width: 160px;
+    flex: 1 1 160px;
+    max-width: 220px;
+  }
+  .spec-arch-box .spec-arch-num {
+    display: inline-block;
+    background: #4299e1;
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 99px;
+    padding: 2px 9px;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+  }
+  .spec-arch-box .spec-arch-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #2c5282;
+    margin-bottom: 6px;
+  }
+  .spec-arch-box .spec-arch-desc {
+    font-size: 12px;
+    color: #4a5568;
+    line-height: 1.6;
+  }
+  .spec-arch-arrow {
+    font-size: 22px;
+    color: #4299e1;
+    padding: 0 6px;
+    flex-shrink: 0;
+    font-weight: 700;
+    align-self: center;
+  }
+  @media (max-width: 700px) {
+    .spec-arch { flex-direction: column; }
+    .spec-arch-arrow { transform: rotate(90deg); padding: 4px 0; }
+  }
+
+  /* ─── 2. ステップ ─── */
+  .spec-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 4px;
+  }
+  .spec-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    background: #f7fafc;
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+  .spec-step-num {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #4299e1, #2b6cb0);
+    color: white;
+    font-size: 15px;
+    font-weight: 800;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .spec-step-body { flex: 1; }
+  .spec-step-body strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 3px;
+  }
+  .spec-step-body span {
+    font-size: 13px;
+    color: #4a5568;
+    line-height: 1.65;
+  }
+  .spec-step-tag {
+    display: inline-block;
+    background: #bee3f8;
+    color: #2c5282;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 99px;
+    padding: 2px 8px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .spec-step-tag.tag-hybrid {
+    background: #c6f6d5;
+    color: #22543d;
+  }
+
+  /* ─── 3. 法令配慮チェックリスト ─── */
+  .spec-check-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 12px;
+    margin-top: 4px;
+  }
+  .spec-check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: #f0fff4;
+    border: 1px solid #c6f6d5;
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .spec-check-icon {
+    width: 22px;
+    height: 22px;
+    background: #38a169;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 12px;
+    color: white;
+    font-weight: 700;
+  }
+  .spec-check-text {
+    font-size: 13px;
+    color: #276749;
+    line-height: 1.6;
+  }
+  .spec-check-text strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 2px;
+    color: #22543d;
+  }
+
+  /* ─── 4. 工数・進め方 ─── */
+  .spec-time-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 4px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 600px) {
+    .spec-time-compare { grid-template-columns: 1fr; }
+  }
+  .spec-time-box {
+    border-radius: 10px;
+    padding: 18px 20px;
+    text-align: center;
+  }
+  .spec-time-box.manual {
+    background: #fff5f5;
+    border: 1px solid #fed7d7;
+  }
+  .spec-time-box.auto {
+    background: #f0fff4;
+    border: 1px solid #c6f6d5;
+  }
+  .spec-time-box .spec-time-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #718096;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .spec-time-box .spec-time-num {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .spec-time-box.manual .spec-time-num { color: #c53030; }
+  .spec-time-box.auto   .spec-time-num { color: #276749; }
+  .spec-time-box .spec-time-note {
+    font-size: 12px;
+    color: #718096;
+    line-height: 1.5;
+  }
+
+  .spec-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .spec-flow-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .spec-flow-badge {
+    background: linear-gradient(135deg, #2d3748, #1a365d);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 99px;
+    padding: 3px 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .spec-flow-text {
+    font-size: 13px;
+    color: #4a5568;
+    line-height: 1.6;
+  }
+  .spec-flow-arrow {
+    font-size: 16px;
+    color: #a0aec0;
+    padding-left: 10px;
+    margin-top: -2px;
+    align-self: flex-start;
+    display: block;
+    line-height: 2;
+  }
+  @media (max-width: 500px) {
+    .spec-arch-box { max-width: 100%; }
+  }
+</style>
+
+<section class="spec-section" aria-labelledby="spec-main-title">
+  <div class="spec-inner">
+
+    <h2 class="spec-section-title" id="spec-main-title">
+      📋 制作仕様・自動化の仕組み
+    </h2>
+    <p class="spec-section-lead">
+      このページでは、ツールがどのような部品で構成されているか・データをどのように収集しているか・法令への配慮・作業の進め方をまとめています。<br>
+      非エンジニアの方にも伝わるよう、専門用語は最小限にしています。
+    </p>
+
+    <!-- ── 1. システム構成 ── -->
+    <div class="spec-card">
+      <h3 class="spec-block-title">① システム構成（3つの部品）</h3>
+      <div class="spec-arch">
+        <div class="spec-arch-box">
+          <div class="spec-arch-num">PART 1</div>
+          <div class="spec-arch-name">HP特定</div>
+          <div class="spec-arch-desc">企業名から公式ホームページを検索して見つける部分</div>
+        </div>
+        <div class="spec-arch-arrow">→</div>
+        <div class="spec-arch-box">
+          <div class="spec-arch-num">PART 2</div>
+          <div class="spec-arch-name">抽出エンジン</div>
+          <div class="spec-arch-desc">「会社概要」ページから郵便番号・住所・代表者名を取り出す部分</div>
+        </div>
+        <div class="spec-arch-arrow">→</div>
+        <div class="spec-arch-box">
+          <div class="spec-arch-num">PART 3</div>
+          <div class="spec-arch-name">仕分け・出力</div>
+          <div class="spec-arch-desc">取得結果を信頼度で仕分けし、CSVで出力する部分</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 2. データ収集の流れ ── -->
+    <div class="spec-card">
+      <h3 class="spec-block-title">② データ収集の流れ（5ステップ）</h3>
+      <div class="spec-steps">
+        <div class="spec-step">
+          <div class="spec-step-num">1</div>
+          <div class="spec-step-body">
+            <strong>企業名リスト（CSV）を用意</strong>
+            <span>1行1社で記載したCSVファイルをツールに読み込みます。</span>
+          </div>
+        </div>
+        <div class="spec-step">
+          <div class="spec-step-num">2</div>
+          <div class="spec-step-body">
+            <strong>公式ホームページを自動で特定</strong>
+            <span>各企業名で検索し、「.co.jp」「.jp」ドメインを優先して公式サイトを自動で判定します。</span>
+          </div>
+        </div>
+        <div class="spec-step">
+          <div class="spec-step-num">3</div>
+          <div class="spec-step-body">
+            <strong>「会社概要」ページから3項目を抽出</strong>
+            <span>トップページのリンクを解析して「会社概要／会社情報」ページへ自動で移動し、郵便番号・住所・代表者名を取り出します。</span>
+          </div>
+        </div>
+        <div class="spec-step">
+          <div class="spec-step-num">4</div>
+          <div class="spec-step-body">
+            <strong>自動で仕分け</strong>
+            <span>3項目すべて揃った企業は
+              <strong style="display:inline;color:#276749;">「完了」</strong>、
+              一部のみ取得できた企業は
+              <strong style="display:inline;color:#744210;">「要確認」</strong>
+              に自動で振り分けます。
+            </span>
+          </div>
+        </div>
+        <div class="spec-step">
+          <div class="spec-step-num">5</div>
+          <div class="spec-step-body">
+            <strong>CSV出力 → 「要確認」分を人が補完 <span class="spec-step-tag tag-hybrid">自動＋人のハイブリッド</span></strong>
+            <span>全件をCSV出力。「要確認」分だけ人が目視で確認・補完することで、精度を高めて納品します。</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 3. 法令・マナーへの配慮 ── -->
+    <div class="spec-card">
+      <h3 class="spec-block-title">③ 法令・マナーへの配慮（重要）</h3>
+      <div class="spec-check-grid">
+        <div class="spec-check-item">
+          <div class="spec-check-icon">✓</div>
+          <div class="spec-check-text">
+            <strong>robots.txt（収集ルール）を必ず確認</strong>
+            各サイトが設定している収集禁止ページは取得しません。
+          </div>
+        </div>
+        <div class="spec-check-item">
+          <div class="spec-check-icon">✓</div>
+          <div class="spec-check-text">
+            <strong>3〜5秒の間隔をあけてアクセス</strong>
+            相手のサーバーに負荷をかけないよう、アクセスの間隔を必ずあけます。
+          </div>
+        </div>
+        <div class="spec-check-item">
+          <div class="spec-check-icon">✓</div>
+          <div class="spec-check-text">
+            <strong>取得するのは公開情報のみ</strong>
+            各社の公式ホームページで公開されている会社情報だけを対象にします。個人情報（非公開情報）は取得しません。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 4. 制作の進め方・スピード ── -->
+    <div class="spec-card">
+      <h3 class="spec-block-title">④ 制作の進め方・処理スピード</h3>
+
+      <div class="spec-time-compare">
+        <div class="spec-time-box manual">
+          <div class="spec-time-label">手作業の場合（1,120件）</div>
+          <div class="spec-time-num">60〜90 時間</div>
+          <div class="spec-time-note">1社あたり3〜5分 × 件数<br>作業中は別業務ができない</div>
+        </div>
+        <div class="spec-time-box auto">
+          <div class="spec-time-label">本ツールの場合（1,120件）</div>
+          <div class="spec-time-num">5〜8 時間</div>
+          <div class="spec-time-note">無人で自動処理<br>その間は別の作業が可能</div>
+        </div>
+      </div>
+
+      <div class="spec-flow">
+        <div class="spec-flow-item">
+          <span class="spec-flow-badge">STEP 1</span>
+          <span class="spec-flow-text">リストの形式を確認し、ツールへ取り込めるか検証</span>
+        </div>
+        <div class="spec-flow-arrow">↓</div>
+        <div class="spec-flow-item">
+          <span class="spec-flow-badge">STEP 2</span>
+          <span class="spec-flow-text">数十件でテスト処理 → 抽出精度を確認・調整</span>
+        </div>
+        <div class="spec-flow-arrow">↓</div>
+        <div class="spec-flow-item">
+          <span class="spec-flow-badge">STEP 3</span>
+          <span class="spec-flow-text">本番処理（全件） → 「要確認」分を人が目視で補完</span>
+        </div>
+        <div class="spec-flow-arrow">↓</div>
+        <div class="spec-flow-item">
+          <span class="spec-flow-badge">STEP 4</span>
+          <span class="spec-flow-text">完成CSVを納品</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+<!-- ── /制作仕様セクション ── -->
+
 </body>
 </html>

@@ -755,6 +755,375 @@
   実装ではこの画面がスプレッドシートのデータをリアルタイムに反映します。
 </div>
 
+<!-- ======== 制作仕様セクション ======== -->
+<style>
+  /* spec- プレフィックスで既存クラスと衝突なし */
+  .spec-section {
+    background: #fff0f6;
+    border-top: 3px solid transparent;
+    border-image: linear-gradient(90deg, #dc2743, #cc2366, #bc1888) 1;
+    padding: 48px 24px 56px;
+    margin-top: 0;
+  }
+  .spec-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .spec-heading {
+    font-size: 22px;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .spec-heading-sub {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 40px;
+  }
+  /* ブロックタイトル */
+  .spec-block-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #cc2366;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .spec-block-title::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 20px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, #dc2743, #bc1888);
+    flex-shrink: 0;
+  }
+  /* ======= 1. 構成図 ======= */
+  .spec-arch {
+    background: #fff;
+    border: 1px solid #f0d0e0;
+    border-radius: 14px;
+    padding: 28px 24px 24px;
+    box-shadow: 0 2px 12px rgba(204,35,102,.07);
+    margin-bottom: 32px;
+  }
+  .spec-arch-flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    flex-wrap: wrap;
+    row-gap: 16px;
+    justify-content: center;
+    margin-top: 8px;
+  }
+  .spec-arch-node {
+    background: linear-gradient(135deg, #fce4ec, #f8bbd0);
+    border: 1.5px solid #f48fb1;
+    border-radius: 12px;
+    padding: 16px 20px;
+    text-align: center;
+    min-width: 140px;
+    flex: 1 1 140px;
+    max-width: 200px;
+  }
+  .spec-arch-node .spec-node-icon {
+    font-size: 28px;
+    margin-bottom: 6px;
+    line-height: 1;
+  }
+  .spec-arch-node .spec-node-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #9c0045;
+    margin-bottom: 4px;
+  }
+  .spec-arch-node .spec-node-desc {
+    font-size: 11px;
+    color: #6b7280;
+    line-height: 1.5;
+  }
+  .spec-arch-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    font-size: 22px;
+    color: #cc2366;
+    font-weight: 700;
+    flex-shrink: 0;
+    align-self: center;
+  }
+  @media (max-width: 600px) {
+    .spec-arch-flow { flex-direction: column; align-items: center; }
+    .spec-arch-arrow { transform: rotate(90deg); padding: 4px 0; }
+    .spec-arch-node { max-width: 100%; width: 100%; }
+  }
+  /* ======= 2. ステップ ======= */
+  .spec-steps {
+    background: #fff;
+    border: 1px solid #f0d0e0;
+    border-radius: 14px;
+    padding: 28px 24px 24px;
+    box-shadow: 0 2px 12px rgba(204,35,102,.07);
+    margin-bottom: 32px;
+  }
+  .spec-step-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .spec-step-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid #fce4ec;
+  }
+  .spec-step-item:last-child { border-bottom: none; }
+  .spec-step-num {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #dc2743, #bc1888);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .spec-step-text {
+    font-size: 14px;
+    line-height: 1.65;
+    color: #1a1a2e;
+  }
+  .spec-step-text strong { color: #cc2366; }
+  /* ======= 3. 運用カード ======= */
+  .spec-ops-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .spec-ops-card {
+    background: #fff;
+    border: 1px solid #f0d0e0;
+    border-radius: 14px;
+    padding: 22px 20px;
+    box-shadow: 0 2px 12px rgba(204,35,102,.07);
+  }
+  .spec-ops-card .spec-ops-icon {
+    font-size: 26px;
+    margin-bottom: 10px;
+  }
+  .spec-ops-card .spec-ops-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #9c0045;
+    margin-bottom: 6px;
+  }
+  .spec-ops-card .spec-ops-body {
+    font-size: 13px;
+    color: #374151;
+    line-height: 1.65;
+  }
+  /* ======= 4. 制作ステップ ======= */
+  .spec-process {
+    background: #fff;
+    border: 1px solid #f0d0e0;
+    border-radius: 14px;
+    padding: 28px 24px 24px;
+    box-shadow: 0 2px 12px rgba(204,35,102,.07);
+  }
+  .spec-process-flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    flex-wrap: wrap;
+    row-gap: 16px;
+    justify-content: center;
+    margin-top: 8px;
+  }
+  .spec-proc-node {
+    flex: 1 1 180px;
+    max-width: 240px;
+    background: #fff0f6;
+    border: 1.5px solid #f48fb1;
+    border-radius: 12px;
+    padding: 18px 16px;
+    text-align: center;
+  }
+  .spec-proc-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #dc2743, #bc1888);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .spec-proc-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #9c0045;
+    margin-bottom: 6px;
+  }
+  .spec-proc-body {
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.6;
+  }
+  .spec-proc-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    font-size: 22px;
+    color: #cc2366;
+    flex-shrink: 0;
+    align-self: center;
+  }
+  @media (max-width: 600px) {
+    .spec-process-flow { flex-direction: column; align-items: center; }
+    .spec-proc-arrow { transform: rotate(90deg); padding: 4px 0; }
+    .spec-proc-node { max-width: 100%; width: 100%; }
+  }
+  .spec-delivery-note {
+    margin-top: 16px;
+    background: linear-gradient(135deg, #fce4ec, #f3e5f5);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 13px;
+    color: #1a1a2e;
+    line-height: 1.7;
+  }
+  .spec-delivery-note strong { color: #bc1888; }
+</style>
+
+<section class="spec-section" id="spec-section">
+  <div class="spec-inner">
+
+    <div class="spec-heading">📋 制作仕様・自動化の仕組み</div>
+    <p class="spec-heading-sub">このシステムがどう動くか、納品後の運用方法、制作の流れをご説明します。</p>
+
+    <!-- 1. システム構成 -->
+    <div class="spec-block-title">1. システム構成（3つの部品で動きます）</div>
+    <div class="spec-arch">
+      <div class="spec-arch-flow">
+        <div class="spec-arch-node">
+          <div class="spec-node-icon">📊</div>
+          <div class="spec-node-name">Google<br>スプレッドシート</div>
+          <div class="spec-node-desc">投稿（画像＋文章）の置き場。150パターンをここで管理</div>
+        </div>
+        <div class="spec-arch-arrow">→</div>
+        <div class="spec-arch-node">
+          <div class="spec-node-icon">⚙️</div>
+          <div class="spec-node-name">GAS<br>（自動実行プログラム）</div>
+          <div class="spec-node-desc">Google公式ツール。決めた時間に自動で動く「頭脳」部分</div>
+        </div>
+        <div class="spec-arch-arrow">→</div>
+        <div class="spec-arch-node">
+          <div class="spec-node-icon">📸</div>
+          <div class="spec-node-name">Instagram API<br>（公式投稿窓口）</div>
+          <div class="spec-node-desc">Instagramの公式ルートで投稿を届ける。2アカウント対応</div>
+        </div>
+        <div class="spec-arch-arrow">→</div>
+        <div class="spec-arch-node">
+          <div class="spec-node-icon">🧵</div>
+          <div class="spec-node-name">Threads API<br>（公式投稿窓口）</div>
+          <div class="spec-node-desc">Threadsの公式ルートで投稿を届ける。2アカウント対応</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 自動投稿の流れ -->
+    <div class="spec-block-title">2. 自動投稿の流れ（5ステップ）</div>
+    <div class="spec-steps">
+      <ol class="spec-step-list">
+        <li class="spec-step-item">
+          <div class="spec-step-num">1</div>
+          <div class="spec-step-text"><strong>スプレッドシートに投稿を用意しておく</strong><br>画像のURL・本文テキストを行ごとに入力するだけ。Excelの表と同じ感覚で編集できます。</div>
+        </li>
+        <li class="spec-step-item">
+          <div class="spec-step-num">2</div>
+          <div class="spec-step-text"><strong>GASが約30分ごと（ランダム間隔）に自動で起動</strong><br>人間が何も操作しなくても、設定した時間帯に自動で動き出します。「ランダム」にすることで、機械的な投稿に見えない自然なリズムを作ります。</div>
+        </li>
+        <li class="spec-step-item">
+          <div class="spec-step-num">3</div>
+          <div class="spec-step-text"><strong>次の順番の投稿を4アカウントへ一斉送信</strong><br>Instagram 2アカウント＋Threads 2アカウントへ、公式のAPI（投稿窓口）を使って同時に届けます。</div>
+        </li>
+        <li class="spec-step-item">
+          <div class="spec-step-num">4</div>
+          <div class="spec-step-text"><strong>「いつ・どれを投稿したか」をログに自動記録</strong><br>スプレッドシートに投稿日時を書き込み、<strong>同じ投稿を二重に出さない仕組み</strong>になっています。エラーがあれば理由も記録されます。</div>
+        </li>
+        <li class="spec-step-item">
+          <div class="spec-step-num">5</div>
+          <div class="spec-step-text"><strong>150件すべて配信し終わったら1件目に戻って繰り返し</strong><br>ネタ切れなし。一度用意したコンテンツをずっと活用できます。</div>
+        </li>
+      </ol>
+    </div>
+
+    <!-- 3. 納品後の運用 -->
+    <div class="spec-block-title">3. 納品後はご自身で運用できます</div>
+    <div class="spec-ops-grid">
+      <div class="spec-ops-card">
+        <div class="spec-ops-icon">✏️</div>
+        <div class="spec-ops-title">投稿の追加・修正</div>
+        <div class="spec-ops-body">スプレッドシートの行を足す・直すだけ。プログラムの知識は一切不要です。</div>
+      </div>
+      <div class="spec-ops-card">
+        <div class="spec-ops-icon">⏰</div>
+        <div class="spec-ops-title">投稿間隔・時間帯の変更</div>
+        <div class="spec-ops-body">設定シートの数字を変えるだけ。「30分ごと→60分ごと」など、好みに合わせて調整できます。</div>
+      </div>
+      <div class="spec-ops-card">
+        <div class="spec-ops-icon">💰</div>
+        <div class="spec-ops-title">ランニングコスト</div>
+        <div class="spec-ops-body">GASは無料枠で完結します。Buffer・Makeのような月額サービス費用は不要です。</div>
+      </div>
+    </div>
+
+    <!-- 4. 制作の進め方 -->
+    <div class="spec-block-title">4. 制作の進め方（3ステップ）</div>
+    <div class="spec-process">
+      <div class="spec-process-flow">
+        <div class="spec-proc-node">
+          <div class="spec-proc-num">1</div>
+          <div class="spec-proc-title">要件確認</div>
+          <div class="spec-proc-body">対象アカウント・投稿数・希望の投稿間隔をヒアリングします</div>
+        </div>
+        <div class="spec-proc-arrow">→</div>
+        <div class="spec-proc-node">
+          <div class="spec-proc-num">2</div>
+          <div class="spec-proc-title">実装・接続</div>
+          <div class="spec-proc-body">スプレッドシート構築＋各SNSのAPI接続＋テスト投稿で動作確認</div>
+        </div>
+        <div class="spec-proc-arrow">→</div>
+        <div class="spec-proc-node">
+          <div class="spec-proc-num">3</div>
+          <div class="spec-proc-title">納品</div>
+          <div class="spec-proc-body">GASコード一式＋スプレッドシート雛形＋操作マニュアル（図解付き）</div>
+        </div>
+      </div>
+      <div class="spec-delivery-note">
+        📦 <strong>納期の目安：5営業日</strong>　|　納品物：GASコード一式・スプレッドシート雛形・図解付き操作マニュアル
+      </div>
+    </div>
+
+  </div>
+</section>
+
 <script>
 // ======= ダミーデータ =======
 const EMOJIS = ['🌸','🌿','☀️','🎋','🍃','🌙','🌺','🍀','🦋','🌊','🏔️','🌸','🎨','📚','🌅','🍵','🌻','🎭','🎵','🌈'];

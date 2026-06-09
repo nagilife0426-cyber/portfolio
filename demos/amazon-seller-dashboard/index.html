@@ -440,6 +440,493 @@
   <strong>Amazon集計ツール v1.0 — GAS版 / Excel VBA版 対応 | 開発: Tomoya &amp; Co.</strong>
 </div>
 
+<!-- ====================================================
+     📋 制作仕様・自動化の仕組み（クライアント向け説明）
+     クラス名プレフィックス: spec-  衝突回避済み
+     ==================================================== -->
+<style>
+  /* ===== Spec Section Base ===== */
+  .spec-section {
+    background: var(--bg);
+    border-top: 3px solid var(--primary);
+    padding: 48px 0 64px;
+    margin-top: 0;
+  }
+  .spec-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  .spec-section-heading {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .spec-section-heading h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .spec-section-heading h2::before,
+  .spec-section-heading h2::after {
+    content: '';
+    display: block;
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    max-width: 120px;
+  }
+  .spec-section-heading p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 6px;
+  }
+
+  /* ===== Sub-headings ===== */
+  .spec-block-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .spec-block-title::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 18px;
+    background: var(--primary);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* ===== 1. System Components (3-column cards) ===== */
+  .spec-components-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 700px) {
+    .spec-components-grid { grid-template-columns: 1fr; }
+  }
+  .spec-component-card {
+    padding: 24px 20px;
+    border-right: 1px solid var(--border);
+    position: relative;
+  }
+  .spec-component-card:last-child { border-right: none; }
+  @media (max-width: 700px) {
+    .spec-component-card { border-right: none; border-bottom: 1px solid var(--border); }
+    .spec-component-card:last-child { border-bottom: none; }
+  }
+  /* 矢印（→）をカード間に表示 */
+  .spec-component-card:not(:last-child)::after {
+    content: '→';
+    position: absolute;
+    right: -14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--primary);
+    color: #fff;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    z-index: 1;
+    line-height: 26px;
+    text-align: center;
+  }
+  @media (max-width: 700px) {
+    .spec-component-card:not(:last-child)::after {
+      right: auto;
+      left: 50%;
+      top: auto;
+      bottom: -14px;
+      transform: translateX(-50%) rotate(90deg);
+    }
+  }
+  .spec-component-icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+  }
+  .spec-component-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .spec-component-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  .spec-component-tag {
+    display: inline-block;
+    background: var(--accent-blue-light);
+    color: var(--primary);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 8px;
+  }
+
+  /* ===== 2. Flow (5-step) ===== */
+  .spec-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+  .spec-flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    transition: background .15s;
+  }
+  .spec-flow-step:last-child { border-bottom: none; }
+  .spec-flow-step:hover { background: var(--accent-blue-light); }
+  .spec-step-num {
+    width: 30px;
+    height: 30px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .spec-step-body { flex: 1; }
+  .spec-step-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+  .spec-step-detail {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .spec-step-badge {
+    display: inline-block;
+    background: var(--accent-green-light);
+    color: var(--success);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 8px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  /* ===== 3. Two Versions (2-column) ===== */
+  .spec-versions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 600px) {
+    .spec-versions-grid { grid-template-columns: 1fr; }
+  }
+  .spec-version-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    border-top: 4px solid var(--primary);
+  }
+  .spec-version-card:last-child {
+    border-top-color: #34a853;
+  }
+  .spec-version-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .spec-version-sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+  }
+  .spec-version-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .spec-version-list li {
+    font-size: 12px;
+    color: var(--text);
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .spec-version-list li:last-child { border-bottom: none; }
+  .spec-version-list li::before {
+    content: '✓';
+    color: var(--primary);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .spec-auto-note {
+    text-align: center;
+    background: var(--accent-blue-light);
+    color: var(--primary-dark);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 10px 16px;
+    border-radius: 8px;
+    margin-top: 8px;
+  }
+
+  /* ===== 4. Process (3-step timeline) ===== */
+  .spec-process {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  @media (max-width: 650px) {
+    .spec-process { grid-template-columns: 1fr; }
+  }
+  .spec-process-step {
+    padding: 22px 20px;
+    border-right: 1px solid var(--border);
+    position: relative;
+  }
+  .spec-process-step:last-child { border-right: none; }
+  @media (max-width: 650px) {
+    .spec-process-step { border-right: none; border-bottom: 1px solid var(--border); }
+    .spec-process-step:last-child { border-bottom: none; }
+  }
+  .spec-process-step:not(:last-child)::after {
+    content: '→';
+    position: absolute;
+    right: -14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--accent-blue-light);
+    color: var(--primary);
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    z-index: 1;
+    line-height: 26px;
+    text-align: center;
+  }
+  @media (max-width: 650px) {
+    .spec-process-step:not(:last-child)::after {
+      right: auto;
+      left: 50%;
+      top: auto;
+      bottom: -14px;
+      transform: translateX(-50%) rotate(90deg);
+    }
+  }
+  .spec-process-num {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .spec-process-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .spec-process-detail {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  .spec-process-tag {
+    display: inline-block;
+    background: var(--accent-orange-light);
+    color: var(--warning);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 8px;
+    margin-top: 10px;
+  }
+  .spec-deadline-note {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 10px;
+  }
+  .spec-deadline-note strong { color: var(--text); }
+</style>
+
+<section class="spec-section" aria-label="制作仕様・自動化の仕組み">
+  <div class="spec-container">
+
+    <div class="spec-section-heading">
+      <h2>📋 制作仕様・自動化の仕組み</h2>
+      <p>非エンジニアの方でも全体像がわかるよう、システムの構成と進め方を解説しています。</p>
+    </div>
+
+    <!-- 1. システム構成 -->
+    <div class="spec-block-title">1. システム構成（3つの部品）</div>
+    <div class="spec-components-grid">
+      <div class="spec-component-card">
+        <div class="spec-component-icon">📥</div>
+        <div class="spec-component-name">レポート取込</div>
+        <div class="spec-component-desc">Amazonの売上・広告・在庫レポート（CSVファイル）を読み込む部分。列の並び順が多少違っても自動で対応します。</div>
+        <span class="spec-component-tag">CSV読み込み</span>
+      </div>
+      <div class="spec-component-card">
+        <div class="spec-component-icon">⚙️</div>
+        <div class="spec-component-name">集計エンジン</div>
+        <div class="spec-component-desc">必要な数字（粗利・ACoS・在庫日数など）を抽出し、商品別・期間別に自動計算する部分。</div>
+        <span class="spec-component-tag">自動計算スクリプト</span>
+      </div>
+      <div class="spec-component-card">
+        <div class="spec-component-icon">📊</div>
+        <div class="spec-component-name">ダッシュボード</div>
+        <div class="spec-component-desc">計算した結果を、このページのようにグラフ・表で見やすく表示する画面。数値が更新されると自動で反映されます。</div>
+        <span class="spec-component-tag">グラフ・表示</span>
+      </div>
+    </div>
+
+    <!-- 2. 集計の流れ -->
+    <div class="spec-block-title">2. 集計の流れ（5ステップ）</div>
+    <div class="spec-flow">
+      <div class="spec-flow-step">
+        <div class="spec-step-num">1</div>
+        <div class="spec-step-body">
+          <div class="spec-step-label">レポートを用意する</div>
+          <div class="spec-step-detail">Amazonセラーセントラルから「売上レポート」「広告レポート」「在庫レポート」の3種類をCSV形式でダウンロードします。</div>
+        </div>
+      </div>
+      <div class="spec-flow-step">
+        <div class="spec-step-num">2</div>
+        <div class="spec-step-body">
+          <div class="spec-step-label">「集計実行」ボタンを押す <span class="spec-step-badge">ボタン1つ</span></div>
+          <div class="spec-step-detail">スプレッドシートのメニューに表示される「集計実行」をクリックするだけ。それ以外の操作は不要です。</div>
+        </div>
+      </div>
+      <div class="spec-flow-step">
+        <div class="spec-step-num">3</div>
+        <div class="spec-step-body">
+          <div class="spec-step-label">必要な数値を自動抽出</div>
+          <div class="spec-step-detail">ダウンロードしたレポートから、売上・手数料・広告費・原価などを自動で読み取ります。列の名前が多少違っても自動で対応します。</div>
+        </div>
+      </div>
+      <div class="spec-flow-step">
+        <div class="spec-step-num">4</div>
+        <div class="spec-step-body">
+          <div class="spec-step-label">商品別・月別に自動計算</div>
+          <div class="spec-step-detail">粗利（売上から費用を引いた利益）・ACoS（広告の費用対効果）・在庫切れアラートを自動で計算します。</div>
+        </div>
+      </div>
+      <div class="spec-flow-step">
+        <div class="spec-step-num">5</div>
+        <div class="spec-step-body">
+          <div class="spec-step-label">ダッシュボードに自動表示</div>
+          <div class="spec-step-detail">このページのようなグラフ・表・アラートカードが自動で更新されます。毎月同じ手順を繰り返すだけで最新の集計結果を確認できます。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 2つのバージョン -->
+    <div class="spec-block-title">3. 2つのバージョンに対応</div>
+    <div class="spec-versions-grid">
+      <div class="spec-version-card">
+        <div class="spec-version-name">GAS版（Googleスプレッドシート）</div>
+        <div class="spec-version-sub">チームで共有して使いたい場合におすすめ</div>
+        <ul class="spec-version-list">
+          <li>インターネット接続があればどこからでもアクセス可能</li>
+          <li>複数人でリアルタイム共有・閲覧できる</li>
+          <li>スマホ・タブレットからも確認OK</li>
+          <li>ファイルのバックアップ・バージョン管理が自動</li>
+        </ul>
+      </div>
+      <div class="spec-version-card">
+        <div class="spec-version-name">Excel VBA版</div>
+        <div class="spec-version-sub">手元のExcelで完結させたい場合におすすめ</div>
+        <ul class="spec-version-list">
+          <li>インターネット不要、オフラインで動作する</li>
+          <li>既存のExcel業務フローにそのまま組み込める</li>
+          <li>社内ルールでGoogleを使えない場合も安心</li>
+          <li>慣れ親しんだExcel画面で操作できる</li>
+        </ul>
+      </div>
+    </div>
+    <div class="spec-auto-note">
+      どちらも毎回ボタン1つで集計できます。ご希望の場合は週次・月次の定期自動実行も設定可能です。
+    </div>
+
+    <!-- 4. 制作の進め方 -->
+    <div class="spec-block-title" style="margin-top: 32px;">4. 制作の進め方（3ステップ）</div>
+    <div class="spec-process">
+      <div class="spec-process-step">
+        <div class="spec-process-num">Step 1</div>
+        <div class="spec-process-title">要件確認</div>
+        <div class="spec-process-detail">現在お使いのレポート種別・列名・必ず見たい指標・原価データの管理方法をヒアリングします。不明な点はこの段階で解消します。</div>
+        <span class="spec-process-tag">ヒアリング</span>
+      </div>
+      <div class="spec-process-step">
+        <div class="spec-process-num">Step 2</div>
+        <div class="spec-process-title">実装・動作確認</div>
+        <div class="spec-process-detail">取込 → 集計 → ダッシュボードを構築し、実際のデータで動作確認・列の調整を行います。細かい修正も対応します。</div>
+        <span class="spec-process-tag">実装・テスト</span>
+      </div>
+      <div class="spec-process-step">
+        <div class="spec-process-num">Step 3</div>
+        <div class="spec-process-title">納品・マニュアル</div>
+        <div class="spec-process-detail">スクリプト一式と操作マニュアルをセットで納品します。後から見返せるよう図付きで手順をまとめます。</div>
+        <span class="spec-process-tag">納品</span>
+      </div>
+    </div>
+    <div class="spec-deadline-note">
+      納期の目安: <strong>仕様確定後 7〜10 営業日</strong>（データのご提供が早いほど短縮できます）
+    </div>
+
+  </div>
+</section>
+
 <script>
 // ============================================================
 // サンプルデータ（sample_data/ の集計結果）
