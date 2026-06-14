@@ -1,0 +1,15 @@
+# OS ゴミは ~/.gitignore_global で共通管理
+
+# Python（check_crowdworks.py 用）
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Node（将来のビルド導入に備えて）
+node_modules/
+
+# ログ・一時
+*.log
+.cache/
