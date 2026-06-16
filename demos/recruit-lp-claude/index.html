@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>採用情報 | 株式会社ノースライト（架空サンプル）</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:       #0b1d3e;
+      --navy-mid:   #132d5e;
+      --blue:       #1e4fc8;
+      --blue-mid:   #2e63d8;
+      --teal:       #0cb8b8;
+      --teal-light: #34d8d8;
+      --white:      #ffffff;
+      --off-white:  #f6f9ff;
+      --bg-light:   #eef3fc;
+      --text:       #0b1d3e;
+      --text-mid:   #2d4070;
+      --text-light: #5a6e9c;
+      --border:     #d4def5;
+      --shadow-sm:  0 2px 8px rgba(11,29,62,0.07);
+      --shadow-md:  0 4px 20px rgba(11,29,62,0.12);
+      --shadow-lg:  0 12px 40px rgba(11,29,62,0.15);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic Medium', 'Yu Gothic', sans-serif;
+      color: var(--text);
+      background: var(--white);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* ===========================
+       CREDIT BAR
+    =========================== */
+    .credit-bar {
+      background: var(--navy);
+      color: rgba(255,255,255,0.55);
+      text-align: center;
+      font-size: 11px;
+      padding: 7px 16px;
+      letter-spacing: 0.05em;
+    }
+    .credit-bar a { color: var(--teal-light); text-decoration: none; }
+    .credit-bar a:hover { text-decoration: underline; }
+
+    /* ===========================
+       DEMO BADGE
+    =========================== */
+    .demo-badge {
+      position: fixed;
+      top: 56px;
+      right: 16px;
+      z-index: 9999;
+      background: #ef4444;
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      padding: 5px 11px;
+      border-radius: 4px;
+      box-shadow: 0 2px 10px rgba(239,68,68,0.45);
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    /* ===========================
+       NAVBAR
+    =========================== */
+    .navbar {
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      box-shadow: var(--shadow-sm);
+    }
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 68px;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-logo-mark {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--blue), var(--teal));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 19px;
+      color: white;
+      flex-shrink: 0;
+    }
+    .nav-logo-text { font-size: 16px; font-weight: 800; color: var(--text); letter-spacing: 0.04em; line-height: 1.2; }
+    .nav-logo-text small { display: block; font-size: 9px; font-weight: 500; color: var(--text-light); letter-spacing: 0.12em; text-transform: uppercase; }
+    .nav-links { display: flex; gap: 2px; list-style: none; align-items: center; }
+    .nav-links a {
+      color: var(--text-mid);
+      text-decoration: none;
+      font-size: 14px;
+      padding: 8px 14px;
+      border-radius: 6px;
+      transition: background 0.18s, color 0.18s;
+      white-space: nowrap;
+    }
+    .nav-links a:hover { background: var(--bg-light); color: var(--blue); }
+    .nav-cta {
+      background: var(--blue) !important;
+      color: white !important;
+      font-weight: 700 !important;
+      border-radius: 8px !important;
+      padding: 9px 20px !important;
+      transition: background 0.18s, transform 0.18s !important;
+    }
+    .nav-cta:hover { background: var(--navy-mid) !important; transform: translateY(-1px) !important; }
+    .nav-hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 8px; }
+    .nav-hamburger span { display: block; width: 22px; height: 2px; background: var(--text); border-radius: 2px; transition: all 0.25s; }
+
+    /* ===========================
+       HERO
+    =========================== */
+    .hero {
+      background: linear-gradient(145deg, var(--navy) 0%, var(--navy-mid) 45%, #1a3a7a 100%);
+      position: relative;
+      overflow: hidden;
+      padding: 100px 28px 110px;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 85% 50%, rgba(12,184,184,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 70% at 10% 80%, rgba(30,79,200,0.25) 0%, transparent 55%);
+    }
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+    .hero-inner {
+      position: relative;
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(12,184,184,0.15);
+      border: 1px solid rgba(12,184,184,0.4);
+      color: var(--teal-light);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 20px;
+      margin-bottom: 26px;
+    }
+    .hero-eyebrow::before { content: '●'; font-size: 7px; animation: blink 2s ease-in-out infinite; }
+    @keyframes blink { 0%,100% { opacity:1 } 50% { opacity:0.3 } }
+    .hero-title {
+      font-size: clamp(30px, 4.5vw, 52px);
+      font-weight: 900;
+      color: white;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+      margin-bottom: 22px;
+    }
+    .hero-title .hl {
+      background: linear-gradient(120deg, var(--teal-light), #93c5fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-desc {
+      font-size: 16px;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.9;
+      margin-bottom: 38px;
+    }
+    .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--teal), var(--blue-mid));
+      color: white;
+      padding: 15px 32px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+      letter-spacing: 0.03em;
+      transition: transform 0.22s, box-shadow 0.22s;
+      box-shadow: 0 6px 24px rgba(12,184,184,0.4);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(12,184,184,0.55); }
+    .btn-ghost {
+      background: rgba(255,255,255,0.08);
+      border: 1.5px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 15px 32px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.22s, border-color 0.22s;
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.55); }
+    .hero-visual { display: flex; flex-direction: column; gap: 14px; }
+    .hero-card {
+      background: rgba(255,255,255,0.07);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 16px;
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: transform 0.25s, background 0.25s;
+    }
+    .hero-card:hover { transform: translateX(6px); background: rgba(255,255,255,0.11); }
+    .hero-card-icon { font-size: 34px; flex-shrink: 0; }
+    .hero-card-title { font-size: 14px; font-weight: 700; color: white; margin-bottom: 3px; }
+    .hero-card-sub { font-size: 12px; color: rgba(255,255,255,0.55); }
+    .hero-card-badge {
+      margin-left: auto;
+      background: var(--teal);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 12px;
+      flex-shrink: 0;
+    }
+
+    /* ===========================
+       SECTION COMMON
+    =========================== */
+    .section { padding: 88px 28px; }
+    .section-alt { background: var(--off-white); }
+    .section-navy { background: var(--navy); }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .section-header { text-align: center; margin-bottom: 56px; }
+    .section-label {
+      display: inline-block;
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--blue);
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+    .section-label-light { color: var(--teal-light) !important; }
+    .section-title {
+      font-size: clamp(24px, 3.5vw, 38px);
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+    }
+    .section-title-light { color: white !important; }
+    .section-sub { font-size: 15px; color: var(--text-light); margin-top: 14px; line-height: 1.8; }
+    .section-sub-light { color: rgba(255,255,255,0.65) !important; }
+
+    /* Animate on scroll */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .fade-in-delay-1 { transition-delay: 0.1s; }
+    .fade-in-delay-2 { transition-delay: 0.2s; }
+    .fade-in-delay-3 { transition-delay: 0.3s; }
+    .fade-in-delay-4 { transition-delay: 0.4s; }
+
+    /* ===========================
+       NUMBERS
+    =========================== */
+    .numbers-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+    }
+    .number-item {
+      background: white;
+      padding: 36px 24px;
+      text-align: center;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .number-item::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--blue), var(--teal));
+    }
+    .number-value {
+      font-size: clamp(32px, 4vw, 52px);
+      font-weight: 900;
+      color: var(--navy);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .number-value span { font-size: 0.55em; font-weight: 700; color: var(--blue); }
+    .number-label { font-size: 13px; color: var(--text-light); margin-top: 10px; letter-spacing: 0.02em; }
+
+    /* ===========================
+       MISSION
+    =========================== */
+    .mission-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+    .mission-text-block {}
+    .mission-tagline {
+      font-size: clamp(22px, 3vw, 34px);
+      font-weight: 900;
+      color: var(--text);
+      line-height: 1.45;
+      letter-spacing: -0.01em;
+      margin-bottom: 24px;
+    }
+    .mission-tagline em {
+      font-style: normal;
+      background: linear-gradient(120deg, var(--blue), var(--teal));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .mission-body { font-size: 15px; color: var(--text-mid); line-height: 1.95; }
+    .mission-values { display: flex; flex-direction: column; gap: 20px; }
+    .mission-value {
+      background: var(--bg-light);
+      border-left: 4px solid var(--blue);
+      padding: 20px 22px;
+      border-radius: 0 10px 10px 0;
+    }
+    .mission-value-title { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+    .mission-value-desc { font-size: 13px; color: var(--text-light); line-height: 1.75; }
+
+    /* ===========================
+       JOBS
+    =========================== */
+    .jobs-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .job-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 28px;
+      transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .job-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--blue), var(--teal));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s;
+    }
+    .job-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); border-color: rgba(30,79,200,0.3); }
+    .job-card:hover::after { transform: scaleX(1); }
+    .job-tag {
+      display: inline-block;
+      background: var(--bg-light);
+      color: var(--blue);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 20px;
+      margin-bottom: 18px;
+    }
+    .job-title { font-size: 20px; font-weight: 800; color: var(--navy); margin-bottom: 12px; line-height: 1.3; }
+    .job-desc { font-size: 13px; color: var(--text-mid); line-height: 1.8; margin-bottom: 22px; }
+    .job-meta { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+    .job-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-light);
+    }
+    .job-meta-row span:first-child { font-size: 15px; }
+    .job-btn {
+      display: block;
+      text-align: center;
+      background: var(--blue);
+      color: white;
+      text-decoration: none;
+      padding: 11px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      transition: background 0.2s;
+    }
+    .job-btn:hover { background: var(--navy-mid); }
+
+    /* ===========================
+       INTERVIEW
+    =========================== */
+    .interview-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+    .interview-card {
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .interview-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+    .interview-avatar {
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 64px;
+    }
+    .interview-card:nth-child(1) .interview-avatar { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
+    .interview-card:nth-child(2) .interview-avatar { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+    .interview-card:nth-child(3) .interview-avatar { background: linear-gradient(135deg, #ede9fe, #ddd6fe); }
+    .interview-body { padding: 26px 24px; }
+    .interview-name { font-size: 16px; font-weight: 700; color: var(--navy); }
+    .interview-role { font-size: 12px; color: var(--text-light); margin-bottom: 18px; letter-spacing: 0.06em; }
+    .interview-q {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--blue);
+      background: var(--bg-light);
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+    .interview-a { font-size: 13px; color: var(--text-mid); line-height: 1.8; }
+
+    /* ===========================
+       BENEFITS
+    =========================== */
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+    .benefit-card {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 16px;
+      padding: 28px 22px;
+      text-align: center;
+      transition: background 0.25s, transform 0.25s;
+    }
+    .benefit-card:hover { background: rgba(255,255,255,0.11); transform: translateY(-3px); }
+    .benefit-icon { font-size: 36px; margin-bottom: 14px; }
+    .benefit-title { font-size: 14px; font-weight: 700; color: white; margin-bottom: 8px; }
+    .benefit-desc { font-size: 12px; color: rgba(255,255,255,0.58); line-height: 1.75; }
+
+    /* ===========================
+       FLOW
+    =========================== */
+    .flow-steps { display: flex; gap: 0; position: relative; }
+    .flow-steps::before {
+      content: '';
+      position: absolute;
+      top: 28px;
+      left: 60px;
+      right: 60px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--blue), var(--teal));
+    }
+    .flow-step {
+      flex: 1;
+      text-align: center;
+      position: relative;
+      padding-top: 10px;
+    }
+    .flow-num {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, var(--blue), var(--teal));
+      color: white;
+      font-size: 20px;
+      font-weight: 900;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 18px;
+      border: 4px solid white;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      z-index: 1;
+    }
+    .flow-title { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+    .flow-desc { font-size: 12px; color: var(--text-light); line-height: 1.75; padding: 0 8px; }
+    .flow-duration {
+      display: inline-block;
+      background: var(--bg-light);
+      color: var(--blue);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 10px;
+      margin-top: 10px;
+      letter-spacing: 0.05em;
+    }
+
+    /* ===========================
+       FAQ
+    =========================== */
+    .faq-list { display: flex; flex-direction: column; gap: 12px; }
+    .faq-item {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .faq-item:hover { box-shadow: var(--shadow-sm); }
+    .faq-q {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px 24px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .faq-q-text {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--navy);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      flex: 1;
+    }
+    .faq-q-text::before {
+      content: 'Q';
+      background: var(--blue);
+      color: white;
+      font-size: 11px;
+      font-weight: 800;
+      width: 22px; height: 22px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .faq-toggle {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--bg-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: var(--blue);
+      flex-shrink: 0;
+      transition: transform 0.3s, background 0.2s;
+    }
+    .faq-item.open .faq-toggle { transform: rotate(45deg); background: var(--blue); color: white; }
+    .faq-a {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease, padding 0.3s;
+      font-size: 14px;
+      color: var(--text-mid);
+      line-height: 1.85;
+      padding: 0 24px 0 58px;
+    }
+    .faq-item.open .faq-a { max-height: 240px; padding-bottom: 22px; }
+
+    /* ===========================
+       CTA ENTRY
+    =========================== */
+    .entry-section {
+      background: linear-gradient(145deg, var(--navy) 0%, var(--navy-mid) 55%, #1a3a7a 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    .entry-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 80% at 90% 50%, rgba(12,184,184,0.2) 0%, transparent 55%);
+    }
+    .entry-inner {
+      position: relative;
+      max-width: 800px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .entry-title {
+      font-size: clamp(26px, 3.5vw, 40px);
+      font-weight: 900;
+      color: white;
+      margin-bottom: 16px;
+      letter-spacing: -0.01em;
+    }
+    .entry-desc { font-size: 15px; color: rgba(255,255,255,0.7); margin-bottom: 44px; line-height: 1.8; }
+    .entry-form {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 20px;
+      padding: 40px 48px;
+      text-align: left;
+    }
+    .form-row { margin-bottom: 20px; }
+    .form-row label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.7);
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+    .form-row label span { color: var(--teal-light); margin-left: 4px; }
+    .form-input {
+      width: 100%;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 14px;
+      color: white;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+      font-family: inherit;
+    }
+    .form-input::placeholder { color: rgba(255,255,255,0.3); }
+    .form-input:focus { border-color: var(--teal); background: rgba(255,255,255,0.11); }
+    .form-row select.form-input option { background: var(--navy); color: white; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-submit-wrap { margin-top: 28px; }
+    .form-submit {
+      width: 100%;
+      background: linear-gradient(135deg, var(--teal), var(--blue-mid));
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 16px 32px;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: transform 0.22s, box-shadow 0.22s, opacity 0.22s;
+      box-shadow: 0 6px 24px rgba(12,184,184,0.4);
+      font-family: inherit;
+    }
+    .form-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(12,184,184,0.55); }
+    .form-submit:active { transform: translateY(0); opacity: 0.85; }
+    .form-note { text-align: center; font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 14px; }
+
+    /* ===========================
+       FOOTER
+    =========================== */
+    .footer { background: #060e20; padding: 56px 28px 32px; }
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .footer-top {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr 1fr;
+      gap: 48px;
+      margin-bottom: 48px;
+    }
+    .footer-brand {}
+    .footer-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .footer-logo-mark {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, var(--blue), var(--teal));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; color: white;
+    }
+    .footer-logo-text { font-size: 15px; font-weight: 800; color: rgba(255,255,255,0.85); }
+    .footer-desc { font-size: 13px; color: rgba(255,255,255,0.38); line-height: 1.85; }
+    .footer-col h4 { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.6); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 20px; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .footer-col ul a { font-size: 13px; color: rgba(255,255,255,0.42); text-decoration: none; transition: color 0.18s; }
+    .footer-col ul a:hover { color: var(--teal-light); }
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding-top: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .footer-copy { font-size: 12px; color: rgba(255,255,255,0.28); }
+    .footer-dummy { font-size: 11px; color: rgba(255,255,255,0.2); }
+
+    /* ===========================
+       SPEC SECTION
+    =========================== */
+    .spec-section {
+      background: #f0f4ff;
+      border-top: 4px solid #1e4fc8;
+      padding: 72px 28px;
+    }
+    .spec-inner { max-width: 900px; margin: 0 auto; }
+    .spec-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 40px;
+    }
+    .spec-icon {
+      width: 48px; height: 48px;
+      background: #1e4fc8;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+    .spec-heading { font-size: 20px; font-weight: 800; color: #0b1d3e; }
+    .spec-heading small { display: block; font-size: 12px; font-weight: 500; color: #5a6e9c; margin-top: 3px; letter-spacing: 0.03em; }
+    .spec-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      margin-bottom: 32px;
+    }
+    .spec-card {
+      background: white;
+      border: 1px solid #d4def5;
+      border-radius: 14px;
+      padding: 26px 28px;
+    }
+    .spec-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e4fc8;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .spec-card ol, .spec-card ul { padding-left: 20px; }
+    .spec-card li { font-size: 14px; color: #2d4070; line-height: 1.85; margin-bottom: 4px; }
+    .spec-card li strong { color: #0b1d3e; }
+    .spec-tags { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+    .spec-tag {
+      background: #eef3fc;
+      border: 1px solid #c4d0f0;
+      color: #1e4fc8;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 13px;
+      border-radius: 20px;
+    }
+    .spec-note {
+      background: white;
+      border-left: 4px solid var(--blue);
+      padding: 20px 24px;
+      border-radius: 0 12px 12px 0;
+      font-size: 14px;
+      color: #2d4070;
+      line-height: 1.85;
+    }
+    .spec-note strong { color: #0b1d3e; }
+
+    /* ===========================
+       RESPONSIVE
+    =========================== */
+    @media (max-width: 900px) {
+      .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+      .hero-visual { display: none; }
+      .numbers-grid { grid-template-columns: repeat(2, 1fr); }
+      .mission-wrap { grid-template-columns: 1fr; gap: 36px; }
+      .jobs-grid { grid-template-columns: 1fr; }
+      .interview-grid { grid-template-columns: 1fr; }
+      .benefits-grid { grid-template-columns: repeat(2, 1fr); }
+      .footer-top { grid-template-columns: 1fr 1fr; }
+      .spec-grid { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .nav-hamburger { display: flex; }
+      .nav-links.open {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        inset: 68px 0 0;
+        background: white;
+        padding: 24px;
+        gap: 8px;
+        z-index: 199;
+        box-shadow: var(--shadow-lg);
+        border-top: 1px solid var(--border);
+      }
+      .nav-links.open a { padding: 14px 16px; font-size: 16px; }
+      .hero { padding: 70px 20px 80px; }
+      .section { padding: 60px 20px; }
+      .numbers-grid { grid-template-columns: 1fr 1fr; }
+      .flow-steps { flex-direction: column; gap: 16px; }
+      .flow-steps::before { display: none; }
+      .flow-step { display: flex; align-items: flex-start; gap: 16px; text-align: left; }
+      .flow-num { margin: 0; flex-shrink: 0; width: 44px; height: 44px; font-size: 16px; }
+      .benefits-grid { grid-template-columns: 1fr 1fr; }
+      .footer-top { grid-template-columns: 1fr; }
+      .demo-badge { top: auto; bottom: 16px; right: 16px; }
+      .entry-form { padding: 28px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- DEMO BADGE -->
+<div class="demo-badge">DEMO</div>
+
+<!-- CREDIT BAR -->
+<div class="credit-bar">
+  このページは採用LPのデモサンプルです（架空企業）。制作：
+  <a href="../../index.html" target="_blank">なぎ｜業務自動化エンジニア</a>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="top">
+  <div class="nav-inner">
+    <a href="#top" class="nav-logo">
+      <div class="nav-logo-mark">🌐</div>
+      <div class="nav-logo-text">
+        NorthLight
+        <small>Inc. — Recruit</small>
+      </div>
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#mission">ミッション</a></li>
+      <li><a href="#jobs">募集職種</a></li>
+      <li><a href="#interview">社員の声</a></li>
+      <li><a href="#benefits">働く環境</a></li>
+      <li><a href="#flow">選考フロー</a></li>
+      <li><a href="#entry" class="nav-cta">エントリー</a></li>
+    </ul>
+    <div class="nav-hamburger" id="hamburger" onclick="document.getElementById('navLinks').classList.toggle('open')">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+</nav>
+
+<!-- ============================
+     HERO
+============================= -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-inner container">
+    <div class="hero-text fade-in">
+      <div class="hero-eyebrow">Now Hiring 2026</div>
+      <h1 class="hero-title">
+        HR をアップデートする、<br>
+        <span class="hl">次世代の仲間</span>を探しています。
+      </h1>
+      <p class="hero-desc">
+        株式会社ノースライトは「すべての企業が、人材の力を最大化できる社会」を目指し、
+        クラウド人事SaaSを展開するスタートアップです。<br>
+        急成長フェーズの今、ともに未来を描くメンバーを募集しています。
+      </p>
+      <div class="hero-btns">
+        <a href="#jobs" class="btn-primary">募集職種を見る →</a>
+        <a href="#mission" class="btn-ghost">会社を知る</a>
+      </div>
+    </div>
+    <div class="hero-visual fade-in fade-in-delay-2">
+      <div class="hero-card">
+        <div class="hero-card-icon">🚀</div>
+        <div>
+          <div class="hero-card-title">シリーズA調達完了</div>
+          <div class="hero-card-sub">累計調達額 12億円 / 2025年8月</div>
+        </div>
+        <div class="hero-card-badge">NEW</div>
+      </div>
+      <div class="hero-card">
+        <div class="hero-card-icon">📈</div>
+        <div>
+          <div class="hero-card-title">ARR 前年比 280% 成長</div>
+          <div class="hero-card-sub">導入企業 1,200社超 / 2026年1月時点</div>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="hero-card-icon">🏆</div>
+        <div>
+          <div class="hero-card-title">HR Tech Award 2025 受賞</div>
+          <div class="hero-card-sub">SaaS Best Innovation部門・最優秀賞</div>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="hero-card-icon">🌍</div>
+        <div>
+          <div class="hero-card-title">フルリモート × 国内全域採用</div>
+          <div class="hero-card-sub">本社：東京 / 拠点：大阪・福岡・札幌</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================
+     NUMBERS
+============================= -->
+<section class="section" style="padding: 0;">
+  <div class="numbers-grid">
+    <div class="number-item fade-in">
+      <div class="number-value">280<span>%</span></div>
+      <div class="number-label">前年比ARR成長率</div>
+    </div>
+    <div class="number-item fade-in fade-in-delay-1">
+      <div class="number-value">1,200<span>+</span></div>
+      <div class="number-label">累計導入企業数</div>
+    </div>
+    <div class="number-item fade-in fade-in-delay-2">
+      <div class="number-value">96<span>%</span></div>
+      <div class="number-label">顧客継続率（チャーンレート 4%）</div>
+    </div>
+    <div class="number-item fade-in fade-in-delay-3">
+      <div class="number-value">120<span>名</span></div>
+      <div class="number-label">チームメンバー数</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================
+     MISSION
+============================= -->
+<section class="section section-alt" id="mission">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-label">Mission & Vision</div>
+      <h2 class="section-title">私たちが解決したい課題</h2>
+    </div>
+    <div class="mission-wrap">
+      <div class="mission-text-block fade-in">
+        <p class="mission-tagline">
+          「採用は<em>直感</em>と<em>経験</em>に頼る」<br>
+          その常識を、データで壊す。
+        </p>
+        <p class="mission-body">
+          日本では年間500万件以上の採用が行われているにもかかわらず、
+          その意思決定の7割以上が「勘」に基づいていると言われています。<br><br>
+          NorthLightは、自社開発の人事SaaS「Kira（キラ）」を通じて、採用・評価・育成の全工程をデータドリブンに変革。
+          企業規模を問わず、誰もが科学的に「人材の力を引き出せる」仕組みを提供します。<br><br>
+          私たちのミッションは <strong>「HR の民主化」</strong>——。
+          それを本気で実現する仲間を、今まさに探しています。
+        </p>
+      </div>
+      <div class="mission-values fade-in fade-in-delay-1">
+        <div class="mission-value">
+          <div class="mission-value-title">🎯 Data First</div>
+          <div class="mission-value-desc">意見より数字を優先。直感を否定せず、データで裏付ける文化。</div>
+        </div>
+        <div class="mission-value">
+          <div class="mission-value-title">🌱 Grow Together</div>
+          <div class="mission-value-desc">個人の成長がチームの成長。学習コストを惜しまない組織づくり。</div>
+        </div>
+        <div class="mission-value">
+          <div class="mission-value-title">⚡ Move Fast</div>
+          <div class="mission-value-desc">完璧より速さ。1週間で仮説を立て、2週間で検証できる組織。</div>
+        </div>
+        <div class="mission-value">
+          <div class="mission-value-title">💬 Radical Honesty</div>
+          <div class="mission-value-desc">役職に関係なく意見を言える。心理的安全性を全員で守る。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================
+     JOBS
+============================= -->
+<section class="section" id="jobs">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-label">Open Positions</div>
+      <h2 class="section-title">募集職種</h2>
+      <p class="section-sub">急成長フェーズの今だからこそ、大きな裁量と成長機会があります。</p>
+    </div>
+    <div class="jobs-grid">
+      <div class="job-card fade-in">
+        <div class="job-tag">Engineering</div>
+        <div class="job-title">バックエンドエンジニア<br>（シニア〜リード）</div>
+        <p class="job-desc">SaaSプロダクト「Kira」のコアAPIと分析基盤を担当。Go/TypeScriptで高トラフィックシステムを設計・運用します。</p>
+        <div class="job-meta">
+          <div class="job-meta-row"><span>💴</span><span>年収 700〜1,100万円</span></div>
+          <div class="job-meta-row"><span>🏠</span><span>フルリモート可</span></div>
+          <div class="job-meta-row"><span>⏱️</span><span>フレックスタイム制（コアなし）</span></div>
+        </div>
+        <a href="#entry" class="job-btn">この職種に応募する</a>
+      </div>
+      <div class="job-card fade-in fade-in-delay-1">
+        <div class="job-tag">Product</div>
+        <div class="job-title">プロダクトマネージャー</div>
+        <p class="job-desc">顧客課題を深掘りし、ロードマップを策定・推進。エンジニア・デザイナー・営業と連携しながらプロダクト価値を最大化します。</p>
+        <div class="job-meta">
+          <div class="job-meta-row"><span>💴</span><span>年収 650〜950万円</span></div>
+          <div class="job-meta-row"><span>🏠</span><span>フルリモート可</span></div>
+          <div class="job-meta-row"><span>📚</span><span>書籍・勉強会支援あり</span></div>
+        </div>
+        <a href="#entry" class="job-btn">この職種に応募する</a>
+      </div>
+      <div class="job-card fade-in fade-in-delay-2">
+        <div class="job-tag">Business</div>
+        <div class="job-title">エンタープライズ<br>セールス</div>
+        <p class="job-desc">大手企業への新規開拓・既存拡大を担うアカウントエグゼクティブ。戦略策定から契約クローズまで高い自律性で推進します。</p>
+        <div class="job-meta">
+          <div class="job-meta-row"><span>💴</span><span>年収 550〜900万円（歩合含む）</span></div>
+          <div class="job-meta-row"><span>🏢</span><span>東京本社 or リモート</span></div>
+          <div class="job-meta-row"><span>📈</span><span>インセンティブ制度あり</span></div>
+        </div>
+        <a href="#entry" class="job-btn">この職種に応募する</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================
+     INTERVIEW
+============================= -->
+<section class="section section-alt" id="interview">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-label">Member Voice</div>
+      <h2 class="section-title">社員インタビュー</h2>
+      <p class="section-sub">実際に働くメンバーの声をご紹介します。</p>
+    </div>
+    <div class="interview-grid">
+      <div class="interview-card fade-in">
+        <div class="interview-avatar">👨‍💻</div>
+        <div class="interview-body">
+          <div class="interview-name">田中 誠一郎</div>
+          <div class="interview-role">バックエンドエンジニア / 入社2年目</div>
+          <div class="interview-q">入社の決め手は何でしたか？</div>
+          <p class="interview-a">「課題をデータで解く」という文化と、エンジニアが経営判断に近い場所にいる点に惹かれました。入社後も想像以上に裁量が大きく、プロダクトの核心部分に関われています。</p>
+        </div>
+      </div>
+      <div class="interview-card fade-in fade-in-delay-1">
+        <div class="interview-avatar">👩‍💼</div>
+        <div class="interview-body">
+          <div class="interview-name">佐藤 あやか</div>
+          <div class="interview-role">プロダクトマネージャー / 入社3年目</div>
+          <div class="interview-q">NorthLightならではの働き方とは？</div>
+          <p class="interview-a">フルリモートでも意思決定が速い。週1のオールハンズで全社の動きが透明に共有され、チャンネルに書けば翌日には回答が返ってきます。「隠す文化」が一切ないのが最高です。</p>
+        </div>
+      </div>
+      <div class="interview-card fade-in fade-in-delay-2">
+        <div class="interview-avatar">👨‍🎨</div>
+        <div class="interview-body">
+          <div class="interview-name">中村 健太</div>
+          <div class="interview-role">エンタープライズセールス / 入社1年目</div>
+          <div class="interview-q">成長実感はありますか？</div>
+          <p class="interview-a">前職では提案に3ヶ月かかっていたことが、ここでは2週間で動けます。マーケ・プロダクトと連携しながら大手案件を担当でき、営業としてのレンジが明らかに広がっています。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================
+     BENEFITS
+============================= -->
+<section class="section section-navy" id="benefits">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-label section-label-light">Work Style & Benefits</div>
+      <h2 class="section-title section-title-light">働く環境・福利厚生</h2>
+      <p class="section-sub section-sub-light">パフォーマンスを最大化するための制度を整えています。</p>
+    </div>
+    <div class="benefits-grid">
+      <div class="benefit-card fade-in">
+        <div class="benefit-icon">🏠</div>
+        <div class="benefit-title">フルリモート勤務</div>
+        <div class="benefit-desc">全職種リモート可。居住地不問で全国採用。在宅環境整備手当あり（月1万円）</div>
+      </div>
+      <div class="benefit-card fade-in fade-in-delay-1">
+        <div class="benefit-icon">⏰</div>
+        <div class="benefit-title">スーパーフレックス</div>
+        <div class="benefit-desc">コアタイムなしのフレックス制。自分のパフォーマンスが最大化する時間帯で働く</div>
+      </div>
+      <div class="benefit-card fade-in fade-in-delay-2">
+        <div class="benefit-icon">📚</div>
+        <div class="benefit-title">学習支援制度</div>
+        <div class="benefit-desc">年間20万円の書籍・勉強会・資格費用補助。業務時間内の学習も奨励</div>
+      </div>
+      <div class="benefit-card fade-in fade-in-delay-3">
+        <div class="benefit-icon">🍱</div>
+        <div class="benefit-title">ランチ手当</div>
+        <div class="benefit-desc">毎日500円のランチ補助（月額最大1万円）。オフィス出社時は社食無料</div>
+      </div>
+      <div class="benefit-card fade-in">
+        <div class="benefit-icon">💊</div>
+        <div class="benefit-title">健康サポート</div>
+        <div class="benefit-desc">健康診断・人間ドック費用全額補助。メンタルヘルスケアプログラム提供</div>
+      </div>
+      <div class="benefit-card fade-in fade-in-delay-1">
+        <div class="benefit-icon">👶</div>
+        <div class="benefit-title">育児・介護支援</div>
+        <div class="benefit-desc">育休取得率88%（男性含む）。時短勤務・看護休暇・ベビーシッター補助</div>
+      </div>
+      <div class="benefit-card fade-in fade-in-delay-2">
+        <div class="benefit-icon">🏖️</div>
+        <div class="benefit-title">有給休暇</div>
+        <div class="benefit-desc">入社初日から有給付与（10日）。バースデー休暇・リフレッシュ休暇制度あり</div>
+      </div>
+      <div class="benefit-card fade-in fade-in-delay-3">
+        <div class="benefit-icon">📈</div>
+        <div class="benefit-title">ストックオプション</div>
+        <div class="benefit-desc">全社員にストックオプション付与。会社の成長を全員で享受する仕組み</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================
+     FLOW
+============================= -->
+<section class="section" id="flow">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-label">Selection Process</div>
+      <h2 class="section-title">選考フロー</h2>
+      <p class="section-sub">エントリーから最短3週間でご連絡します。全選考オンライン対応可。</p>
+    </div>
+    <div class="flow-steps fade-in">
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-title">書類選考</div>
+        <div class="flow-desc">レジュメ・職務経歴書・ポートフォリオ（任意）</div>
+        <div class="flow-duration">〜3営業日</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-title">カジュアル面談</div>
+        <div class="flow-desc">担当者と30分のオンライン面談（相互理解のみ）</div>
+        <div class="flow-duration">30分</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-title">一次面接</div>
+        <div class="flow-desc">現場メンバーとスキル・経験の深掘り面談</div>
+        <div class="flow-duration">60分</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div class="flow-title">ケーススタディ</div>
+        <div class="flow-desc">職種に応じた課題提出（所要1〜3時間程度）</div>
+        <div class="flow-duration">1〜3h</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">5</div>
+        <div class="flow-title">最終面接</div>
+        <div class="flow-desc">経営陣との対話。カルチャーフィット・志向性の確認</div>
+        <div class="flow-duration">60分</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================
+     FAQ
+============================= -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-label">FAQ</div>
+      <h2 class="section-title">よくあるご質問</h2>
+    </div>
+    <div class="faq-list fade-in">
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          <span class="faq-q-text">転職活動中でもカジュアル面談は参加できますか？</span>
+          <span class="faq-toggle">+</span>
+        </div>
+        <div class="faq-a">もちろんです。「転職を具体的に考えている段階ではないが話を聞いてみたい」という方も大歓迎です。カジュアル面談は選考に影響しません。お気軽にエントリーフォームからご連絡ください。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          <span class="faq-q-text">副業・兼業は認められていますか？</span>
+          <span class="faq-toggle">+</span>
+        </div>
+        <div class="faq-a">原則として副業・兼業は申請ベースで認めています。ただし、利益相反が生じる業務（競合企業・顧客企業への就業等）は事前相談が必要です。詳しくは面談時にご確認ください。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          <span class="faq-q-text">未経験の技術スタックがあっても選考に影響しますか？</span>
+          <span class="faq-toggle">+</span>
+        </div>
+        <div class="faq-a">スキルセットの完全一致より、学習意欲・地頭・問題解決へのスタンスを重視しています。「使ったことはないが学ぶ気がある」という姿勢は評価されます。ぜひありのままをご記載ください。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          <span class="faq-q-text">入社後の研修・オンボーディングはどのように行われますか？</span>
+          <span class="faq-toggle">+</span>
+        </div>
+        <div class="faq-a">入社後2週間は専任メンターがつくオンボーディングプログラムを実施します。プロダクト・文化・業務フローを段階的に理解できる設計になっており、リモートでも不安なくスタートできます。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          <span class="faq-q-text">選考から内定まで、どれくらいの期間がかかりますか？</span>
+          <span class="faq-toggle">+</span>
+        </div>
+        <div class="faq-a">標準的なスケジュールは書類選考から内定まで3〜4週間程度です。お急ぎの場合はエントリーフォームの備考欄にご記入いただくと、可能な範囲でスケジュールを調整します。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================
+     ENTRY CTA
+============================= -->
+<section class="entry-section section" id="entry">
+  <div class="container entry-inner fade-in">
+    <div class="section-label section-label-light">Entry Form</div>
+    <h2 class="entry-title">まずはエントリーしてみよう</h2>
+    <p class="entry-desc">
+      カジュアル面談はプレッシャーなし。「話を聞いてみたい」だけでも大歓迎です。<br>
+      フォームを送信後、3営業日以内にご連絡します。
+    </p>
+    <div class="entry-form">
+      <div class="form-grid">
+        <div class="form-row">
+          <label>お名前<span>*</span></label>
+          <input type="text" class="form-input" placeholder="山田 太郎" />
+        </div>
+        <div class="form-row">
+          <label>メールアドレス<span>*</span></label>
+          <input type="email" class="form-input" placeholder="taro@example.com" />
+        </div>
+      </div>
+      <div class="form-row">
+        <label>ご希望の職種<span>*</span></label>
+        <select class="form-input">
+          <option value="">選択してください</option>
+          <option>バックエンドエンジニア（シニア〜リード）</option>
+          <option>プロダクトマネージャー</option>
+          <option>エンタープライズセールス</option>
+          <option>その他 / まだ決まっていない</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>ご経歴・自己PRなど（任意）</label>
+        <textarea class="form-input" rows="4" placeholder="現在のお仕事・得意なこと・NorthLightに興味を持ったきっかけ等、自由にご記入ください"></textarea>
+      </div>
+      <div class="form-row">
+        <label>希望の連絡方法</label>
+        <select class="form-input">
+          <option>メールで返信を希望</option>
+          <option>カジュアル面談の日程調整URLを送ってほしい</option>
+        </select>
+      </div>
+      <div class="form-submit-wrap">
+        <button class="form-submit" onclick="alert('これはデモサンプルです。実際の送信機能はありません。')">
+          エントリーする（無料・選考に影響なし）
+        </button>
+      </div>
+      <p class="form-note">※ このフォームはデモです。個人情報は一切送信されません。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================
+     FOOTER
+============================= -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <div class="footer-logo-mark">🌐</div>
+          <div class="footer-logo-text">NorthLight Inc.</div>
+        </div>
+        <p class="footer-desc">
+          「HR の民主化」を掲げ、クラウド人事SaaS「Kira」を展開するスタートアップ。<br>
+          2021年創業、東京都渋谷区。<br>
+          ※ 本ページは架空企業のデモサンプルです。
+        </p>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">会社概要</a></li>
+          <li><a href="#">事業内容</a></li>
+          <li><a href="#">ニュース</a></li>
+          <li><a href="#">お問い合わせ</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Recruit</h4>
+        <ul>
+          <li><a href="#">募集職種一覧</a></li>
+          <li><a href="#">社員インタビュー</a></li>
+          <li><a href="#">福利厚生</a></li>
+          <li><a href="#">選考フロー</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2026 NorthLight Inc. — このページは架空企業のデモサンプルです。</div>
+      <div class="footer-dummy">制作：<a href="../../index.html" style="color:rgba(255,255,255,0.35);text-decoration:none;">なぎ｜業務自動化エンジニア ポートフォリオ</a></div>
+    </div>
+  </div>
+</footer>
+
+<!-- ============================
+     SPEC SECTION（制作仕様）
+============================= -->
+<section class="spec-section" id="spec">
+  <div class="spec-inner">
+    <div class="spec-header">
+      <div class="spec-icon">📋</div>
+      <div class="spec-heading">
+        制作仕様・Claude（AI）での作り方
+        <small>このサンプル採用LPをどのように制作したか</small>
+      </div>
+    </div>
+
+    <div class="spec-grid">
+      <div class="spec-card">
+        <div class="spec-card-title">⚡ 制作フロー</div>
+        <ol>
+          <li><strong>ヒアリング・素材収集</strong>：会社情報・職種・訴求ポイントをシートに整理</li>
+          <li><strong>Claudeで構成・コピー生成</strong>：ターゲット・トーン・セクション構成をプロンプトで指示し、キャッチコピー・本文を一括生成</li>
+          <li><strong>HTML/CSS コーディング</strong>：Claudeにデザイン指示を与え、レスポンシブ対応の1ファイル完結HTMLを出力</li>
+          <li><strong>レビュー・修正</strong>：クライアント確認後、差分をClaude経由で即反映</li>
+          <li><strong>納品</strong>：HTMLファイル一式を圧縮。WordPress埋め込み・サーバー直置きも対応</li>
+        </ol>
+      </div>
+      <div class="spec-card">
+        <div class="spec-card-title">🎨 対応内容・提供形式</div>
+        <ul>
+          <li>1ページ完結の採用LP（HTML/CSS単体）</li>
+          <li>WordPressへの組み込み対応（追加費用なし）</li>
+          <li>独自ドメイン・サーバーへの設置サポート</li>
+          <li>スマホ・PC完全レスポンシブ</li>
+          <li>アニメーション・FAQ・フォーム風モック実装</li>
+          <li>初回納品後の修正 2回まで無料</li>
+          <li><strong>スピード対応：依頼〜初稿 最短2〜3日</strong></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="spec-card" style="margin-bottom:24px;">
+      <div class="spec-card-title">🔧 使用技術・ツール</div>
+      <div class="spec-tags">
+        <span class="spec-tag">Claude（Anthropic）</span>
+        <span class="spec-tag">HTML5</span>
+        <span class="spec-tag">CSS3（変数・Grid・Flex）</span>
+        <span class="spec-tag">Vanilla JavaScript</span>
+        <span class="spec-tag">レスポンシブデザイン</span>
+        <span class="spec-tag">スクロールアニメーション</span>
+        <span class="spec-tag">外部ライブラリ不使用</span>
+      </div>
+    </div>
+
+    <div class="spec-note">
+      <strong>継続運用・複数LP制作にも対応します。</strong><br>
+      採用職種ごとに専用ページを量産したい、定期的にコピーを更新したいといったご要望も、
+      ClaudeとGAS（Google Apps Script）を組み合わせた<strong>半自動化フロー</strong>でスピーディに対応可能です。
+      まずはお気軽にご相談ください。
+    </div>
+  </div>
+</section>
+
+<script>
+  // Fade-in on scroll
+  const fadeEls = document.querySelectorAll('.fade-in');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  fadeEls.forEach(el => io.observe(el));
+
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        const offset = 72;
+        const top = target.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top, behavior: 'smooth' });
+        document.getElementById('navLinks').classList.remove('open');
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

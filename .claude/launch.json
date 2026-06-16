@@ -6,6 +6,12 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "8794", "--directory", "/Users/tomoya/Projects/portfolio-site/demos/expense-report-gas"],
       "port": 8794
+    },
+    {
+      "name": "recruit-lp-claude",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8795", "--directory", "/Users/tomoya/Projects/portfolio-site/demos/recruit-lp-claude"],
+      "port": 8795
     }
   ]
 }
