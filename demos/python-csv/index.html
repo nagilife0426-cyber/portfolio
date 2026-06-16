@@ -292,6 +292,26 @@
       z-index: 999; pointer-events: none;
     }
     .toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ======== How it works（仕組み） ======== */
+    .hiw { max-width: 980px; margin: 40px auto 0; padding: 0 20px; }
+    .hiw-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px 26px 24px; }
+    .hiw-title { font-size: 16px; font-weight: 700; color: var(--text); margin: 0 0 4px; display: flex; align-items: center; gap: 8px; }
+    .hiw-sub { font-size: 12px; color: var(--text2); margin: 0 0 20px; }
+    .hiw-flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; margin-bottom: 22px; }
+    .hiw-node { flex: 1 1 130px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; text-align: center; }
+    .hiw-node-icon { font-size: 20px; line-height: 1; margin-bottom: 6px; }
+    .hiw-node-name { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .hiw-node-desc { font-size: 11px; color: var(--text2); line-height: 1.5; }
+    .hiw-arrow { display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 16px; flex: 0 0 auto; }
+    .hiw-list { list-style: none; margin: 0; padding: 0; }
+    .hiw-list li { position: relative; padding: 7px 0 7px 24px; font-size: 13px; color: var(--text); line-height: 1.7; border-bottom: 1px solid var(--border); }
+    .hiw-list li:last-child { border-bottom: none; }
+    .hiw-list li::before { content: '▹'; position: absolute; left: 4px; color: var(--accent); font-weight: 700; }
+    .hiw-list strong { color: var(--accent); font-weight: 700; }
+    .hiw-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+    .hiw-tag { font-size: 11px; color: var(--text2); background: var(--bg3); border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; }
+    @media (max-width: 600px) { .hiw-arrow { transform: rotate(90deg); width: 100%; } .hiw-node { flex: 1 1 100%; } }
   </style>
 </head>
 <body>
@@ -583,6 +603,48 @@
     </div>
   </div>
 </div>
+
+<!-- HOW IT WORKS -->
+<section class="hiw">
+  <div class="hiw-card">
+    <h2 class="hiw-title">🔧 仕組み（How it works）</h2>
+    <p class="hiw-sub">汚れたCSVを読み込み・整形・出力するまでの技術と流れです。</p>
+
+    <div class="hiw-flow">
+      <div class="hiw-node">
+        <div class="hiw-node-icon">📂</div>
+        <div class="hiw-node-name">CSV読み込み</div>
+        <div class="hiw-node-desc">文字コードを自動判定して取り込み</div>
+      </div>
+      <div class="hiw-arrow">→</div>
+      <div class="hiw-node">
+        <div class="hiw-node-icon">🐍</div>
+        <div class="hiw-node-name">Python（整形処理）</div>
+        <div class="hiw-node-desc">日付統一・全角→半角・重複削除を一括実行</div>
+      </div>
+      <div class="hiw-arrow">→</div>
+      <div class="hiw-node">
+        <div class="hiw-node-icon">✅</div>
+        <div class="hiw-node-name">クリーン出力</div>
+        <div class="hiw-node-desc">整ったCSVを書き出し。数秒で完了</div>
+      </div>
+    </div>
+
+    <ul class="hiw-list">
+      <li><strong>Python（pandas）</strong>でCSVを読み込み、文字コードの違いを吸収して安全に取り込みます。</li>
+      <li><strong>日付フォーマット統一・全角数字の半角化・前後空白の除去・重複行の削除</strong>など、実務で頻出する整形をまとめて自動処理します。</li>
+      <li>処理ルールはスクリプト側で定義しているため、<strong>列の追加やルール変更も柔軟に対応</strong>できます。</li>
+      <li>手作業なら1時間かかる作業が<strong>数秒で完了</strong>。大量ファイルのバッチ処理にも展開できます。</li>
+    </ul>
+
+    <div class="hiw-tags">
+      <span class="hiw-tag">Python</span>
+      <span class="hiw-tag">pandas</span>
+      <span class="hiw-tag">データクレンジング</span>
+      <span class="hiw-tag">文字コード自動判定</span>
+    </div>
+  </div>
+</section>
 
 <footer>
   <p class="footer-label">このデモについて</p>

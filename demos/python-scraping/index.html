@@ -162,6 +162,26 @@
 
     /* Responsive */
     @media(max-width:780px){ .kpi-row{grid-template-columns:1fr 1fr;} .grid2,.grid3,.flow-grid,.info-sections{grid-template-columns:1fr;} .nav-tabs{display:none;} }
+
+    /* ======== How it works（仕組み） ======== */
+    .hiw { margin: 28px 0 0; }
+    .hiw-card { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r); padding: 24px 26px 22px; }
+    .hiw-title { font-size: 17px; font-weight: 800; color: var(--text); margin: 0 0 4px; display: flex; align-items: center; gap: 8px; }
+    .hiw-sub { font-size: 12px; color: var(--text2); margin: 0 0 20px; }
+    .hiw-flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; margin-bottom: 22px; }
+    .hiw-node { flex: 1 1 130px; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--r); padding: 12px; text-align: center; }
+    .hiw-node-icon { font-size: 20px; line-height: 1; margin-bottom: 6px; }
+    .hiw-node-name { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .hiw-node-desc { font-size: 11px; color: var(--text2); line-height: 1.5; }
+    .hiw-arrow { display: flex; align-items: center; justify-content: center; color: var(--amazon); font-size: 16px; flex: 0 0 auto; }
+    .hiw-list { list-style: none; margin: 0; padding: 0; }
+    .hiw-list li { position: relative; padding: 7px 0 7px 24px; font-size: 13px; color: var(--text); line-height: 1.7; border-bottom: 1px solid var(--border2); }
+    .hiw-list li:last-child { border-bottom: none; }
+    .hiw-list li::before { content: '▹'; position: absolute; left: 4px; color: var(--amazon); font-weight: 700; }
+    .hiw-list strong { color: var(--amazon); font-weight: 700; }
+    .hiw-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+    .hiw-tag { font-size: 11px; color: var(--text2); background: var(--bg3); border: 1px solid var(--border2); border-radius: 999px; padding: 4px 12px; }
+    @media (max-width: 600px) { .hiw-arrow { transform: rotate(90deg); width: 100%; } .hiw-node { flex: 1 1 100%; } }
   </style>
 </head>
 <body>
@@ -319,6 +339,48 @@
       <div id="acos-bars"></div>
     </div>
   </div>
+
+  <!-- HOW IT WORKS -->
+  <section class="hiw">
+    <div class="hiw-card">
+      <h2 class="hiw-title">🔧 仕組み（How it works）</h2>
+      <p class="hiw-sub">価格・在庫データを定期収集し、ダッシュボードに反映するまでの技術と流れです。</p>
+
+      <div class="hiw-flow">
+        <div class="hiw-node">
+          <div class="hiw-node-icon">🌐</div>
+          <div class="hiw-node-name">対象ページ収集</div>
+          <div class="hiw-node-desc">指定URL・商品ページを定期取得</div>
+        </div>
+        <div class="hiw-arrow">→</div>
+        <div class="hiw-node">
+          <div class="hiw-node-icon">🐍</div>
+          <div class="hiw-node-name">Python（解析・集計）</div>
+          <div class="hiw-node-desc">価格・在庫・指標を抽出して集計</div>
+        </div>
+        <div class="hiw-arrow">→</div>
+        <div class="hiw-node">
+          <div class="hiw-node-icon">📊</div>
+          <div class="hiw-node-name">可視化・通知</div>
+          <div class="hiw-node-desc">ダッシュボード更新＋閾値超えで自動アラート</div>
+        </div>
+      </div>
+
+      <ul class="hiw-list">
+        <li><strong>Python（requests / BeautifulSoup）</strong>で対象ページを定期取得し、価格・在庫などの必要なデータだけを抽出します。</li>
+        <li>取得データを集計して<strong>KPI・グラフに可視化</strong>。前日比・前月比の変動を一目で把握できます。</li>
+        <li>設定した<strong>閾値を超えた変動はメールやSlackへ自動アラート</strong>。値下がり・在庫切れを見逃しません。</li>
+        <li>収集はスケジュール実行で<strong>無人運用</strong>。監視対象や抽出ルールは案件に合わせてカスタマイズできます。</li>
+      </ul>
+
+      <div class="hiw-tags">
+        <span class="hiw-tag">Python</span>
+        <span class="hiw-tag">requests / BeautifulSoup</span>
+        <span class="hiw-tag">定期スクレイピング</span>
+        <span class="hiw-tag">閾値アラート</span>
+      </div>
+    </div>
+  </section>
 
 </div>
 <!-- ==================== PAGE 2: AUTOMATION ==================== -->

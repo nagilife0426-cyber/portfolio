@@ -477,6 +477,83 @@
       pointer-events: none;
     }
     .toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ======== How it works（仕組み） ======== */
+    .hiw {
+      max-width: 980px;
+      margin: 40px auto 0;
+      padding: 0 20px;
+    }
+    .hiw-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 26px 26px 24px;
+    }
+    .hiw-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0 0 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hiw-sub {
+      font-size: 12px;
+      color: var(--text2);
+      margin: 0 0 20px;
+    }
+    .hiw-flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: stretch;
+      margin-bottom: 22px;
+    }
+    .hiw-node {
+      flex: 1 1 130px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 12px;
+      text-align: center;
+    }
+    .hiw-node-icon { font-size: 20px; line-height: 1; margin-bottom: 6px; }
+    .hiw-node-name { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .hiw-node-desc { font-size: 11px; color: var(--text2); line-height: 1.5; }
+    .hiw-arrow { display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 16px; flex: 0 0 auto; }
+    .hiw-list { list-style: none; margin: 0; padding: 0; }
+    .hiw-list li {
+      position: relative;
+      padding: 7px 0 7px 24px;
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.7;
+      border-bottom: 1px solid var(--border);
+    }
+    .hiw-list li:last-child { border-bottom: none; }
+    .hiw-list li::before {
+      content: '▹';
+      position: absolute;
+      left: 4px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .hiw-list strong { color: var(--accent); font-weight: 700; }
+    .hiw-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+    .hiw-tag {
+      font-size: 11px;
+      color: var(--text2);
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 12px;
+    }
+    @media (max-width: 600px) {
+      .hiw-arrow { transform: rotate(90deg); width: 100%; }
+      .hiw-node { flex: 1 1 100%; }
+    }
   </style>
 </head>
 <body>
@@ -725,6 +802,48 @@
     </div>
   </div>
 </div>
+
+<!-- HOW IT WORKS -->
+<section class="hiw">
+  <div class="hiw-card">
+    <h2 class="hiw-title">🔧 仕組み（How it works）</h2>
+    <p class="hiw-sub">使っている技術と、ボタン1つで集計が完成するまでの流れです。</p>
+
+    <div class="hiw-flow">
+      <div class="hiw-node">
+        <div class="hiw-node-icon">📥</div>
+        <div class="hiw-node-name">入力データ</div>
+        <div class="hiw-node-desc">日付・商品・数量・単価をシートに入力</div>
+      </div>
+      <div class="hiw-arrow">→</div>
+      <div class="hiw-node">
+        <div class="hiw-node-icon">⚙️</div>
+        <div class="hiw-node-name">GAS（集計処理）</div>
+        <div class="hiw-node-desc">ボタン押下で自動実行。合計・ランキングを算出</div>
+      </div>
+      <div class="hiw-arrow">→</div>
+      <div class="hiw-node">
+        <div class="hiw-node-icon">📊</div>
+        <div class="hiw-node-name">レポート出力</div>
+        <div class="hiw-node-desc">集計表・担当者別ランキング・グラフを自動生成</div>
+      </div>
+    </div>
+
+    <ul class="hiw-list">
+      <li><strong>Google Apps Script（GAS）</strong>でスプレッドシート上のデータを読み取り、合計・担当者別ランキングを自動計算します。</li>
+      <li>集計ボタンに紐づけた関数が走るだけなので、<strong>マクロやExcelの手作業は不要</strong>。誰でもボタン1つで操作できます。</li>
+      <li>結果はそのままシートに書き戻し、<strong>グラフも自動描画</strong>。月次・週次のレポートをワンクリックで再生成できます。</li>
+      <li>Googleアカウントだけで動くため<strong>月額費用ゼロ</strong>。既存のシート構成に合わせてカスタマイズも可能です。</li>
+    </ul>
+
+    <div class="hiw-tags">
+      <span class="hiw-tag">Google Apps Script</span>
+      <span class="hiw-tag">スプレッドシート連携</span>
+      <span class="hiw-tag">自動集計</span>
+      <span class="hiw-tag">グラフ自動生成</span>
+    </div>
+  </div>
+</section>
 
 <!-- FOOTER -->
 <footer>

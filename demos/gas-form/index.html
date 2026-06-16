@@ -415,6 +415,26 @@
       animation: spin 0.7s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ======== How it works（仕組み） ======== */
+    .hiw { max-width: 980px; margin: 40px auto 0; padding: 0 20px; }
+    .hiw-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px 26px 24px; }
+    .hiw-title { font-size: 16px; font-weight: 700; color: var(--text); margin: 0 0 4px; display: flex; align-items: center; gap: 8px; }
+    .hiw-sub { font-size: 12px; color: var(--text2); margin: 0 0 20px; }
+    .hiw-flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; margin-bottom: 22px; }
+    .hiw-node { flex: 1 1 130px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; text-align: center; }
+    .hiw-node-icon { font-size: 20px; line-height: 1; margin-bottom: 6px; }
+    .hiw-node-name { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .hiw-node-desc { font-size: 11px; color: var(--text2); line-height: 1.5; }
+    .hiw-arrow { display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 16px; flex: 0 0 auto; }
+    .hiw-list { list-style: none; margin: 0; padding: 0; }
+    .hiw-list li { position: relative; padding: 7px 0 7px 24px; font-size: 13px; color: var(--text); line-height: 1.7; border-bottom: 1px solid var(--border); }
+    .hiw-list li:last-child { border-bottom: none; }
+    .hiw-list li::before { content: '▹'; position: absolute; left: 4px; color: var(--accent); font-weight: 700; }
+    .hiw-list strong { color: var(--accent); font-weight: 700; }
+    .hiw-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+    .hiw-tag { font-size: 11px; color: var(--text2); background: var(--bg3); border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; }
+    @media (max-width: 600px) { .hiw-arrow { transform: rotate(90deg); width: 100%; } .hiw-node { flex: 1 1 100%; } }
   </style>
 </head>
 <body>
@@ -756,6 +776,48 @@
     </div>
   </div>
 </div>
+
+<!-- HOW IT WORKS -->
+<section class="hiw">
+  <div class="hiw-card">
+    <h2 class="hiw-title">🔧 仕組み（How it works）</h2>
+    <p class="hiw-sub">フォーム送信から記録・返信・通知までを自動化する技術と流れです。</p>
+
+    <div class="hiw-flow">
+      <div class="hiw-node">
+        <div class="hiw-node-icon">📝</div>
+        <div class="hiw-node-name">フォーム送信</div>
+        <div class="hiw-node-desc">問い合わせがGoogleフォームから届く</div>
+      </div>
+      <div class="hiw-arrow">→</div>
+      <div class="hiw-node">
+        <div class="hiw-node-icon">⚙️</div>
+        <div class="hiw-node-name">GAS（自動処理）</div>
+        <div class="hiw-node-desc">onFormSubmitトリガーで即時起動</div>
+      </div>
+      <div class="hiw-arrow">→</div>
+      <div class="hiw-node">
+        <div class="hiw-node-icon">📊📧💬</div>
+        <div class="hiw-node-name">記録・返信・通知</div>
+        <div class="hiw-node-desc">シート記録＋自動返信メール＋Slack通知</div>
+      </div>
+    </div>
+
+    <ul class="hiw-list">
+      <li><strong>Google Apps Script（GAS）</strong>の onFormSubmit トリガーで、フォーム送信と同時にプログラムが自動起動します。</li>
+      <li>受信内容を<strong>スプレッドシートに自動記録</strong>し、種別・部署・ステータスで仕分けできる形に整えます。</li>
+      <li>送信者へ<strong>自動返信メール</strong>を送り、同時に<strong>Slackへ通知</strong>。担当者の取りこぼしを防ぎます。</li>
+      <li>すべてGoogleアカウント内で完結するため<strong>月額費用ゼロ</strong>。返信文面や通知先は自由に設定できます。</li>
+    </ul>
+
+    <div class="hiw-tags">
+      <span class="hiw-tag">Google Apps Script</span>
+      <span class="hiw-tag">onFormSubmitトリガー</span>
+      <span class="hiw-tag">自動返信メール</span>
+      <span class="hiw-tag">Slack Webhook</span>
+    </div>
+  </div>
+</section>
 
 <footer>
   <p class="footer-label">このデモについて</p>
