@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>なぎ — 課題を、仕組みで終わらせる。｜営業 × AI × エンジニアリング</title>
+<meta name="description" content="営業現場で鍛えた課題発見力と、AIで作りきる実装力。提案で終わらせず、動くものまでひとりで届ける越境クリエイター・なぎのポートフォリオ。業務自動化・Web/アプリ制作・AI活用・プロダクト開発。" />
+<meta name="theme-color" content="#0c0b08" />
+<meta property="og:title" content="なぎ — 課題を、仕組みで終わらせる。" />
+<meta property="og:description" content="営業 × AI × エンジニアリング。提案で終わらせず、動くものまでひとりで届ける越境クリエイター。" />
+<meta property="og:type" content="website" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;600;700;800&family=Noto+Serif+JP:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body data-loading>
+
+<!-- grain + cursor + progress -->
+<div class="grain" aria-hidden="true"></div>
+<div class="cursor" aria-hidden="true"><div class="cursor__dot"></div><div class="cursor__ring"></div></div>
+<div class="scroll-progress" aria-hidden="true"><span></span></div>
+
+<!-- ===== Preloader ===== -->
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="loader__inner">
+    <span class="loader__mark">NAGI</span>
+    <span class="loader__count"><i data-loadnum>0</i><b>%</b></span>
+  </div>
+  <div class="loader__bar"><span></span></div>
+</div>
+
+<!-- ===== Header ===== -->
+<header class="header" id="header">
+  <div class="header__inner">
+    <a href="#hero" class="logo magnetic" data-cursor>
+      <span class="logo__mark">NAGI</span>
+      <span class="logo__sub">Sales × AI × Eng</span>
+    </a>
+    <nav class="nav">
+      <a href="#works" class="nav__link" data-cursor><span>実績</span></a>
+      <a href="#capabilities" class="nav__link" data-cursor><span>できること</span></a>
+      <a href="#process" class="nav__link" data-cursor><span>進め方</span></a>
+      <a href="#faq" class="nav__link" data-cursor><span>FAQ</span></a>
+    </nav>
+    <a href="#contact" class="btn btn--sm magnetic" data-cursor>
+      <span class="btn__label">お問い合わせ</span>
+    </a>
+  </div>
+</header>
+
+<!-- ===== Hero ===== -->
+<section class="hero" id="hero">
+  <div class="hero__grid" aria-hidden="true"></div>
+  <div class="hero__glow" data-parallax="0.12" aria-hidden="true"></div>
+
+  <div class="container hero__inner">
+    <p class="hero__eyebrow split-up"><span>営業 / AI / エンジニアリングの越境クリエイター</span></p>
+
+    <h1 class="hero__title">
+      <span class="line"><span class="line__in">課題を、</span></span>
+      <span class="line"><span class="line__in">仕組みで</span></span>
+      <span class="line"><span class="line__in">終わらせる<span class="period">.</span></span></span>
+    </h1>
+
+    <div class="hero__foot">
+      <p class="hero__lead split-up">
+        <span>営業現場で鍛えた「課題を見つける力」と、AIで「作りきる実装力」。<br />
+        <em>なぎ</em>は、提案して終わりにしない。動くものまで、ひとりで届けます。</span>
+      </p>
+      <div class="hero__cta split-up">
+        <a href="#contact" class="btn btn--lg magnetic" data-cursor><span class="btn__label">無料で相談する</span><span class="btn__arrow">→</span></a>
+        <a href="#works" class="btn btn--ghost btn--lg magnetic" data-cursor><span class="btn__label">実績を見る</span></a>
+      </div>
+    </div>
+  </div>
+
+  <a href="#about" class="hero__scroll" data-cursor aria-label="下へスクロール">
+    <span>SCROLL</span>
+    <span class="hero__scroll-line"></span>
+  </a>
+</section>
+
+<!-- ===== Marquee ===== -->
+<div class="marquee" aria-hidden="true">
+  <div class="marquee__track">
+    <span>業務自動化</span><span class="marquee__dot">✦</span><span>LP / Web 制作</span><span class="marquee__dot">✦</span><span>AIエージェント設計</span><span class="marquee__dot">✦</span><span>PWA 開発</span><span class="marquee__dot">✦</span><span>データ判断支援</span><span class="marquee__dot">✦</span><span>GAS / Python</span><span class="marquee__dot">✦</span>
+    <span>業務自動化</span><span class="marquee__dot">✦</span><span>LP / Web 制作</span><span class="marquee__dot">✦</span><span>AIエージェント設計</span><span class="marquee__dot">✦</span><span>PWA 開発</span><span class="marquee__dot">✦</span><span>データ判断支援</span><span class="marquee__dot">✦</span><span>GAS / Python</span><span class="marquee__dot">✦</span>
+  </div>
+</div>
+
+<!-- ===== About ===== -->
+<section class="about section" id="about">
+  <div class="container about__grid">
+    <div class="about__head">
+      <p class="section-eyebrow reveal"><i>(01)</i> ABOUT</p>
+      <h2 class="section-title reveal">越境する、<br />ひとり開発者<span class="period">.</span></h2>
+    </div>
+    <div class="about__body">
+      <p class="about__lead reveal">「提案だけ」も「実装だけ」もしない。<br />ビジネスの言葉とコードの言葉、その両方を話せる。</p>
+      <div class="about__text reveal">
+        <p>本業は営業。日々お客様と向き合うなかで「現場の面倒は、仕組みで消せる」と気づき、GAS と Python、そして AI を独学で実務に投入してきました。</p>
+        <p>強みは<strong>越境</strong>です。「何を作るべきか」から「実際に動かす」までを、間に誰も挟まず完遂できる。会議の自動文字起こし、AIニュースアプリ、情報収集の自動化、仕入れ判断ツール——必要だと思ったものは、まず自分の手で作る。その積み重ねが、ここに並ぶ実績です。</p>
+      </div>
+      <a href="#works" class="link-arrow reveal magnetic" data-cursor><span>実績を見る</span><i>→</i></a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Stats ===== -->
+<section class="stats">
+  <div class="container stats__grid">
+    <div class="stat reveal"><span class="stat__num" data-count="12" data-suffix="+">0</span><span class="stat__label">自作プロジェクト</span></div>
+    <div class="stat reveal"><span class="stat__num" data-count="30" data-suffix="+">0</span><span class="stat__label">公開デモ</span></div>
+    <div class="stat reveal"><span class="stat__num" data-count="7" data-suffix="">0</span><span class="stat__label">自動化領域</span></div>
+    <div class="stat reveal"><span class="stat__num" data-count="4" data-suffix="">0</span><span class="stat__label">専門ドメイン</span></div>
+  </div>
+</section>
+
+<!-- ===== Capabilities ===== -->
+<section class="caps section" id="capabilities">
+  <div class="container">
+    <div class="section-head">
+      <p class="section-eyebrow reveal"><i>(02)</i> CAPABILITIES</p>
+      <h2 class="section-title reveal">4つの領域を、<br />ひとつの頭で<span class="period">.</span></h2>
+    </div>
+    <div class="caps__list">
+      <article class="cap reveal" data-cursor>
+        <span class="cap__no">01</span>
+        <div class="cap__main"><h3 class="cap__title">営業・課題発見</h3><p class="cap__desc">現場で磨いた提案力。表に出ていない“本当の課題”を引き出し、解くべき問いを定義します。</p></div>
+        <div class="cap__tags"><span>ヒアリング</span><span>要件定義</span><span>提案</span></div>
+      </article>
+      <article class="cap reveal" data-cursor>
+        <span class="cap__no">02</span>
+        <div class="cap__main"><h3 class="cap__title">AI活用・自動化</h3><p class="cap__desc">Claude / GPT を使ったエージェント設計と、情報収集・運用の自動化。手作業を“朝には終わっている”状態へ。</p></div>
+        <div class="cap__tags"><span>LLM</span><span>エージェント</span><span>RPA</span></div>
+      </article>
+      <article class="cap reveal" data-cursor>
+        <span class="cap__no">03</span>
+        <div class="cap__main"><h3 class="cap__title">Web・アプリ制作</h3><p class="cap__desc">LP・PWA・ポートフォリオサイト。デザインのトーン設計から実装・公開まで一気通貫で。</p></div>
+        <div class="cap__tags"><span>LP</span><span>PWA</span><span>UI設計</span></div>
+      </article>
+      <article class="cap reveal" data-cursor>
+        <span class="cap__no">04</span>
+        <div class="cap__main"><h3 class="cap__title">プロダクト開発</h3><p class="cap__desc">GAS・Python で業務ツールを内製。0→1 で「使える形」にして、運用まで面倒を見ます。</p></div>
+        <div class="cap__tags"><span>GAS</span><span>Python</span><span>内製化</span></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Works ===== -->
+<section class="works section" id="works">
+  <div class="container">
+    <div class="section-head">
+      <p class="section-eyebrow reveal"><i>(03)</i> SELECTED WORKS</p>
+      <h2 class="section-title reveal">作ってきたもの<span class="period">.</span></h2>
+      <p class="section-note reveal">すべて自分の課題から生まれ、実際に動いているプロジェクトです。</p>
+    </div>
+
+    <div class="works__list">
+      <article class="work reveal" data-cursor>
+        <span class="work__idx">01</span>
+        <div class="work__head"><h3 class="work__title">Meeting Recorder</h3><span class="work__tag">AI / 音声</span></div>
+        <p class="work__desc">会議の録音を自動で文字起こしし、要約まで生成。完全ローカル・無料で動く議事録ツール。</p>
+        <ul class="work__stack"><li>Python</li><li>Whisper</li><li>LLM要約</li></ul>
+        <span class="work__go" aria-hidden="true">↗</span>
+      </article>
+      <article class="work reveal" data-cursor>
+        <span class="work__idx">02</span>
+        <div class="work__head"><h3 class="work__title">AI News App</h3><span class="work__tag">AI / PWA</span></div>
+        <p class="work__desc">興味に合わせて記事を自動収集し、AIが日本語で要約するパーソナライズ・ニュースアプリ。</p>
+        <ul class="work__stack"><li>Next.js</li><li>PWA</li><li>Gemini</li></ul>
+        <span class="work__go" aria-hidden="true">↗</span>
+      </article>
+      <article class="work reveal" data-cursor>
+        <span class="work__idx">03</span>
+        <div class="work__head"><h3 class="work__title">ai-intel</h3><span class="work__tag">AI / 自動収集</span></div>
+        <p class="work__desc">毎朝 GitHub Actions が世界中のAI最新情報を自動収集し、日本語キュレーションとして蓄積。</p>
+        <ul class="work__stack"><li>GitHub Actions</li><li>SQLite</li><li>Claude</li></ul>
+        <span class="work__go" aria-hidden="true">↗</span>
+      </article>
+      <article class="work reveal" data-cursor>
+        <span class="work__idx">04</span>
+        <div class="work__head"><h3 class="work__title">業務自動化スイート</h3><span class="work__tag">自動化デモ集</span></div>
+        <p class="work__desc">SNS自動投稿・データ集約・スクレイピングなど、現場で効く自動化を動くデモとして多数公開。</p>
+        <ul class="work__stack"><li>GAS</li><li>Python</li><li>API連携</li></ul>
+        <span class="work__go" aria-hidden="true">↗</span>
+      </article>
+      <article class="work reveal" data-cursor>
+        <span class="work__idx">05</span>
+        <div class="work__head"><h3 class="work__title">相場連動・仕入れ判断ツール</h3><span class="work__tag">データ / 判断支援</span></div>
+        <p class="work__desc">相場データと連動して仕入れの可否を自動判定。勘の世界を、データドリブンに置き換える。</p>
+        <ul class="work__stack"><li>Sheets</li><li>GAS</li><li>相場API</li></ul>
+        <span class="work__go" aria-hidden="true">↗</span>
+      </article>
+      <article class="work reveal" data-cursor>
+        <span class="work__idx">06</span>
+        <div class="work__head"><h3 class="work__title">Task Manager PWA</h3><span class="work__tag">PWA / ツール</span></div>
+        <p class="work__desc">オフラインでも動く自分専用タスク管理。インストール不要、ブラウザだけで完結。</p>
+        <ul class="work__stack"><li>PWA</li><li>IndexedDB</li><li>Service Worker</li></ul>
+        <span class="work__go" aria-hidden="true">↗</span>
+      </article>
+    </div>
+
+    <div class="works__more reveal">
+      <a href="#contact" class="link-arrow magnetic" data-cursor><span>この他の実績も相談時にご紹介します</span><i>→</i></a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Strengths ===== -->
+<section class="strengths section" id="strengths">
+  <div class="container">
+    <div class="section-head">
+      <p class="section-eyebrow reveal"><i>(04)</i> WHY NAGI</p>
+      <h2 class="section-title reveal">選ばれる、<br />3つの理由<span class="period">.</span></h2>
+    </div>
+    <div class="strengths__grid">
+      <div class="strength reveal"><span class="strength__no">01</span><h3 class="strength__title">越境力</h3><p class="strength__desc">営業と開発、両方の言葉を持つ。ビジネス課題を、そのまま技術で解けます。</p></div>
+      <div class="strength reveal"><span class="strength__no">02</span><h3 class="strength__title">完遂力</h3><p class="strength__desc">提案で止めない。要件整理から実装・公開・改善まで、動くものを届けます。</p></div>
+      <div class="strength reveal"><span class="strength__no">03</span><h3 class="strength__title">スピード</h3><p class="strength__desc">AIを相棒に、ひとりでチーム並みの速度。小さく早く、形にしていきます。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Process ===== -->
+<section class="process section" id="process">
+  <div class="container">
+    <div class="section-head">
+      <p class="section-eyebrow reveal"><i>(05)</i> HOW IT WORKS</p>
+      <h2 class="section-title reveal">ご依頼の進め方<span class="period">.</span></h2>
+    </div>
+    <ol class="process__list">
+      <li class="process__step reveal"><span class="process__no">01</span><div><h3 class="process__title">無料相談</h3><p class="process__desc">やりたいこと・困りごとを、ざっくりで大丈夫。フォームから気軽にどうぞ。</p></div></li>
+      <li class="process__step reveal"><span class="process__no">02</span><div><h3 class="process__title">要件整理・提案</h3><p class="process__desc">本当に必要なものを一緒に定義し、進め方と概算をご提案します。</p></div></li>
+      <li class="process__step reveal"><span class="process__no">03</span><div><h3 class="process__title">制作・実装</h3><p class="process__desc">小さく作って早く見せる。途中経過を共有しながら進めます。</p></div></li>
+      <li class="process__step reveal"><span class="process__no">04</span><div><h3 class="process__title">納品・改善</h3><p class="process__desc">動く状態でお渡しし、運用に乗るまで伴走。改善も継続できます。</p></div></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section class="faq section" id="faq">
+  <div class="container faq__grid">
+    <div class="section-head faq__head">
+      <p class="section-eyebrow reveal"><i>(06)</i> FAQ</p>
+      <h2 class="section-title reveal">よくある質問<span class="period">.</span></h2>
+    </div>
+    <div class="faq__list">
+      <details class="faq__item reveal"><summary class="faq__q" data-cursor>どんな依頼ができますか？</summary><div class="faq__a"><p>業務の自動化、LP・Webアプリ制作、AIを使ったツール開発などが中心です。「これって自動化できる？」というご相談だけでも歓迎します。</p></div></details>
+      <details class="faq__item reveal"><summary class="faq__q" data-cursor>営業職なのに開発もできるんですか？</summary><div class="faq__a"><p>はい。本業の営業で課題を見つける力を、独学の開発で“形にする力”に変えてきました。両方を一人で持つことが最大の強みです。</p></div></details>
+      <details class="faq__item reveal"><summary class="faq__q" data-cursor>料金はどのくらいですか？</summary><div class="faq__a"><p>内容と規模によります。小さな自動化から承りますので、まずは無料相談で内容を伺ってからお見積りします。</p></div></details>
+      <details class="faq__item reveal"><summary class="faq__q" data-cursor>対応できる範囲を教えてください。</summary><div class="faq__a"><p>要件の整理から設計・実装・公開・運用改善まで一気通貫で対応します。デザインのトーン設計もご相談ください。</p></div></details>
+      <details class="faq__item reveal"><summary class="faq__q" data-cursor>連絡方法は？</summary><div class="faq__a"><p>下のお問い合わせフォーム、または CrowdWorks 経由でご連絡いただけます。返信は通常2〜3日以内です。</p></div></details>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Contact ===== -->
+<section class="contact section" id="contact">
+  <div class="container contact__inner">
+    <p class="section-eyebrow reveal"><i>(07)</i> CONTACT</p>
+    <h2 class="contact__title">
+      <span class="line"><span class="line__in">まずは、気軽に</span></span>
+      <span class="line"><span class="line__in">ご相談を<span class="period">.</span></span></span>
+    </h2>
+    <p class="contact__lead reveal">「こんなこと頼める？」のひと言から始められます。<br />売ることも、作ることも、ひとりで引き受けます。</p>
+
+    <form class="contact__form reveal" onsubmit="return false;">
+      <div class="field"><label for="name">お名前</label><input id="name" type="text" placeholder="山田 太郎" /></div>
+      <div class="field"><label for="email">メールアドレス</label><input id="email" type="email" placeholder="you@example.com" /></div>
+      <div class="field field--full"><label for="message">ご相談内容</label><textarea id="message" rows="3" placeholder="例：問い合わせ対応を自動化したい / LPを作りたい など"></textarea></div>
+      <button type="submit" class="btn btn--lg btn--full magnetic" data-cursor><span class="btn__label">送信する</span><span class="btn__arrow">→</span></button>
+      <p class="contact__note">※ このフォームはデモです。送信先の設定は本人がご記入ください。</p>
+    </form>
+  </div>
+</section>
+
+<!-- ===== Footer ===== -->
+<footer class="footer">
+  <div class="container footer__inner">
+    <div class="footer__top">
+      <p class="footer__cta-label">Let's build something.</p>
+      <a href="#contact" class="footer__cta-link magnetic" data-cursor>お問い合わせ <i>→</i></a>
+    </div>
+    <div class="footer__bigmark" aria-hidden="true">NAGI</div>
+    <div class="footer__bottom">
+      <p class="footer__tag">課題を、仕組みで終わらせる。</p>
+      <nav class="footer__nav">
+        <a href="#works" data-cursor>実績</a>
+        <a href="#capabilities" data-cursor>できること</a>
+        <a href="#process" data-cursor>進め方</a>
+        <a href="#contact" data-cursor>お問い合わせ</a>
+      </nav>
+      <p class="footer__copy">© 2026 NAGI — Sales × AI × Engineering</p>
+    </div>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

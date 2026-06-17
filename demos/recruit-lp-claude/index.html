@@ -26,7 +26,10 @@
       --shadow-lg:  0 12px 40px rgba(11,29,62,0.15);
     }
 
-    html { scroll-behavior: smooth; }
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 84px;
+    }
 
     body {
       font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic Medium', 'Yu Gothic', sans-serif;
@@ -116,15 +119,17 @@
       white-space: nowrap;
     }
     .nav-links a:hover { background: var(--bg-light); color: var(--blue); }
+    .nav-links a:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 6px; }
     .nav-cta {
       background: var(--blue) !important;
       color: white !important;
       font-weight: 700 !important;
       border-radius: 8px !important;
       padding: 9px 20px !important;
-      transition: background 0.18s, transform 0.18s !important;
+      transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease !important;
     }
-    .nav-cta:hover { background: var(--navy-mid) !important; transform: translateY(-1px) !important; }
+    .nav-cta:hover { background: var(--navy-mid) !important; transform: translateY(-2px) !important; box-shadow: 0 4px 14px rgba(11,29,62,0.18) !important; }
+    .nav-cta:focus-visible { outline: 3px solid var(--teal) !important; outline-offset: 3px !important; }
     .nav-hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 8px; }
     .nav-hamburger span { display: block; width: 22px; height: 2px; background: var(--text); border-radius: 2px; transition: all 0.25s; }
 
@@ -142,16 +147,31 @@
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(ellipse 70% 60% at 85% 50%, rgba(12,184,184,0.18) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 70% at 10% 80%, rgba(30,79,200,0.25) 0%, transparent 55%);
+        radial-gradient(ellipse 80% 70% at 50% 0%, rgba(30,79,200,0.18) 0%, transparent 55%),
+        radial-gradient(ellipse 55% 55% at 85% 55%, rgba(12,184,184,0.20) 0%, transparent 58%),
+        radial-gradient(ellipse 40% 60% at 5% 80%, rgba(30,79,200,0.22) 0%, transparent 52%),
+        radial-gradient(ellipse 30% 30% at 30% 95%, rgba(12,184,184,0.10) 0%, transparent 50%);
+    }
+    /* 奥行き演出：斜めのグロースリップ */
+    .hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(115deg,
+        rgba(255,255,255,0.00) 30%,
+        rgba(255,255,255,0.025) 50%,
+        rgba(255,255,255,0.00) 70%);
+      pointer-events: none;
     }
     .hero-grid {
       position: absolute;
       inset: 0;
       background-image:
-        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-      background-size: 48px 48px;
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 40%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 40%, transparent 100%);
     }
     .hero-inner {
       position: relative;
@@ -209,10 +229,14 @@
       font-weight: 700;
       text-decoration: none;
       letter-spacing: 0.03em;
-      transition: transform 0.22s, box-shadow 0.22s;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
       box-shadow: 0 6px 24px rgba(12,184,184,0.4);
     }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(12,184,184,0.55); }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(12,184,184,0.55); }
+    .btn-primary:focus-visible {
+      outline: 3px solid rgba(52,216,216,0.7);
+      outline-offset: 3px;
+    }
     .btn-ghost {
       background: rgba(255,255,255,0.08);
       border: 1.5px solid rgba(255,255,255,0.3);
@@ -222,9 +246,13 @@
       font-size: 15px;
       font-weight: 600;
       text-decoration: none;
-      transition: background 0.22s, border-color 0.22s;
+      transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
     }
-    .btn-ghost:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.55); }
+    .btn-ghost:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.55); transform: translateY(-2px); }
+    .btn-ghost:focus-visible {
+      outline: 3px solid rgba(255,255,255,0.5);
+      outline-offset: 3px;
+    }
     .hero-visual { display: flex; flex-direction: column; gap: 14px; }
     .hero-card {
       background: rgba(255,255,255,0.07);
@@ -255,19 +283,30 @@
     /* ===========================
        SECTION COMMON
     =========================== */
-    .section { padding: 88px 28px; }
+    .section { padding: 96px 28px; }
     .section-alt { background: var(--off-white); }
     .section-navy { background: var(--navy); }
     .container { max-width: 1100px; margin: 0 auto; }
     .section-header { text-align: center; margin-bottom: 56px; }
     .section-label {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       font-size: 11px;
       letter-spacing: 0.22em;
       text-transform: uppercase;
       color: var(--blue);
       font-weight: 700;
       margin-bottom: 14px;
+    }
+    .section-label::before {
+      content: '';
+      display: inline-block;
+      width: 20px;
+      height: 2px;
+      background: currentColor;
+      border-radius: 2px;
+      opacity: 0.7;
     }
     .section-label-light { color: var(--teal-light) !important; }
     .section-title {
@@ -281,20 +320,45 @@
     .section-sub { font-size: 15px; color: var(--text-light); margin-top: 14px; line-height: 1.8; }
     .section-sub-light { color: rgba(255,255,255,0.65) !important; }
 
-    /* Animate on scroll */
+    /* section-label のライトバリアント（Navy背景）*/
+    .section-label-light::before { background: var(--teal-light); opacity: 0.8; }
+
+    /* ===========================
+       SECTION ENTRY ANIMATION
+       opacity は常に 1。初期非表示は一切しない。
+       ページ読み込み完了後に一度だけ走る CSS アニメで
+       "下から浮かび上がる" 演出を付ける。
+    =========================== */
+
+    /* ヒーロー登場アニメ（CSS keyframes のみ・JSに非依存） */
+    .hero-text {
+      animation: heroFadeIn 0.65s ease both;
+    }
+    .hero-visual {
+      animation: heroFadeIn 0.65s 0.15s ease both;
+    }
+    @keyframes heroFadeIn {
+      from { opacity: 0.6; transform: translateY(12px); }
+      to   { opacity: 1;   transform: translateY(0); }
+    }
+
+    /* セクション・カード共通の入場アニメ
+       animation-fill-mode: backwards で開始前は from 状態だが、
+       from を opacity:1 にすることで「一瞬でも消えない」を保証する。
+       from の opacity を 0 にすると瞬間的に消えるので使わない。 */
     .fade-in {
-      opacity: 0;
-      transform: translateY(24px);
-      transition: opacity 0.6s ease, transform 0.6s ease;
+      animation: sectionIn 0.5s ease both;
     }
-    .fade-in.visible {
-      opacity: 1;
-      transform: translateY(0);
+    @keyframes sectionIn {
+      from { opacity: 1; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-    .fade-in-delay-1 { transition-delay: 0.1s; }
-    .fade-in-delay-2 { transition-delay: 0.2s; }
-    .fade-in-delay-3 { transition-delay: 0.3s; }
-    .fade-in-delay-4 { transition-delay: 0.4s; }
+
+    /* ディレイバリアント（グリッドカードの連続入場） */
+    .fade-in-delay-1 { animation-delay: 0.08s; }
+    .fade-in-delay-2 { animation-delay: 0.16s; }
+    .fade-in-delay-3 { animation-delay: 0.24s; }
+    .fade-in-delay-4 { animation-delay: 0.32s; }
 
     /* ===========================
        NUMBERS
@@ -311,7 +375,9 @@
       border: 1px solid var(--border);
       position: relative;
       overflow: hidden;
+      transition: background 0.2s ease, box-shadow 0.2s ease;
     }
+    .number-item:hover { background: var(--off-white); box-shadow: var(--shadow-sm); }
     .number-item::before {
       content: '';
       position: absolute;
@@ -361,7 +427,16 @@
       border-left: 4px solid var(--blue);
       padding: 20px 22px;
       border-radius: 0 10px 10px 0;
+      transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     }
+    .mission-value:hover {
+      background: #e6edfa;
+      transform: translateX(4px);
+      box-shadow: var(--shadow-sm);
+    }
+    .mission-value:nth-child(2) { border-left-color: var(--teal); }
+    .mission-value:nth-child(3) { border-left-color: #2e63d8; }
+    .mission-value:nth-child(4) { border-left-color: var(--teal); }
     .mission-value-title { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
     .mission-value-desc { font-size: 13px; color: var(--text-light); line-height: 1.75; }
 
@@ -378,7 +453,7 @@
       border: 1px solid var(--border);
       border-radius: 16px;
       padding: 32px 28px;
-      transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
       position: relative;
       overflow: hidden;
     }
@@ -390,10 +465,11 @@
       background: linear-gradient(90deg, var(--blue), var(--teal));
       transform: scaleX(0);
       transform-origin: left;
-      transition: transform 0.3s;
+      transition: transform 0.3s ease;
     }
-    .job-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); border-color: rgba(30,79,200,0.3); }
+    .job-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: rgba(30,79,200,0.25); }
     .job-card:hover::after { transform: scaleX(1); }
+    .job-card:focus-within { border-color: rgba(30,79,200,0.35); box-shadow: var(--shadow-md); }
     .job-tag {
       display: inline-block;
       background: var(--bg-light);
@@ -428,9 +504,10 @@
       font-size: 13px;
       font-weight: 700;
       letter-spacing: 0.04em;
-      transition: background 0.2s;
+      transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     }
-    .job-btn:hover { background: var(--navy-mid); }
+    .job-btn:hover { background: var(--navy-mid); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(11,29,62,0.18); }
+    .job-btn:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
 
     /* ===========================
        INTERVIEW
@@ -445,22 +522,37 @@
       border-radius: 20px;
       overflow: hidden;
       border: 1px solid var(--border);
-      transition: transform 0.25s, box-shadow 0.25s;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     }
-    .interview-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+    .interview-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: rgba(30,79,200,0.2); }
     .interview-avatar {
-      height: 120px;
+      height: 110px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 64px;
     }
-    .interview-card:nth-child(1) .interview-avatar { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
-    .interview-card:nth-child(2) .interview-avatar { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
-    .interview-card:nth-child(3) .interview-avatar { background: linear-gradient(135deg, #ede9fe, #ddd6fe); }
-    .interview-body { padding: 26px 24px; }
+    .interview-card:nth-child(1) .interview-avatar { background: linear-gradient(135deg, #1e4fc8, #0cb8b8); }
+    .interview-card:nth-child(2) .interview-avatar { background: linear-gradient(135deg, #132d5e, #1e4fc8); }
+    .interview-card:nth-child(3) .interview-avatar { background: linear-gradient(135deg, #0cb8b8, #34d8d8); }
+    /* モノグラムアバター */
+    .avatar-monogram {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.18);
+      border: 2px solid rgba(255,255,255,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 800;
+      color: white;
+      letter-spacing: 0.03em;
+      backdrop-filter: blur(4px);
+    }
+    .interview-body { padding: 24px 22px; }
     .interview-name { font-size: 16px; font-weight: 700; color: var(--navy); }
-    .interview-role { font-size: 12px; color: var(--text-light); margin-bottom: 18px; letter-spacing: 0.06em; }
+    .interview-role { font-size: 12px; color: var(--text-light); margin-bottom: 16px; letter-spacing: 0.06em; }
     .interview-q {
       font-size: 12px;
       font-weight: 700;
@@ -468,7 +560,7 @@
       background: var(--bg-light);
       padding: 8px 12px;
       border-radius: 6px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
     .interview-a { font-size: 13px; color: var(--text-mid); line-height: 1.8; }
 
@@ -486,10 +578,35 @@
       border-radius: 16px;
       padding: 28px 22px;
       text-align: center;
-      transition: background 0.25s, transform 0.25s;
+      transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     }
-    .benefit-card:hover { background: rgba(255,255,255,0.11); transform: translateY(-3px); }
-    .benefit-icon { font-size: 36px; margin-bottom: 14px; }
+    .benefit-card:hover {
+      background: rgba(255,255,255,0.11);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.25);
+      border-color: rgba(12,184,184,0.3);
+    }
+    /* SVGアイコンホルダー */
+    .benefit-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 16px;
+      background: rgba(12,184,184,0.18);
+      border: 1px solid rgba(12,184,184,0.35);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .benefit-icon svg {
+      width: 24px;
+      height: 24px;
+      stroke: var(--teal-light);
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
     .benefit-title { font-size: 14px; font-weight: 700; color: white; margin-bottom: 8px; }
     .benefit-desc { font-size: 12px; color: rgba(255,255,255,0.58); line-height: 1.75; }
 
@@ -551,9 +668,10 @@
       border: 1px solid var(--border);
       border-radius: 12px;
       overflow: hidden;
-      transition: box-shadow 0.2s;
+      transition: box-shadow 0.2s ease, border-color 0.2s ease;
     }
-    .faq-item:hover { box-shadow: var(--shadow-sm); }
+    .faq-item:hover { box-shadow: var(--shadow-md); border-color: rgba(30,79,200,0.2); }
+    .faq-item.open { border-color: rgba(30,79,200,0.3); box-shadow: var(--shadow-md); }
     .faq-q {
       display: flex;
       align-items: center;
@@ -687,8 +805,11 @@
       box-shadow: 0 6px 24px rgba(12,184,184,0.4);
       font-family: inherit;
     }
-    .form-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(12,184,184,0.55); }
+    .form-submit:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(12,184,184,0.55); }
     .form-submit:active { transform: translateY(0); opacity: 0.85; }
+    .form-submit:focus-visible { outline: 3px solid rgba(52,216,216,0.7); outline-offset: 3px; }
+    .form-input:focus-visible { outline: none; border-color: var(--teal); }
+    a:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 4px; }
     .form-note { text-align: center; font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 14px; }
 
     /* ===========================
@@ -718,8 +839,9 @@
     .footer-desc { font-size: 13px; color: rgba(255,255,255,0.38); line-height: 1.85; }
     .footer-col h4 { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.6); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 20px; }
     .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-    .footer-col ul a { font-size: 13px; color: rgba(255,255,255,0.42); text-decoration: none; transition: color 0.18s; }
+    .footer-col ul a { font-size: 13px; color: rgba(255,255,255,0.42); text-decoration: none; transition: color 0.2s ease; }
     .footer-col ul a:hover { color: var(--teal-light); }
+    .footer-col ul a:focus-visible { outline: 2px solid var(--teal-light); outline-offset: 3px; border-radius: 3px; }
     .footer-bottom {
       border-top: 1px solid rgba(255,255,255,0.08);
       padding-top: 24px;
@@ -731,6 +853,13 @@
     }
     .footer-copy { font-size: 12px; color: rgba(255,255,255,0.28); }
     .footer-dummy { font-size: 11px; color: rgba(255,255,255,0.2); }
+
+    /* ===========================
+       SCROLL OFFSET (固定ヘッダー対策)
+    =========================== */
+    #mission, #jobs, #interview, #benefits, #flow, #entry, #spec {
+      scroll-margin-top: 80px;
+    }
 
     /* ===========================
        SPEC SECTION
@@ -812,14 +941,19 @@
       .hero-visual { display: none; }
       .numbers-grid { grid-template-columns: repeat(2, 1fr); }
       .mission-wrap { grid-template-columns: 1fr; gap: 36px; }
-      .jobs-grid { grid-template-columns: 1fr; }
-      .interview-grid { grid-template-columns: 1fr; }
+      .jobs-grid { grid-template-columns: 1fr 1fr; gap: 20px; }
+      .interview-grid { grid-template-columns: 1fr 1fr; gap: 20px; }
       .benefits-grid { grid-template-columns: repeat(2, 1fr); }
       .footer-top { grid-template-columns: 1fr 1fr; }
       .spec-grid { grid-template-columns: 1fr; }
       .form-grid { grid-template-columns: 1fr; }
     }
+    @media (max-width: 720px) {
+      .jobs-grid { grid-template-columns: 1fr; }
+      .interview-grid { grid-template-columns: 1fr; }
+    }
     @media (max-width: 640px) {
+      /* ナビ：スマホではリンク非表示 → ハンバーガー */
       .nav-links { display: none; }
       .nav-hamburger { display: flex; }
       .nav-links.open {
@@ -833,19 +967,61 @@
         z-index: 199;
         box-shadow: var(--shadow-lg);
         border-top: 1px solid var(--border);
+        overflow-y: auto;
       }
-      .nav-links.open a { padding: 14px 16px; font-size: 16px; }
-      .hero { padding: 70px 20px 80px; }
-      .section { padding: 60px 20px; }
+      .nav-links.open a { padding: 14px 16px; font-size: 16px; border-radius: 8px; }
+      .nav-links.open .nav-cta { background: var(--blue) !important; color: white !important; text-align: center; margin-top: 8px; }
+
+      /* Hero */
+      .hero { padding: 64px 20px 72px; }
+      .hero-title { font-size: clamp(26px, 7vw, 36px); }
+      .hero-desc { font-size: 15px; }
+      .hero-btns { gap: 12px; }
+      .btn-primary, .btn-ghost { padding: 13px 24px; font-size: 14px; }
+
+      /* Section */
+      .section { padding: 64px 20px; }
+      .section-header { margin-bottom: 40px; }
+      .section-title { font-size: clamp(22px, 5.5vw, 30px); }
+
+      /* Numbers: 2×2グリッド */
       .numbers-grid { grid-template-columns: 1fr 1fr; }
+      .number-item { padding: 28px 16px; }
+
+      /* Mission */
+      .mission-tagline { font-size: clamp(20px, 5vw, 28px); }
+
+      /* Flow: 縦積み */
       .flow-steps { flex-direction: column; gap: 16px; }
       .flow-steps::before { display: none; }
       .flow-step { display: flex; align-items: flex-start; gap: 16px; text-align: left; }
       .flow-num { margin: 0; flex-shrink: 0; width: 44px; height: 44px; font-size: 16px; }
-      .benefits-grid { grid-template-columns: 1fr 1fr; }
-      .footer-top { grid-template-columns: 1fr; }
+      .flow-title { margin-bottom: 4px; }
+
+      /* Benefits: 2カラム維持 */
+      .benefits-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .benefit-card { padding: 22px 16px; }
+      .benefit-title { font-size: 13px; }
+
+      /* Footer */
+      .footer-top { grid-template-columns: 1fr; gap: 32px; }
+
+      /* Demo badge */
       .demo-badge { top: auto; bottom: 16px; right: 16px; }
-      .entry-form { padding: 28px 24px; }
+
+      /* Entry form */
+      .entry-form { padding: 28px 20px; }
+      .entry-title { font-size: clamp(22px, 6vw, 32px); }
+    }
+
+    /* 超小型 (≤390px) */
+    @media (max-width: 390px) {
+      .hero-title { font-size: 24px; }
+      .benefits-grid { grid-template-columns: 1fr; }
+      .numbers-grid { grid-template-columns: 1fr 1fr; }
+      .nav-inner { padding: 0 16px; }
+      .section { padding: 56px 16px; }
+      .hero { padding: 56px 16px 64px; }
     }
   </style>
 </head>
@@ -1070,7 +1246,9 @@
     </div>
     <div class="interview-grid">
       <div class="interview-card fade-in">
-        <div class="interview-avatar">👨‍💻</div>
+        <div class="interview-avatar">
+          <div class="avatar-monogram">T.S</div>
+        </div>
         <div class="interview-body">
           <div class="interview-name">田中 誠一郎</div>
           <div class="interview-role">バックエンドエンジニア / 入社2年目</div>
@@ -1079,7 +1257,9 @@
         </div>
       </div>
       <div class="interview-card fade-in fade-in-delay-1">
-        <div class="interview-avatar">👩‍💼</div>
+        <div class="interview-avatar">
+          <div class="avatar-monogram">S.A</div>
+        </div>
         <div class="interview-body">
           <div class="interview-name">佐藤 あやか</div>
           <div class="interview-role">プロダクトマネージャー / 入社3年目</div>
@@ -1088,7 +1268,9 @@
         </div>
       </div>
       <div class="interview-card fade-in fade-in-delay-2">
-        <div class="interview-avatar">👨‍🎨</div>
+        <div class="interview-avatar">
+          <div class="avatar-monogram">N.K</div>
+        </div>
         <div class="interview-body">
           <div class="interview-name">中村 健太</div>
           <div class="interview-role">エンタープライズセールス / 入社1年目</div>
@@ -1112,42 +1294,66 @@
     </div>
     <div class="benefits-grid">
       <div class="benefit-card fade-in">
-        <div class="benefit-icon">🏠</div>
+        <div class="benefit-icon">
+          <!-- home -->
+          <svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+        </div>
         <div class="benefit-title">フルリモート勤務</div>
         <div class="benefit-desc">全職種リモート可。居住地不問で全国採用。在宅環境整備手当あり（月1万円）</div>
       </div>
       <div class="benefit-card fade-in fade-in-delay-1">
-        <div class="benefit-icon">⏰</div>
+        <div class="benefit-icon">
+          <!-- clock -->
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+        </div>
         <div class="benefit-title">スーパーフレックス</div>
         <div class="benefit-desc">コアタイムなしのフレックス制。自分のパフォーマンスが最大化する時間帯で働く</div>
       </div>
       <div class="benefit-card fade-in fade-in-delay-2">
-        <div class="benefit-icon">📚</div>
+        <div class="benefit-icon">
+          <!-- book-open -->
+          <svg viewBox="0 0 24 24"><path d="M2 3h7a4 4 0 014 4v14a3 3 0 00-3-3H2V3z"/><path d="M22 3h-7a4 4 0 00-4 4v14a3 3 0 013-3h8V3z"/></svg>
+        </div>
         <div class="benefit-title">学習支援制度</div>
         <div class="benefit-desc">年間20万円の書籍・勉強会・資格費用補助。業務時間内の学習も奨励</div>
       </div>
       <div class="benefit-card fade-in fade-in-delay-3">
-        <div class="benefit-icon">🍱</div>
+        <div class="benefit-icon">
+          <!-- coffee / lunch -->
+          <svg viewBox="0 0 24 24"><path d="M17 8h1a4 4 0 010 8h-1"/><path d="M3 8h14v9a4 4 0 01-4 4H7a4 4 0 01-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>
+        </div>
         <div class="benefit-title">ランチ手当</div>
         <div class="benefit-desc">毎日500円のランチ補助（月額最大1万円）。オフィス出社時は社食無料</div>
       </div>
       <div class="benefit-card fade-in">
-        <div class="benefit-icon">💊</div>
+        <div class="benefit-icon">
+          <!-- heart-pulse -->
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        </div>
         <div class="benefit-title">健康サポート</div>
         <div class="benefit-desc">健康診断・人間ドック費用全額補助。メンタルヘルスケアプログラム提供</div>
       </div>
       <div class="benefit-card fade-in fade-in-delay-1">
-        <div class="benefit-icon">👶</div>
+        <div class="benefit-icon">
+          <!-- users -->
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        </div>
         <div class="benefit-title">育児・介護支援</div>
         <div class="benefit-desc">育休取得率88%（男性含む）。時短勤務・看護休暇・ベビーシッター補助</div>
       </div>
       <div class="benefit-card fade-in fade-in-delay-2">
-        <div class="benefit-icon">🏖️</div>
+        <div class="benefit-icon">
+          <!-- sun / vacation -->
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </div>
         <div class="benefit-title">有給休暇</div>
         <div class="benefit-desc">入社初日から有給付与（10日）。バースデー休暇・リフレッシュ休暇制度あり</div>
       </div>
       <div class="benefit-card fade-in fade-in-delay-3">
-        <div class="benefit-icon">📈</div>
+        <div class="benefit-icon">
+          <!-- trending-up -->
+          <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        </div>
         <div class="benefit-title">ストックオプション</div>
         <div class="benefit-desc">全社員にストックオプション付与。会社の成長を全員で享受する仕組み</div>
       </div>
@@ -1406,25 +1612,22 @@
 </section>
 
 <script>
-  // Fade-in on scroll
-  const fadeEls = document.querySelectorAll('.fade-in');
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('visible');
-        io.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.12 });
-  fadeEls.forEach(el => io.observe(el));
+  // ──────────────────────────────────────────────────────────────
+  // NOTE: スクロール連動の opacity:0 アニメは完全廃止。
+  //       全要素はページ読み込み完了時から opacity:1 で表示済み。
+  //       JS はスムーススクロールと FAQ トグルのみ担当。
+  // ──────────────────────────────────────────────────────────────
 
   // Smooth scroll for anchor links
   document.querySelectorAll('a[href^="#"]').forEach(a => {
     a.addEventListener('click', e => {
-      const target = document.querySelector(a.getAttribute('href'));
+      const href = a.getAttribute('href');
+      if (!href || href === '#') return;
+      const target = document.querySelector(href);
       if (target) {
         e.preventDefault();
-        const offset = 72;
+        const navH = document.querySelector('.navbar')?.offsetHeight || 68;
+        const offset = navH + 16; // ヘッダー高さ + 余白
         const top = target.getBoundingClientRect().top + window.scrollY - offset;
         window.scrollTo({ top, behavior: 'smooth' });
         document.getElementById('navLinks').classList.remove('open');
