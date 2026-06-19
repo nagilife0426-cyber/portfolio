@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>note記事 全自動投稿パイプライン（デモ）</title>
+<style>
+  /* ======== リセット・ベース ======== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --accent-cyan:   #00d4ff;
+    --accent-purple: #7c3aed;
+    --accent-amber:  #f59e0b;
+    --accent-green:  #10b981;
+    --accent-red:    #ef4444;
+    --bg-primary:    #0a0a0f;
+    --bg-surface:    #12121a;
+    --bg-card:       #1a1a26;
+    --bg-card2:      #1f1f2e;
+    --border:        #2a2a40;
+    --border-light:  #333350;
+    --text:          #e8e8f0;
+    --text-muted:    #8888aa;
+    --text-dim:      #555570;
+    --radius:        12px;
+    --shadow:        0 2px 12px rgba(0,0,0,.4);
+    --shadow-glow:   0 0 24px rgba(0,212,255,.1);
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Meiryo', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ======== ナビゲーション ======== */
+  .nav {
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-left { display: flex; align-items: center; gap: 16px; }
+  .nav-back {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color .2s;
+  }
+  .nav-back:hover { color: var(--text); }
+  .nav-title { font-size: 15px; font-weight: 700; }
+  .nav-badges { display: flex; gap: 8px; }
+  .badge {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .3px;
+  }
+  .badge-ai {
+    background: rgba(124,58,237,.2);
+    color: var(--accent-purple);
+    border: 1px solid rgba(124,58,237,.4);
+  }
+  .badge-bot {
+    background: rgba(245,158,11,.15);
+    color: var(--accent-amber);
+    border: 1px solid rgba(245,158,11,.35);
+  }
+  .badge-demo {
+    background: rgba(0,212,255,.1);
+    color: var(--accent-cyan);
+    border: 1px solid rgba(0,212,255,.25);
+  }
+  .nav-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent-green);
+    box-shadow: 0 0 0 3px rgba(16,185,129,.25);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(16,185,129,.25); }
+    50%       { box-shadow: 0 0 0 6px rgba(16,185,129,.1); }
+  }
+
+  /* ======== ヒーロー ======== */
+  .hero {
+    background: linear-gradient(135deg, #0d0d1a 0%, #0a0a0f 40%, #0d0820 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 40px 24px 36px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 200px;
+    background: radial-gradient(ellipse, rgba(0,212,255,.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    line-height: 1;
+  }
+  .hero h1 {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-sub {
+    font-size: 15px;
+    color: var(--text-muted);
+    max-width: 560px;
+    margin: 0 auto 24px;
+    line-height: 1.7;
+  }
+  .hero-chips {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .hero-chip {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .hero-chip span { color: var(--accent-cyan); }
+
+  /* ======== パイプライン図 ======== */
+  .pipeline-section {
+    max-width: 1100px;
+    margin: 40px auto 0;
+    padding: 0 24px;
+  }
+  .section-heading {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-heading::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .pipeline-flow {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr) ;
+    gap: 0;
+    margin-bottom: 40px;
+    align-items: stretch;
+  }
+  @media (max-width: 768px) {
+    .pipeline-flow {
+      grid-template-columns: 1fr;
+    }
+    .pipeline-arrow { display: none; }
+    .pipeline-arrow-v {
+      display: flex !important;
+      justify-content: center;
+      font-size: 24px;
+      color: var(--accent-cyan);
+      padding: 6px 0;
+    }
+  }
+  .pipeline-arrow-v { display: none; }
+
+  .pipeline-step {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 18px;
+    position: relative;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .pipeline-step:hover {
+    border-color: var(--border-light);
+    box-shadow: var(--shadow-glow);
+  }
+  .pipeline-connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    flex-shrink: 0;
+  }
+  .pipeline-arrow {
+    color: var(--accent-cyan);
+    font-size: 20px;
+    opacity: .6;
+  }
+
+  .step-layer {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    color: var(--accent-cyan);
+    background: rgba(0,212,255,.1);
+    border: 1px solid rgba(0,212,255,.2);
+    border-radius: 4px;
+    padding: 2px 7px;
+    display: inline-block;
+    margin-bottom: 12px;
+  }
+  .step-icon {
+    font-size: 32px;
+    margin-bottom: 10px;
+    line-height: 1;
+  }
+  .step-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .step-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  .step-tech {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .step-tech-tag {
+    font-size: 10px;
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 7px;
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+
+  /* ======== タブナビ ======== */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px 40px;
+  }
+  .tab-nav {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+  }
+  .tab-btn {
+    flex: 1;
+    min-width: 110px;
+    padding: 9px 14px;
+    border: none;
+    background: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: all .2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .tab-btn:hover { background: var(--bg-card2); color: var(--text); }
+  .tab-btn.active {
+    background: linear-gradient(135deg, rgba(0,212,255,.18), rgba(124,58,237,.18));
+    color: var(--accent-cyan);
+    border: 1px solid rgba(0,212,255,.25);
+  }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* ======== カード共通 ======== */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-body { padding: 18px; }
+
+  /* ======== テーブル ======== */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    white-space: nowrap;
+  }
+  td {
+    padding: 12px 14px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,.015); }
+
+  /* チェックボックス */
+  .cb-wrap {
+    width: 18px; height: 18px;
+    border-radius: 4px;
+    border: 2px solid var(--border-light);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .cb-wrap.checked {
+    background: var(--accent-cyan);
+    border-color: var(--accent-cyan);
+  }
+  .cb-wrap.checked::after {
+    content: '✓';
+    font-size: 11px;
+    font-weight: 800;
+    color: #000;
+  }
+
+  /* ステータス */
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .status-done    { background: rgba(16,185,129,.15);  color: #34d399; }
+  .status-pending { background: rgba(245,158,11,.12);  color: var(--accent-amber); }
+  .status-running { background: rgba(0,212,255,.12);   color: var(--accent-cyan); }
+  .status-error   { background: rgba(239,68,68,.12);   color: var(--accent-red); }
+  .status-checked { background: rgba(124,58,237,.15);  color: #a78bfa; }
+
+  /* ======== スプレッドシート風テーブル ======== */
+  .sheet-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-surface);
+    flex-wrap: wrap;
+  }
+  .sheet-tab {
+    background: var(--accent-cyan);
+    color: #000;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 12px;
+    border-radius: 4px 4px 0 0;
+  }
+  .sheet-tab-inactive {
+    background: var(--bg-card2);
+    color: var(--text-muted);
+    font-size: 11px;
+    padding: 3px 12px;
+    border-radius: 4px 4px 0 0;
+    border: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .sheet-info {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* ======== 記事カードグリッド ======== */
+  .article-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+  .article-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .article-card:hover {
+    border-color: var(--border-light);
+    box-shadow: 0 4px 20px rgba(0,0,0,.3);
+  }
+  .article-thumb {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: linear-gradient(135deg, #1a0f2e 0%, #0d1a2e 50%, #0a1a1a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 42px;
+    position: relative;
+    overflow: hidden;
+  }
+  .article-thumb::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(124,58,237,.15), rgba(0,212,255,.1));
+  }
+  .article-thumb-label {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    background: rgba(0,0,0,.7);
+    color: var(--text-muted);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  .article-body { padding: 16px; }
+  .article-title {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  .article-excerpt {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .article-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 12px;
+  }
+  .article-tag {
+    font-size: 11px;
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 8px;
+    color: var(--accent-cyan);
+  }
+  .article-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+    margin-top: 2px;
+  }
+  .article-meta .sched {
+    color: var(--accent-amber);
+    font-weight: 600;
+  }
+
+  /* ======== カレンダーリスト ======== */
+  .cal-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .cal-item {
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .cal-date {
+    min-width: 52px;
+    text-align: center;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 8px;
+    flex-shrink: 0;
+  }
+  .cal-date .month { font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
+  .cal-date .day   { font-size: 20px; font-weight: 800; line-height: 1.1; }
+  .cal-info { flex: 1; }
+  .cal-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+  .cal-sub   { font-size: 11px; color: var(--text-muted); }
+  .cal-time  {
+    font-size: 12px;
+    color: var(--accent-cyan);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* ======== フッター ======== */
+  .demo-notice {
+    text-align: center;
+    padding: 16px;
+    font-size: 11px;
+    color: var(--text-dim);
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border);
+  }
+
+  /* ======== 制作仕様セクション ======== */
+  .spec-section {
+    background: linear-gradient(180deg, #0d0d1a 0%, #0a0a0f 100%);
+    border-top: 1px solid var(--border);
+    padding: 56px 24px 64px;
+  }
+  .spec-inner { max-width: 1100px; margin: 0 auto; }
+  .spec-heading {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .spec-heading-sub {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 48px;
+    line-height: 1.7;
+  }
+
+  .spec-block-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .spec-block-title::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 20px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple));
+    flex-shrink: 0;
+  }
+
+  /* 1. アーキテクチャ図 */
+  .spec-arch {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 24px 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 36px;
+  }
+  .spec-arch-flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    flex-wrap: wrap;
+    row-gap: 16px;
+    justify-content: center;
+    margin-top: 12px;
+  }
+  .spec-arch-node {
+    background: var(--bg-card2);
+    border: 1.5px solid var(--border-light);
+    border-radius: 12px;
+    padding: 18px 16px;
+    text-align: center;
+    min-width: 150px;
+    flex: 1 1 150px;
+    max-width: 210px;
+    transition: border-color .2s;
+  }
+  .spec-arch-node:hover { border-color: var(--accent-cyan); }
+  .spec-node-layer {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    color: var(--accent-purple);
+    margin-bottom: 8px;
+  }
+  .spec-node-icon { font-size: 28px; margin-bottom: 8px; line-height: 1; }
+  .spec-node-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .spec-node-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .spec-arch-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+    font-size: 22px;
+    color: var(--accent-cyan);
+    opacity: .5;
+    flex-shrink: 0;
+    align-self: center;
+  }
+  @media (max-width: 640px) {
+    .spec-arch-flow { flex-direction: column; align-items: center; }
+    .spec-arch-arrow { transform: rotate(90deg); padding: 4px 0; }
+    .spec-arch-node { max-width: 100%; width: 100%; }
+  }
+
+  /* 2. 技術スタック */
+  .spec-tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 36px;
+  }
+  .spec-tech-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    transition: border-color .2s;
+  }
+  .spec-tech-card:hover { border-color: var(--border-light); }
+  .spec-tech-icon { font-size: 24px; margin-bottom: 10px; }
+  .spec-tech-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .spec-tech-role {
+    font-size: 12px;
+    color: var(--accent-cyan);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .spec-tech-body {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.65;
+  }
+
+  /* 3. 処理フロー */
+  .spec-steps {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 36px;
+  }
+  .spec-step-list { list-style: none; display: flex; flex-direction: column; }
+  .spec-step-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .spec-step-item:last-child { border-bottom: none; }
+  .spec-step-num {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    color: #000;
+    font-size: 14px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .spec-step-text {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  .spec-step-text strong { color: var(--accent-cyan); }
+
+  /* 4. 運用イメージ */
+  .spec-ops-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin-bottom: 36px;
+  }
+  .spec-ops-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 20px;
+    transition: border-color .2s;
+  }
+  .spec-ops-card:hover { border-color: var(--border-light); }
+  .spec-ops-icon { font-size: 24px; margin-bottom: 10px; }
+  .spec-ops-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .spec-ops-body { font-size: 12px; color: var(--text-muted); line-height: 1.65; }
+
+  /* 5. 費用感 */
+  .spec-cost {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 36px;
+  }
+  .spec-cost-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-top: 12px;
+  }
+  .spec-cost-item {
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .spec-cost-item .cost-service { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+  .spec-cost-item .cost-price   { font-size: 18px; font-weight: 800; color: var(--accent-cyan); }
+  .spec-cost-item .cost-note    { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
+
+  /* 6. 制作の進め方 */
+  .spec-process {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 24px;
+    box-shadow: var(--shadow);
+  }
+  .spec-process-flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    flex-wrap: wrap;
+    row-gap: 16px;
+    justify-content: center;
+    margin-top: 12px;
+  }
+  .spec-proc-node {
+    flex: 1 1 180px;
+    max-width: 240px;
+    background: var(--bg-card2);
+    border: 1.5px solid var(--border-light);
+    border-radius: 12px;
+    padding: 20px 16px;
+    text-align: center;
+  }
+  .spec-proc-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    color: #000;
+    font-size: 13px;
+    font-weight: 800;
+    margin-bottom: 10px;
+  }
+  .spec-proc-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .spec-proc-body  { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+  .spec-proc-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    font-size: 20px;
+    color: var(--accent-cyan);
+    opacity: .5;
+    flex-shrink: 0;
+    align-self: center;
+  }
+  @media (max-width: 640px) {
+    .spec-process-flow { flex-direction: column; align-items: center; }
+    .spec-proc-arrow { transform: rotate(90deg); padding: 4px 0; }
+    .spec-proc-node { max-width: 100%; width: 100%; }
+  }
+  .spec-delivery-note {
+    margin-top: 20px;
+    background: linear-gradient(135deg, rgba(0,212,255,.06), rgba(124,58,237,.06));
+    border: 1px solid rgba(0,212,255,.2);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.7;
+  }
+  .spec-delivery-note strong { color: var(--accent-cyan); }
+
+  /* ======== レスポンシブ調整 ======== */
+  @media (max-width: 640px) {
+    .hero h1 { font-size: 22px; }
+    .pipeline-flow { grid-template-columns: 1fr; }
+    .article-grid { grid-template-columns: 1fr; }
+    .spec-tech-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ======== ナビゲーション ======== -->
+<nav class="nav">
+  <div class="nav-left">
+    <a class="nav-back" href="../../index.html">← ポートフォリオに戻る</a>
+    <span class="nav-title">📝 note 全自動投稿パイプライン</span>
+  </div>
+  <div class="nav-badges">
+    <span class="badge badge-ai">AI</span>
+    <span class="badge badge-bot">Bot</span>
+    <span class="badge badge-demo">DEMO</span>
+  </div>
+  <div class="nav-status">
+    <span class="dot"></span>
+    パイプライン 稼働中
+  </div>
+</nav>
+
+<!-- ======== ヒーロー ======== -->
+<div class="hero">
+  <div class="hero-icon">📝</div>
+  <h1>note記事 全自動投稿パイプライン</h1>
+  <p class="hero-sub">
+    ネタ収集 → 記事生成 → 画像生成 → note投稿まで<br>を無人化する 4 レイヤー構成の完全自動システム
+  </p>
+  <div class="hero-chips">
+    <div class="hero-chip">⚙️ n8n <span>スケジュール自動実行</span></div>
+    <div class="hero-chip">🤖 Claude API <span>Sonnet で記事生成</span></div>
+    <div class="hero-chip">🖼️ 画像生成API <span>サムネ自動作成</span></div>
+    <div class="hero-chip">🎭 Playwright <span>note ブラウザ自動操作</span></div>
+  </div>
+</div>
+
+<!-- ======== パイプライン図 ======== -->
+<div class="pipeline-section">
+  <div class="section-heading">4 レイヤー パイプライン</div>
+  <div class="pipeline-flow">
+    <div class="pipeline-step">
+      <div class="step-layer">L1</div>
+      <div class="step-icon">🔍</div>
+      <div class="step-title">ネタ・リサーチ自動収集</div>
+      <div class="step-desc">n8n が毎週決まった曜日・時刻に X（旧Twitter）・競合note・Googleトレンドを巡回。記事候補をスプレッドシートに自動一覧出力。</div>
+      <div class="step-tech">
+        <span class="step-tech-tag">n8n</span>
+        <span class="step-tech-tag">Google Sheets</span>
+        <span class="step-tech-tag">Trends API</span>
+      </div>
+    </div>
+    <div class="pipeline-connector"><div class="pipeline-arrow">→</div></div>
+    <div class="pipeline-step">
+      <div class="step-layer">L2</div>
+      <div class="step-icon">✍️</div>
+      <div class="step-title">記事自動生成</div>
+      <div class="step-desc">チェック済みテーマを読み込み、ペルソナ・トーン・文字数・構成を埋めたプロンプトテンプレートで Claude API（Sonnet）が記事生成 → Markdown 保存。</div>
+      <div class="step-tech">
+        <span class="step-tech-tag">Python</span>
+        <span class="step-tech-tag">Claude API</span>
+        <span class="step-tech-tag">Sonnet</span>
+      </div>
+    </div>
+    <div class="pipeline-connector"><div class="pipeline-arrow">→</div></div>
+    <div class="pipeline-step">
+      <div class="step-layer">L3</div>
+      <div class="step-icon">🖼️</div>
+      <div class="step-title">画像自動生成</div>
+      <div class="step-desc">画像生成 API（Kie.ai 等）でサムネイル＋本文図解を自動生成。記事と連動して画像プロンプトも AI が自動作成し、記事フォルダに保存。</div>
+      <div class="step-tech">
+        <span class="step-tech-tag">Python</span>
+        <span class="step-tech-tag">Kie.ai API</span>
+        <span class="step-tech-tag">Claude API</span>
+      </div>
+    </div>
+    <div class="pipeline-connector"><div class="pipeline-arrow">→</div></div>
+    <div class="pipeline-step">
+      <div class="step-layer">L4</div>
+      <div class="step-icon">🚀</div>
+      <div class="step-title">note 自動投稿</div>
+      <div class="step-desc">Playwright が note にログイン → 本文入力 → 画像挿入 → タグ設定 → スケジュール予約を自動実行。複数記事の一括予約に対応。</div>
+      <div class="step-tech">
+        <span class="step-tech-tag">Playwright</span>
+        <span class="step-tech-tag">Python</span>
+        <span class="step-tech-tag">note</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== タブ UI ======== -->
+<div class="container">
+  <nav class="tab-nav" role="tablist">
+    <button class="tab-btn active" onclick="switchTab('ideas')" id="tab-ideas">
+      📋 ネタ一覧
+    </button>
+    <button class="tab-btn" onclick="switchTab('articles')" id="tab-articles">
+      📄 生成記事
+    </button>
+    <button class="tab-btn" onclick="switchTab('schedule')" id="tab-schedule">
+      📅 投稿スケジュール
+    </button>
+  </nav>
+
+  <!-- ========== ネタ一覧（スプレッドシート風） ========== -->
+  <div class="tab-pane active" id="pane-ideas">
+    <div class="card">
+      <div class="sheet-toolbar">
+        <span class="sheet-tab">ネタ一覧</span>
+        <span class="sheet-tab-inactive" onclick="switchTab('articles')">生成済み記事</span>
+        <span class="sheet-info">💡 チェックを入れたテーマが次回のバッチで処理されます（デモ）</span>
+      </div>
+      <div class="table-wrap">
+        <table id="idea-table">
+          <thead>
+            <tr>
+              <th style="width:44px">投稿</th>
+              <th>テーマ・タイトル案</th>
+              <th>カテゴリ</th>
+              <th>ソース</th>
+              <th>優先度</th>
+              <th>ステータス</th>
+              <th>収集日</th>
+            </tr>
+          </thead>
+          <tbody id="idea-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 生成記事カード ========== -->
+  <div class="tab-pane" id="pane-articles">
+    <div class="article-grid" id="article-grid"></div>
+  </div>
+
+  <!-- ========== 投稿スケジュール ========== -->
+  <div class="tab-pane" id="pane-schedule">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📅 投稿スケジュール（予約済み）</div>
+        <span style="font-size:12px;color:var(--text-muted)">自動生成・自動予約 — 人の操作は不要</span>
+      </div>
+      <div class="card-body">
+        <ul class="cal-list" id="cal-list"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="demo-notice">
+  ⚠️ これはデモ画面です。実際の API は呼ばれておらず、すべてダミーデータです。<br>
+  実装では各レイヤーがリアルタイムに連携し、note へ自動投稿されます。
+</div>
+
+<!-- ======== 制作仕様セクション ======== -->
+<section class="spec-section" id="spec-section">
+  <div class="spec-inner">
+
+    <div class="spec-heading">📋 制作仕様・自動化の仕組み</div>
+    <p class="spec-heading-sub">
+      このシステムがどう動くか、使用技術、処理フロー、運用イメージ、費用感、制作の流れをご説明します。
+    </p>
+
+    <!-- 1. アーキテクチャ -->
+    <div class="spec-block-title">1. システムアーキテクチャ（4レイヤー構成）</div>
+    <div class="spec-arch">
+      <div class="spec-arch-flow">
+        <div class="spec-arch-node">
+          <div class="spec-node-layer">L1 — COLLECT</div>
+          <div class="spec-node-icon">🔍</div>
+          <div class="spec-node-name">ネタ収集</div>
+          <div class="spec-node-desc">n8n が定期実行。X・note・Googleトレンドから記事候補を自動収集しスプレッドシートに蓄積</div>
+        </div>
+        <div class="spec-arch-arrow">→</div>
+        <div class="spec-arch-node">
+          <div class="spec-node-layer">L2 — GENERATE</div>
+          <div class="spec-node-icon">✍️</div>
+          <div class="spec-node-name">記事生成</div>
+          <div class="spec-node-desc">Python スクリプトが Claude API (Sonnet) を呼び出し、テンプレプロンプトで記事を生成し Markdown 保存</div>
+        </div>
+        <div class="spec-arch-arrow">→</div>
+        <div class="spec-arch-node">
+          <div class="spec-node-layer">L3 — IMAGE</div>
+          <div class="spec-node-icon">🖼️</div>
+          <div class="spec-node-name">画像生成</div>
+          <div class="spec-node-desc">画像生成 API でサムネ＋図解を自動作成。画像プロンプトも Claude が自動生成し連動</div>
+        </div>
+        <div class="spec-arch-arrow">→</div>
+        <div class="spec-arch-node">
+          <div class="spec-node-layer">L4 — PUBLISH</div>
+          <div class="spec-node-icon">🚀</div>
+          <div class="spec-node-name">note 自動投稿</div>
+          <div class="spec-node-desc">Playwright が note をブラウザ自動操作。本文・画像・タグ・スケジュール予約をすべて自動化</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 技術スタック -->
+    <div class="spec-block-title">2. 使用技術スタック</div>
+    <div class="spec-tech-grid">
+      <div class="spec-tech-card">
+        <div class="spec-tech-icon">⚙️</div>
+        <div class="spec-tech-name">n8n</div>
+        <div class="spec-tech-role">ワークフロー自動化エンジン</div>
+        <div class="spec-tech-body">毎週決まった曜日・時刻にトリガーを発火し、ネタ収集からパイプライン全体の起動を管制します。ノーコードでスケジュール変更が可能です。</div>
+      </div>
+      <div class="spec-tech-card">
+        <div class="spec-tech-icon">🤖</div>
+        <div class="spec-tech-name">Claude API（Sonnet）</div>
+        <div class="spec-tech-role">記事生成 AI</div>
+        <div class="spec-tech-body">ペルソナ・トーン・文字数・見出し構成を指定したプロンプトテンプレートで高品質な note 記事を生成。画像プロンプトの自動生成にも使用します。</div>
+      </div>
+      <div class="spec-tech-card">
+        <div class="spec-tech-icon">🐍</div>
+        <div class="spec-tech-name">Python</div>
+        <div class="spec-tech-role">バックエンド処理スクリプト</div>
+        <div class="spec-tech-body">スプレッドシートのデータ読み込み、Claude API 呼び出し、Markdown ファイル保存、画像 API 連携、Playwright の起動制御をすべて担います。</div>
+      </div>
+      <div class="spec-tech-card">
+        <div class="spec-tech-icon">🖼️</div>
+        <div class="spec-tech-name">画像生成 API</div>
+        <div class="spec-tech-role">サムネイル・図解の自動生成</div>
+        <div class="spec-tech-body">Kie.ai 等の API を使用してサムネイルと本文中の図解画像を自動生成。クライアントの要望に応じて API を選定します。</div>
+      </div>
+      <div class="spec-tech-card">
+        <div class="spec-tech-icon">🎭</div>
+        <div class="spec-tech-name">Playwright</div>
+        <div class="spec-tech-role">note ブラウザ自動操作</div>
+        <div class="spec-tech-body">note は公式投稿 API が非公開のため、ブラウザ自動操作で対応。ログイン状態保存・本文入力・画像挿入・スケジュール予約を自動化します。</div>
+      </div>
+      <div class="spec-tech-card">
+        <div class="spec-tech-icon">📊</div>
+        <div class="spec-tech-name">Google Sheets</div>
+        <div class="spec-tech-role">ネタ管理・ステータス管理</div>
+        <div class="spec-tech-body">収集したネタの一覧、チェックフラグ、生成ステータス、投稿日時のログをスプレッドシートで一元管理。人が確認・承認するためのインターフェースです。</div>
+      </div>
+    </div>
+
+    <!-- 3. 処理フロー -->
+    <div class="spec-block-title">3. 処理フローの流れ（平易な日本語で）</div>
+    <div class="spec-steps">
+      <ol class="spec-step-list">
+        <li class="spec-step-item">
+          <div class="spec-step-num">1</div>
+          <div class="spec-step-text">
+            <strong>毎週自動でネタを集める</strong><br>
+            n8n が毎週月曜朝 6 時に起動。X のトレンドワード・競合 note の人気記事・Googleトレンドを巡回し、「今週書くべきテーマ候補」をスプレッドシートに自動追記します。
+          </div>
+        </li>
+        <li class="spec-step-item">
+          <div class="spec-step-num">2</div>
+          <div class="spec-step-text">
+            <strong>人がチェックを入れるだけ（唯一の手作業）</strong><br>
+            スプレッドシートに並んだネタ一覧を見て、書きたいテーマの行にチェックを入れます。これが唯一の人間作業で、あとは完全自動です。
+          </div>
+        </li>
+        <li class="spec-step-item">
+          <div class="spec-step-num">3</div>
+          <div class="spec-step-text">
+            <strong>Claude API（Sonnet）が記事を自動生成</strong><br>
+            Python スクリプトがチェック済みのテーマを読み込み、事前に作成したプロンプトテンプレートで Claude Sonnet を呼び出します。ペルソナ・文字数・見出し構成・トーンを指定した高品質な記事が Markdown 形式で出力・保存されます。
+          </div>
+        </li>
+        <li class="spec-step-item">
+          <div class="spec-step-num">4</div>
+          <div class="spec-step-text">
+            <strong>サムネイル・図解画像を AI が自動作成</strong><br>
+            記事の内容を元に Claude が画像プロンプトを自動生成し、画像生成 API へ送信。サムネイルと本文中の図解画像が自動的に記事フォルダに保存されます。
+          </div>
+        </li>
+        <li class="spec-step-item">
+          <div class="spec-step-num">5</div>
+          <div class="spec-step-text">
+            <strong>Playwright が note へ自動投稿・スケジュール予約</strong><br>
+            Playwright が note のブラウザを自動操作。Markdown から本文を変換して入力し、生成済み画像を挿入、タグを設定、投稿スケジュールを予約します。複数記事を一括で予約投稿でき、週 1 回の作業（チェックを入れるだけ）で次の週の投稿がすべて埋まります。
+          </div>
+        </li>
+      </ol>
+    </div>
+
+    <!-- 4. 運用イメージ -->
+    <div class="spec-block-title">4. 運用イメージ（人がやることは 1 つだけ）</div>
+    <div class="spec-ops-grid">
+      <div class="spec-ops-card">
+        <div class="spec-ops-icon">☑️</div>
+        <div class="spec-ops-title">人がやること</div>
+        <div class="spec-ops-body">週 1 回、スプレッドシートを開いてネタ候補にチェックを入れる。それだけです。記事生成・画像・投稿予約はすべて自動で完了します。</div>
+      </div>
+      <div class="spec-ops-card">
+        <div class="spec-ops-icon">🤖</div>
+        <div class="spec-ops-title">システムがやること</div>
+        <div class="spec-ops-body">ネタ収集・記事生成・画像生成・note 投稿予約のすべてを自動実行。生成された記事はスプレッドシートでステータス確認できます。</div>
+      </div>
+      <div class="spec-ops-card">
+        <div class="spec-ops-icon">✏️</div>
+        <div class="spec-ops-title">記事の品質調整</div>
+        <div class="spec-ops-body">プロンプトテンプレートを変更するだけでトーン・文体・構成を一括変更できます。技術的な知識がなくても文章の方向性を指示できます。</div>
+      </div>
+      <div class="spec-ops-card">
+        <div class="spec-ops-icon">📈</div>
+        <div class="spec-ops-title">スケールアップ</div>
+        <div class="spec-ops-body">週 1 本から週 5 本への増量も設定変更のみ。複数のテーマカテゴリや複数アカウントへの展開も対応可能です。</div>
+      </div>
+    </div>
+
+    <!-- 5. 費用感 -->
+    <div class="spec-block-title">5. 想定の環境構築費用感（月額目安）</div>
+    <div class="spec-cost">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:4px;">記事数・文字数・画像枚数によって変動しますが、一般的な運用での目安です。</p>
+      <div class="spec-cost-grid">
+        <div class="spec-cost-item">
+          <div class="cost-service">n8n（クラウド版）</div>
+          <div class="cost-price">月数百円〜</div>
+          <div class="cost-note">セルフホスト可・無料枠あり</div>
+        </div>
+        <div class="spec-cost-item">
+          <div class="cost-service">Claude API（Sonnet）</div>
+          <div class="cost-price">月数百円〜</div>
+          <div class="cost-note">週 3〜5 本程度の目安</div>
+        </div>
+        <div class="spec-cost-item">
+          <div class="cost-service">画像生成 API</div>
+          <div class="cost-price">月数百円〜</div>
+          <div class="cost-note">生成枚数によって変動</div>
+        </div>
+        <div class="spec-cost-item">
+          <div class="cost-service">実行環境（VPS 等）</div>
+          <div class="cost-price">月数百円〜</div>
+          <div class="cost-note">ローカル PC 運用なら不要</div>
+        </div>
+        <div class="spec-cost-item">
+          <div class="cost-service">Google Sheets</div>
+          <div class="cost-price">無料</div>
+          <div class="cost-note">Google アカウントで利用可</div>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--text-dim);margin-top:16px;">
+        ※ 合計の目安: 月 1,000 円〜3,000 円程度（運用規模によって異なります）。初期構築費用は別途お見積りします。
+      </p>
+    </div>
+
+    <!-- 6. 制作の進め方 -->
+    <div class="spec-block-title">6. 制作の進め方（4ステップ）</div>
+    <div class="spec-process">
+      <div class="spec-process-flow">
+        <div class="spec-proc-node">
+          <div class="spec-proc-num">1</div>
+          <div class="spec-proc-title">要件ヒアリング</div>
+          <div class="spec-proc-body">投稿頻度・ターゲット読者・記事トーン・使用ツールの希望をヒアリングします</div>
+        </div>
+        <div class="spec-proc-arrow">→</div>
+        <div class="spec-proc-node">
+          <div class="spec-proc-num">2</div>
+          <div class="spec-proc-title">プロンプト設計</div>
+          <div class="spec-proc-body">ペルソナ・文体・構成をカスタマイズしたプロンプトテンプレートを設計・調整します</div>
+        </div>
+        <div class="spec-proc-arrow">→</div>
+        <div class="spec-proc-node">
+          <div class="spec-proc-num">3</div>
+          <div class="spec-proc-title">実装・テスト</div>
+          <div class="spec-proc-body">4 レイヤーを実装し、テスト投稿で品質と動作を確認します</div>
+        </div>
+        <div class="spec-proc-arrow">→</div>
+        <div class="spec-proc-node">
+          <div class="spec-proc-num">4</div>
+          <div class="spec-proc-title">納品・引き継ぎ</div>
+          <div class="spec-proc-body">スクリプト一式・スプレッドシート雛形・図解マニュアルを納品します</div>
+        </div>
+      </div>
+      <div class="spec-delivery-note">
+        📦 <strong>納期の目安：7〜10 営業日</strong>　|　納品物：Python スクリプト一式・n8n ワークフロー設定・スプレッドシート雛形・図解付き操作マニュアル
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+// ======= ダミーデータ =======
+
+const IDEAS = [
+  { check: true,  theme: 'ChatGPT で副業を月5万稼ぐ具体的な方法3選',          cat: 'AI活用',    src: 'Xトレンド',      pri: '高',  status: 'done',    date: '6/17' },
+  { check: true,  theme: 'n8n 入門：ノーコードで業務自動化を始める手順',        cat: '自動化',    src: '競合note',       pri: '高',  status: 'done',    date: '6/17' },
+  { check: true,  theme: '2026年 AI ツールおすすめ10選【無料あり】',            cat: 'AI活用',    src: 'Googleトレンド',  pri: '中',  status: 'running', date: '6/18' },
+  { check: true,  theme: 'Claude の使い方：GPT-4o との違いと使い分けガイド',    cat: 'AI活用',    src: '競合note',       pri: '高',  status: 'pending', date: '6/18' },
+  { check: false, theme: 'Playwright 入門：ブラウザ自動操作でできること',        cat: '自動化',    src: 'Xトレンド',      pri: '中',  status: 'pending', date: '6/18' },
+  { check: true,  theme: 'note で月10万円を達成したコンテンツ戦略',              cat: 'コンテンツ', src: 'Googleトレンド', pri: '高',  status: 'pending', date: '6/18' },
+  { check: false, theme: 'Python 自動化入門：初心者でも作れる業務効率化スクリプト', cat: 'プログラミング', src: '競合note', pri: '低',  status: 'pending', date: '6/19' },
+  { check: false, theme: 'AI 画像生成ツール比較 2026：Kie.ai vs 他社',          cat: 'AI活用',    src: 'Googleトレンド',  pri: '中',  status: 'pending', date: '6/19' },
+];
+
+const ARTICLES = [
+  {
+    emoji: '💰',
+    title: 'ChatGPT で副業を月5万稼ぐ具体的な方法3選',
+    excerpt: 'AI ツールを使って副業収入を得る方法は様々ありますが、実際に月5万円以上を安定させるには「再現性のある型」が必要です。本記事では実際に機能している3つのパターンを具体的に解説します。',
+    tags: ['ChatGPT', 'AI副業', '副業', '月5万'],
+    sched: '6/20（金）18:00 公開予定',
+    wordCount: '3,200文字',
+    status: 'done',
+  },
+  {
+    emoji: '⚙️',
+    title: 'n8n 入門：ノーコードで業務自動化を始める手順',
+    excerpt: 'n8n は無料で使えるオープンソースのワークフロー自動化ツールです。Zapier や Make より自由度が高く、自社サーバーで運用することでコストをほぼゼロにできます。本記事では基本操作から初めての自動化フロー作成まで解説します。',
+    tags: ['n8n', '業務自動化', 'ノーコード', '効率化'],
+    sched: '6/22（日）10:00 公開予定',
+    wordCount: '2,800文字',
+    status: 'done',
+  },
+  {
+    emoji: '🤖',
+    title: '2026年 AI ツールおすすめ10選【無料あり】',
+    excerpt: '2026年に実際に使えるAIツールを厳選して10個紹介します。無料で使えるものも多く、業務効率化・コンテンツ制作・プログラミング補助など用途別に最適なツールを選ぶことができます。',
+    tags: ['AIツール', '2026年', '無料', 'おすすめ'],
+    sched: '6/24（火）12:00 公開予定',
+    wordCount: '生成中...',
+    status: 'running',
+  },
+];
+
+const SCHEDULE = [
+  { month: 'JUN', day: '20', title: 'ChatGPT で副業を月5万稼ぐ具体的な方法3選', time: '18:00', tag: 'AI活用', status: 'done' },
+  { month: 'JUN', day: '22', title: 'n8n 入門：ノーコードで業務自動化を始める手順', time: '10:00', tag: '自動化', status: 'done' },
+  { month: 'JUN', day: '24', title: '2026年 AI ツールおすすめ10選【無料あり】', time: '12:00', tag: 'AI活用', status: 'running' },
+  { month: 'JUN', day: '26', title: 'Claude の使い方：GPT-4o との違いと使い分けガイド', time: '18:00', tag: 'AI活用', status: 'pending' },
+  { month: 'JUN', day: '28', title: 'note で月10万円を達成したコンテンツ戦略', time: '10:00', tag: 'コンテンツ', status: 'pending' },
+];
+
+// ======= タブ切り替え =======
+function switchTab(name) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('pane-' + name).classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'ideas')    renderIdeas();
+  if (name === 'articles') renderArticles();
+  if (name === 'schedule') renderSchedule();
+}
+
+// ======= チェック切り替え =======
+const checkedState = IDEAS.map(i => i.check);
+function toggleCheck(idx) {
+  checkedState[idx] = !checkedState[idx];
+  renderIdeas();
+}
+
+// ======= ネタ一覧 =======
+function renderIdeas() {
+  const tbody = document.getElementById('idea-tbody');
+  tbody.innerHTML = '';
+  IDEAS.forEach((item, idx) => {
+    const checked = checkedState[idx];
+    const statusMap = {
+      done:    '<span class="status-pill status-done">✓ 生成済み</span>',
+      running: '<span class="status-pill status-running">⟳ 生成中</span>',
+      pending: '<span class="status-pill status-pending">● 未処理</span>',
+    };
+    const priColor = item.pri === '高' ? 'var(--accent-red)' : item.pri === '中' ? 'var(--accent-amber)' : 'var(--text-dim)';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="text-align:center">
+        <div class="cb-wrap ${checked ? 'checked' : ''}" onclick="toggleCheck(${idx})"></div>
+      </td>
+      <td style="font-weight:600;max-width:280px">${item.theme}</td>
+      <td><span style="font-size:11px;background:rgba(0,212,255,.08);color:var(--accent-cyan);border:1px solid rgba(0,212,255,.2);border-radius:4px;padding:2px 8px;">${item.cat}</span></td>
+      <td style="font-size:12px;color:var(--text-muted)">${item.src}</td>
+      <td style="font-weight:700;color:${priColor}">${item.pri}</td>
+      <td>${statusMap[item.status] || ''}</td>
+      <td style="font-size:12px;color:var(--text-dim)">${item.date}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ======= 記事カード =======
+function renderArticles() {
+  const grid = document.getElementById('article-grid');
+  grid.innerHTML = '';
+  ARTICLES.forEach(a => {
+    const statusMap = {
+      done:    '<span class="status-pill status-done">✓ 生成完了</span>',
+      running: '<span class="status-pill status-running">⟳ 生成中</span>',
+      pending: '<span class="status-pill status-pending">待機中</span>',
+    };
+    const div = document.createElement('div');
+    div.className = 'article-card';
+    div.innerHTML = `
+      <div class="article-thumb">
+        ${a.emoji}
+        <div class="article-thumb-label">AI 生成サムネイル</div>
+      </div>
+      <div class="article-body">
+        <div style="margin-bottom:8px">${statusMap[a.status] || ''}</div>
+        <div class="article-title">${a.title}</div>
+        <div class="article-excerpt">${a.excerpt}</div>
+        <div class="article-tags">
+          ${a.tags.map(t => `<span class="article-tag">#${t}</span>`).join('')}
+        </div>
+        <div class="article-meta">
+          <span class="sched">📅 ${a.sched}</span>
+          <span>${a.wordCount}</span>
+        </div>
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+// ======= スケジュール =======
+function renderSchedule() {
+  const list = document.getElementById('cal-list');
+  list.innerHTML = '';
+  SCHEDULE.forEach(s => {
+    const statusMap = {
+      done:    '<span class="status-pill status-done">✓ 予約済み</span>',
+      running: '<span class="status-pill status-running">⟳ 投稿処理中</span>',
+      pending: '<span class="status-pill status-pending">待機中</span>',
+    };
+    const li = document.createElement('li');
+    li.className = 'cal-item';
+    li.innerHTML = `
+      <div class="cal-date">
+        <div class="month">${s.month}</div>
+        <div class="day">${s.day}</div>
+      </div>
+      <div class="cal-info">
+        <div class="cal-title">${s.title}</div>
+        <div class="cal-sub">
+          <span style="background:rgba(0,212,255,.08);color:var(--accent-cyan);border:1px solid rgba(0,212,255,.2);border-radius:4px;padding:1px 7px;font-size:10px;font-weight:700;margin-right:8px;">${s.tag}</span>
+          ${statusMap[s.status] || ''}
+        </div>
+      </div>
+      <div class="cal-time">${s.time}</div>
+    `;
+    list.appendChild(li);
+  });
+}
+
+// ======= 初期化 =======
+document.addEventListener('DOMContentLoaded', () => {
+  renderIdeas();
+});
+</script>
+</body>
+</html>
