@@ -24,18 +24,32 @@ document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
 (function() {
   var filterBtns = document.querySelectorAll('.filter-btn');
   var demoCards  = document.querySelectorAll('.demo-card');
+  var status     = document.getElementById('filter-status');
+
+  // initial aria state
+  filterBtns.forEach(function(b) {
+    b.setAttribute('aria-pressed', b.classList.contains('active') ? 'true' : 'false');
+  });
 
   filterBtns.forEach(function(btn) {
     btn.addEventListener('click', function() {
       // Update active state
-      filterBtns.forEach(function(b) { b.classList.remove('active'); });
+      filterBtns.forEach(function(b) {
+        b.classList.remove('active');
+        b.setAttribute('aria-pressed', 'false');
+      });
       this.classList.add('active');
+      this.setAttribute('aria-pressed', 'true');
 
       var genre = this.dataset.genre;
+      var shown = 0;
 
       demoCards.forEach(function(card) {
-        if (genre === 'all' || card.dataset.genre === genre) {
+        // a card can carry multiple space-separated genres (e.g. "AI LP")
+        var genres = (card.dataset.genre || '').split(' ');
+        if (genre === 'all' || genres.indexOf(genre) !== -1) {
           card.classList.remove('hidden');
+          shown++;
           // re-trigger reveal animation
           card.classList.remove('visible');
           void card.offsetWidth; // reflow
@@ -44,6 +58,11 @@ document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
           card.classList.add('hidden');
         }
       });
+
+      if (status) {
+        status.textContent = (genre === 'all' ? 'すべて' : this.textContent) +
+          'を表示中：' + shown + ' 件';
+      }
     });
   });
 })();
@@ -112,6 +131,13 @@ document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
   if (!el) return;
 
   var fullText = el.dataset.text || el.textContent;
+
+  // Respect reduced-motion: show the full text instantly, skip typing.
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    el.textContent = fullText;
+    return;
+  }
+
   el.textContent = '';
   var i = 0;
 

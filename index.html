@@ -3,12 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="なぎ - GAS・Python業務自動化エンジニア。繰り返し作業をコードで消します。クラウドワークスでご依頼受付中。">
-  <meta property="og:title" content="なぎ | 業務自動化エンジニア - GAS・Python">
-  <meta property="og:description" content="GAS・Pythonで業務を自動化。実際に動くデモで仕事の質をご確認ください。">
+  <meta name="description" content="なぎ｜業務自動化 × AI制作。営業・カスタマーサポートの実務経験を土台に、課題のヒアリングから実装・納品後の伴走まで一気通貫で対応します。GAS・Python・AIで業務を仕組み化。動く34本のデモで品質を確かめてからクラウドワークスでご依頼いただけます。">
+  <meta property="og:title" content="なぎ | 業務自動化 × AI制作エンジニア">
+  <meta property="og:description" content="営業・CSの現場経験を土台に、ヒアリングから実装・納品後の伴走まで一気通貫。GAS・Python・AIで業務を仕組み化します。">
   <meta property="og:type" content="website">
-  <title>なぎ | 業務自動化エンジニア - GAS・Python</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta property="og:url" content="https://nagilife0426-cyber.github.io/portfolio/">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="なぎ | 業務自動化 × AI制作エンジニア">
+  <meta name="twitter:description" content="営業・CSの現場経験を土台に、ヒアリングから実装・納品後の伴走まで一気通貫。GAS・Python・AIで業務を仕組み化します。">
+  <link rel="canonical" href="https://nagilife0426-cyber.github.io/portfolio/">
+  <title>なぎ | 業務自動化 × AI制作エンジニア</title>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "なぎ",
+    "alternateName": "nagi",
+    "url": "https://nagilife0426-cyber.github.io/portfolio/",
+    "jobTitle": "業務自動化エンジニア / AI制作",
+    "description": "営業・カスタマーサポートの実務経験を土台に、課題のヒアリングから実装・納品後の伴走まで一気通貫で対応する業務自動化エンジニア。GAS・Python・AIで業務を仕組み化する。",
+    "knowsAbout": ["業務自動化", "Google Apps Script", "Python", "AI", "Claude API", "スクレイピング", "Web制作", "ヒアリング", "要件定義", "カスタマーサポート"]
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="css/style.css?v=3">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
 </head>
 <body>
@@ -18,12 +38,14 @@
        ======================================== -->
   <nav class="nav">
     <div class="nav-inner">
-      <a href="#" class="nav-logo">&lt;<span>nagi</span> /&gt;</a>
+      <a href="#top" class="nav-logo">&lt;<span>nagi</span> /&gt;</a>
       <ul class="nav-links">
+        <li><a href="#about">About</a></li>
+        <li><a href="#strengths">強み</a></li>
+        <li><a href="#skills">技術</a></li>
+        <li><a href="#works">実績</a></li>
         <li><a href="#demos">デモ</a></li>
-        <li><a href="#categories">対応範囲</a></li>
-        <li><a href="#how">進め方</a></li>
-        <li><a href="#contact" class="nav-cta">依頼する</a></li>
+        <li><a href="#contact" class="nav-cta">相談する</a></li>
       </ul>
     </div>
   </nav>
@@ -36,30 +58,36 @@
     <div class="hero-grid"></div>
     <div class="container">
       <div class="hero-content">
+        <div class="hero-status fade-up">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span class="status-text">案件受付中</span>
+          <span class="status-sep">/</span>
+          <span class="status-sub">平均1営業日以内に返信</span>
+        </div>
         <p class="hero-eyebrow">
-          <span class="hero-eyebrow-text" data-text="業務自動化エンジニア / クラウドワークス">業務自動化エンジニア / クラウドワークス</span>
+          <span class="hero-eyebrow-text" data-text="なぎ / 業務自動化 × AI制作">なぎ / 業務自動化 × AI制作</span>
         </p>
         <h1 class="hero-title">
-          繰り返し作業を<br>
-          <span class="highlight">コードで消す</span>、<br>
-          自動化エンジニア。
+          現場の「困った」を、<br>
+          <span class="highlight">仕組みで解く。</span>
         </h1>
-        <p class="hero-description fade-up fade-up-delay-1">
-          毎日の集計・転記・通知・レポート作成——<br>
-          GAS と Python で「もうやらなくていい仕事」に変えます。<br>
-          実際に動くデモで品質を確認してからご依頼ください。
+        <p class="hero-lead fade-up fade-up-delay-1">聞いて、作って、納品後も伴走する。</p>
+        <p class="hero-description fade-up fade-up-delay-2">
+          営業とカスタマーサポートの実務経験が土台。だから“本当の困りごと”を掴み、
+          ヒアリングで要件を整理して、GAS・Python・AI で実装、定着まで伴走します。<br>
+          実際に動く 34 本のデモで、品質を確かめてからご依頼いただけます。
         </p>
-        <div class="hero-actions fade-up fade-up-delay-2">
-          <a href="#demos" class="btn-primary">
-            <span>デモを見る</span>
+        <div class="hero-actions fade-up fade-up-delay-3">
+          <a href="#works" class="btn-primary">
+            <span>実績を見る</span>
             <span>↓</span>
           </a>
           <a href="#contact" class="btn-secondary">
-            <span>クラウドワークスで依頼</span>
+            <span>クラウドワークスで相談</span>
             <span>→</span>
           </a>
         </div>
-        <div class="hero-stats fade-up fade-up-delay-3">
+        <div class="hero-stats fade-up fade-up-delay-4">
           <div class="stat-item">
             <span class="stat-num" data-target="34" data-suffix="+">34+</span>
             <span class="stat-label">デモ公開中</span>
@@ -70,7 +98,7 @@
           </div>
           <div class="stat-item">
             <span class="stat-num" data-target="100" data-suffix="%">100%</span>
-            <span class="stat-label">動作確認済み</span>
+            <span class="stat-label">ブラウザで動作</span>
           </div>
         </div>
       </div>
@@ -78,75 +106,231 @@
   </section>
 
   <!-- ========================================
-       Categories
+       About
        ======================================== -->
-  <section class="section categories" id="categories">
+  <section class="section about" id="about">
     <div class="container">
-      <p class="section-label">対応ジャンル</p>
-      <h2 class="section-title">7つの自動化領域</h2>
-      <p class="section-subtitle">小さな改善から業務全体の自動化まで、幅広い領域に対応します。</p>
-      <div class="categories-grid reveal">
-        <div class="category-card">
-          <span class="category-icon">📊</span>
-          <div class="category-name">GAS</div>
-          <div class="category-desc">Googleサービス連携・スプレッドシート自動化</div>
-        </div>
-        <div class="category-card">
-          <span class="category-icon">🐍</span>
-          <div class="category-name">Python</div>
-          <div class="category-desc">CSV処理・スクレイピング・バッチ処理</div>
-        </div>
-        <div class="category-card">
-          <span class="category-icon">📋</span>
-          <div class="category-name">VBA</div>
-          <div class="category-desc">Excel・Accessマクロ自動化</div>
-        </div>
-        <div class="category-card">
-          <span class="category-icon">🤖</span>
-          <div class="category-name">Bot</div>
-          <div class="category-desc">LINE・Slack通知自動化</div>
-        </div>
-        <div class="category-card">
-          <span class="category-icon">🌐</span>
-          <div class="category-name">LP</div>
-          <div class="category-desc">業種別レスポンシブLPテンプレート</div>
-        </div>
-        <div class="category-card">
-          <span class="category-icon">🔍</span>
-          <div class="category-name">スクレイピング</div>
-          <div class="category-desc">価格監視・競合調査・データ収集</div>
-        </div>
-        <div class="category-card">
-          <span class="category-icon">🤖</span>
-          <div class="category-name">AI制作</div>
-          <div class="category-desc">ChatGPT・Genspark活用のLP・画像生成ワークフロー</div>
+      <div class="section-head">
+        <span class="section-index">01</span>
+        <div>
+          <p class="section-label">About</p>
+          <h2 class="section-title">聞いて、作って、伴走する。</h2>
         </div>
       </div>
+      <div class="about-grid reveal">
+        <div class="about-body">
+          <p class="about-lead">営業とカスタマーサポートの現場で、お客さまの“困りごと”を聞き、解決まで伴走してきました。その経験を土台に、いまは業務自動化と AI 制作で課題を仕組みに変えています。</p>
+          <p>強みは、<strong>上流から下流まで一人で通せる</strong>こと。困りごとの本質を掴む問題把握、現場の言葉を“作れる仕様”に翻訳するヒアリング、GAS・Python・AI での実装、そして納品して終わりにしない伴走——コードだけの人には出しにくい距離感で、課題解決を一気通貫で担います。</p>
+          <p>完成で止めず、根本原因まで直して仕上げる。実データは預からずダミーで検証できるようにする。動くデモで先に品質を見てもらう。——派手な裏技よりも、<strong>再現性の高い現実解</strong>を選びます。</p>
+        </div>
+        <aside class="about-panel">
+          <div class="panel-head"><span class="panel-dot" aria-hidden="true"></span>profile.json</div>
+          <ul class="panel-list">
+            <li><span>背景</span><b>営業・カスタマーサポート</b></li>
+            <li><span>領域</span><b>業務自動化・AI制作</b></li>
+            <li><span>強み</span><b>問題把握〜実装〜伴走</b></li>
+            <li><span>稼働</span><b>非同期・オンデマンド</b></li>
+            <li><span>窓口</span><b>クラウドワークス</b></li>
+          </ul>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================
+       Strengths
+       ======================================== -->
+  <section class="section strengths" id="strengths">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-index">02</span>
+        <div>
+          <p class="section-label">Strengths</p>
+          <h2 class="section-title">選ばれる理由</h2>
+        </div>
+      </div>
+      <p class="section-subtitle">上流の課題把握から実装、納品後の伴走まで——“コードだけの人”では届かない距離感で、一気通貫に任せられます。</p>
+      <div class="strengths-grid reveal">
+        <article class="strength-card">
+          <span class="strength-step" aria-hidden="true">01</span>
+          <h3 class="strength-title">問題把握</h3>
+          <p class="strength-desc">営業・カスタマーサポートで数えきれない“困った”に向き合ってきました。表面の要望ではなく、本質の課題を掴みます。</p>
+          <span class="strength-tag">// 営業・CSの実務経験</span>
+        </article>
+        <article class="strength-card">
+          <span class="strength-step" aria-hidden="true">02</span>
+          <h3 class="strength-title">ヒアリング・要件化</h3>
+          <p class="strength-desc">専門用語に逃げず、現場の言葉で対話。あいまいな要望を“そのまま作れる仕様”へ翻訳します。</p>
+          <span class="strength-tag">// 認識のズレを潰す</span>
+        </article>
+        <article class="strength-card">
+          <span class="strength-step" aria-hidden="true">03</span>
+          <h3 class="strength-title">実装</h3>
+          <p class="strength-desc">GAS・Python・AI で、自分の手で形にする。提案だけ・コードだけで終わらせません。</p>
+          <span class="strength-tag">// 上流から下流まで一人で</span>
+        </article>
+        <article class="strength-card">
+          <span class="strength-step" aria-hidden="true">04</span>
+          <h3 class="strength-title">伴走</h3>
+          <p class="strength-desc">納品して終わりにしない。定着・改善・小さな修正まで、現場の隣で走り続けます。</p>
+          <span class="strength-tag">// 渡して終わりにしない</span>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================
+       Skills
+       ======================================== -->
+  <section class="section skills" id="skills">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-index">03</span>
+        <div>
+          <p class="section-label">Skills</p>
+          <h2 class="section-title">技術スタック</h2>
+        </div>
+      </div>
+      <p class="section-subtitle">小さな改善から業務全体の自動化、Web・AI 制作まで。手に馴染んだ道具で素早く形にします。</p>
+      <div class="skills-layout reveal">
+        <div class="skill-groups">
+          <div class="skill-group">
+            <h3 class="skill-group-title"><span class="dot dot-gas"></span>自動化 / RPA</h3>
+            <ul class="skill-tags">
+              <li>GAS</li><li>Python</li><li>VBA</li><li>n8n</li><li>Playwright</li><li>スクレイピング</li><li>定期実行トリガー</li>
+            </ul>
+          </div>
+          <div class="skill-group">
+            <h3 class="skill-group-title"><span class="dot dot-web"></span>Web / フロント</h3>
+            <ul class="skill-tags">
+              <li>HTML</li><li>CSS</li><li>JavaScript</li><li>TypeScript</li><li>Tailwind</li><li>Vite</li><li>Preact</li><li>LP制作</li>
+            </ul>
+          </div>
+          <div class="skill-group">
+            <h3 class="skill-group-title"><span class="dot dot-ai"></span>AI / LLM</h3>
+            <ul class="skill-tags">
+              <li>Claude API</li><li>ChatGPT</li><li>Genspark</li><li>Ollama（日本語）</li><li>プロンプト設計</li>
+            </ul>
+          </div>
+          <div class="skill-group">
+            <h3 class="skill-group-title"><span class="dot dot-data"></span>データ / 基盤</h3>
+            <ul class="skill-tags">
+              <li>Google Sheets API</li><li>Notion API</li><li>SQLite</li><li>GitHub Actions</li><li>Vercel</li><li>Docker</li>
+            </ul>
+          </div>
+        </div>
+        <aside class="principles">
+          <div class="panel-head"><span class="panel-dot"></span>design_principles</div>
+          <ul class="principle-list">
+            <li>ビルドレス・軽量・無課金を優先</li>
+            <li>実データは預からず、ダミーで検証可能に</li>
+            <li>半自動＋承認ゲート（最終判断は人）</li>
+            <li>テストと動くデモで信頼を作る</li>
+          </ul>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================
+       Works (featured projects)
+       ======================================== -->
+  <section class="section works" id="works">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-index">04</span>
+        <div>
+          <p class="section-label">Works</p>
+          <h2 class="section-title">主なプロジェクト</h2>
+        </div>
+      </div>
+      <p class="section-subtitle">受託のデモに加えて、自分でもプロダクトを作っています。設計から運用までの一例です。</p>
+      <div class="works-grid reveal">
+
+        <article class="work-card">
+          <div class="work-top">
+            <span class="work-kind">Product · 自動化</span>
+            <span class="work-status">稼働中</span>
+          </div>
+          <h3 class="work-title">AI情報 自動収集エンジン</h3>
+          <p class="work-desc">GitHub Actions が毎朝 AI 関連の最新情報を自動収集し、Claude が日本語で要約。SQLite に蓄積して全文検索できる、無人運用の情報基盤。収益事例の収集・採点まで拡張。</p>
+          <ul class="work-stack">
+            <li>Python</li><li>Claude API</li><li>GitHub Actions</li><li>SQLite</li>
+          </ul>
+        </article>
+
+        <article class="work-card">
+          <div class="work-top">
+            <span class="work-kind">Product · SaaS</span>
+            <span class="work-status work-status--wip">MVP / 検証中</span>
+          </div>
+          <h3 class="work-title">証憑整理 SaaS（自社開発）</h3>
+          <p class="work-desc">EC 事業者向けに、インボイス対応の証憑整理を自動化する SaaS を開発中。登録番号のチェックディジット検算・公的 API 照会を実装し、検証用 LP を公開してニーズを検証。</p>
+          <ul class="work-stack">
+            <li>Python</li><li>FastAPI</li><li>Claude API</li><li>Vercel</li>
+          </ul>
+        </article>
+
+        <article class="work-card">
+          <div class="work-top">
+            <span class="work-kind">Web App</span>
+            <span class="work-status">公開中</span>
+          </div>
+          <h3 class="work-title">在庫・仕入れ判断ツール</h3>
+          <p class="work-desc">中古ブランド品の在庫管理と仕入れ判断を支援する Web アプリ。Google Sheets を正データに、リアルタイム集計・利益判定・ダッシュボードを実装。45 件の自動テストで品質を担保。</p>
+          <ul class="work-stack">
+            <li>TypeScript</li><li>Preact</li><li>Vite</li><li>Tailwind</li>
+          </ul>
+        </article>
+
+        <article class="work-card">
+          <div class="work-top">
+            <span class="work-kind">System Design</span>
+            <span class="work-status">運用中</span>
+          </div>
+          <h3 class="work-title">AIエージェントチーム基盤</h3>
+          <p class="work-desc">実装・検証・レビュー・監査を担う複数の AI エージェントを役割分担で動かす基盤を設計。書き込みと検証を分離し、重要操作に承認ゲートを設けたガバナンス付き自動化。</p>
+          <ul class="work-stack">
+            <li>Claude API</li><li>オーケストレーション</li><li>ガバナンス設計</li>
+          </ul>
+        </article>
+
+      </div>
+      <p class="works-note">
+        このほか、Amazon セラー向けの AI 運用支援など、受託案件にも対応しています。
+        <a href="#demos" class="works-link">↓ 34 本の動くデモを見る</a>
+      </p>
     </div>
   </section>
 
   <!-- ========================================
        Demos
        ======================================== -->
-  <section class="section" id="demos">
+  <section class="section demos-section" id="demos">
     <div class="container">
-      <p class="section-label">制作実績・デモ</p>
-      <h2 class="section-title">動くデモ一覧</h2>
-      <p class="section-subtitle">すべて実際に動作します。「デモを見る」から挙動を確認してから依頼してください。</p>
+      <div class="section-head">
+        <span class="section-index">05</span>
+        <div>
+          <p class="section-label">Demos</p>
+          <h2 class="section-title">動くデモ一覧</h2>
+        </div>
+      </div>
+      <p class="section-subtitle">すべて実際に動作します。「デモを見る」から挙動を確認してからご依頼ください。</p>
 
       <!-- Filter bar -->
-      <div class="filter-bar">
+      <div class="filter-bar" role="group" aria-label="ジャンルで絞り込み">
         <span class="filter-label">絞り込み:</span>
-        <button class="filter-btn active" data-genre="all">すべて</button>
-        <button class="filter-btn" data-genre="GAS">GAS</button>
-        <button class="filter-btn" data-genre="Python">Python</button>
-        <button class="filter-btn" data-genre="VBA">VBA</button>
-        <button class="filter-btn" data-genre="Bot">Bot</button>
-        <button class="filter-btn" data-genre="LP">LP</button>
-        <button class="filter-btn" data-genre="Scraping">スクレイピング</button>
-        <button class="filter-btn" data-genre="AI">AI</button>
-        <button class="filter-btn" data-genre="Design">デザイン</button>
+        <button class="filter-btn active" data-genre="all" aria-pressed="true">すべて</button>
+        <button class="filter-btn" data-genre="GAS" aria-pressed="false">GAS</button>
+        <button class="filter-btn" data-genre="Python" aria-pressed="false">Python</button>
+        <button class="filter-btn" data-genre="VBA" aria-pressed="false">VBA</button>
+        <button class="filter-btn" data-genre="Bot" aria-pressed="false">Bot</button>
+        <button class="filter-btn" data-genre="LP" aria-pressed="false">LP</button>
+        <button class="filter-btn" data-genre="Scraping" aria-pressed="false">スクレイピング</button>
+        <button class="filter-btn" data-genre="AI" aria-pressed="false">AI</button>
+        <button class="filter-btn" data-genre="Design" aria-pressed="false">デザイン</button>
       </div>
+      <p class="sr-only" id="filter-status" aria-live="polite"></p>
 
       <!-- Demo Cards Grid -->
       <div class="demos-grid">
@@ -843,8 +1027,13 @@
        ======================================== -->
   <section class="section how-it-works" id="how">
     <div class="container">
-      <p class="section-label">仕事の進め方</p>
-      <h2 class="section-title">3ステップで完結</h2>
+      <div class="section-head">
+        <span class="section-index">06</span>
+        <div>
+          <p class="section-label">Process</p>
+          <h2 class="section-title">3ステップで完結</h2>
+        </div>
+      </div>
       <p class="section-subtitle">要件のすり合わせから納品まで、シンプルなフローで進めます。</p>
       <div class="steps-container reveal">
         <div class="step-card">
@@ -933,6 +1122,6 @@
     </div>
   </footer>
 
-  <script src="js/main.js"></script>
+  <script src="js/main.js?v=2"></script>
 </body>
 </html>
