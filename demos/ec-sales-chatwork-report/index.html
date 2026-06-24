@@ -1,0 +1,1733 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EC売上 日次レポート → Chatwork 自動通知（デモ）</title>
+<style>
+  /* ======== リセット・ベース ======== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --accent-cyan:   #00d4ff;
+    --accent-purple: #7c3aed;
+    --accent-amber:  #f59e0b;
+    --accent-green:  #10b981;
+    --accent-red:    #ef4444;
+    --accent-orange: #f97316;
+    --bg-primary:    #0a0a0f;
+    --bg-surface:    #12121a;
+    --bg-card:       #1a1a26;
+    --bg-card2:      #1f1f2e;
+    --border:        #2a2a40;
+    --border-light:  #333350;
+    --text:          #e8e8f0;
+    --text-muted:    #8888aa;
+    --text-dim:      #555570;
+    --radius:        12px;
+    --shadow:        0 2px 12px rgba(0,0,0,.4);
+    --shadow-glow:   0 0 24px rgba(0,212,255,.1);
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Meiryo', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ======== ナビゲーション ======== */
+  .nav {
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .nav-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .nav-back {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color .2s;
+  }
+  .nav-back:hover { color: var(--text); }
+  .nav-title { font-size: 15px; font-weight: 700; }
+  .nav-badges { display: flex; gap: 8px; }
+  .badge {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .3px;
+  }
+  .badge-ai {
+    background: rgba(124,58,237,.2);
+    color: var(--accent-purple);
+    border: 1px solid rgba(124,58,237,.4);
+  }
+  .badge-bot {
+    background: rgba(245,158,11,.15);
+    color: var(--accent-amber);
+    border: 1px solid rgba(245,158,11,.35);
+  }
+  .badge-demo {
+    background: rgba(0,212,255,.1);
+    color: var(--accent-cyan);
+    border: 1px solid rgba(0,212,255,.25);
+  }
+  .nav-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent-green);
+    box-shadow: 0 0 0 3px rgba(16,185,129,.25);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(16,185,129,.25); }
+    50%       { box-shadow: 0 0 0 6px rgba(16,185,129,.1); }
+  }
+
+  /* ======== ヒーロー ======== */
+  .hero {
+    background: linear-gradient(135deg, #0d0d1a 0%, #0a0a0f 40%, #0d0820 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 40px 24px 36px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 200px;
+    background: radial-gradient(ellipse, rgba(0,212,255,.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-icon { font-size: 48px; margin-bottom: 16px; line-height: 1; }
+  .hero h1 {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-sub {
+    font-size: 15px;
+    color: var(--text-muted);
+    max-width: 580px;
+    margin: 0 auto 24px;
+    line-height: 1.7;
+  }
+  .hero-chips {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .hero-chip {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .hero-chip span { color: var(--accent-cyan); }
+
+  /* ======== パイプライン図 ======== */
+  .pipeline-section {
+    max-width: 1100px;
+    margin: 40px auto 0;
+    padding: 0 24px;
+  }
+  .section-heading {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-heading::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .pipeline-flow {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+    gap: 0;
+    margin-bottom: 40px;
+    align-items: stretch;
+  }
+  @media (max-width: 768px) {
+    .pipeline-flow { grid-template-columns: 1fr; }
+    .pipeline-connector { display: none; }
+  }
+
+  .pipeline-step {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 18px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .pipeline-step:hover {
+    border-color: var(--border-light);
+    box-shadow: var(--shadow-glow);
+  }
+  .pipeline-step.highlight {
+    border-color: rgba(0,212,255,.4);
+    box-shadow: 0 0 20px rgba(0,212,255,.12);
+  }
+  .pipeline-connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    flex-shrink: 0;
+  }
+  .pipeline-arrow { color: var(--accent-cyan); font-size: 20px; opacity: .6; }
+
+  .step-layer {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    color: var(--accent-cyan);
+    background: rgba(0,212,255,.1);
+    border: 1px solid rgba(0,212,255,.2);
+    border-radius: 4px;
+    padding: 2px 7px;
+    display: inline-block;
+    margin-bottom: 12px;
+  }
+  .step-layer.purple {
+    color: var(--accent-purple);
+    background: rgba(124,58,237,.1);
+    border-color: rgba(124,58,237,.3);
+  }
+  .step-icon { font-size: 32px; margin-bottom: 10px; line-height: 1; }
+  .step-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .step-desc  { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+  .step-tech  { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 5px; }
+  .step-tech-tag {
+    font-size: 10px;
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 7px;
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+
+  /* ======== タブナビ ======== */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px 40px;
+  }
+  .tab-nav {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+  }
+  .tab-btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 9px 14px;
+    border: none;
+    background: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: all .2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .tab-btn:hover { background: var(--bg-card2); color: var(--text); }
+  .tab-btn.active {
+    background: linear-gradient(135deg, rgba(0,212,255,.18), rgba(124,58,237,.18));
+    color: var(--accent-cyan);
+    border: 1px solid rgba(0,212,255,.25);
+  }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* ======== カード共通 ======== */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .card-title { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .card-body  { padding: 18px; }
+
+  /* ======== テーブル ======== */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    white-space: nowrap;
+  }
+  td {
+    padding: 11px 14px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,.015); }
+
+  /* ======== ステータスピル ======== */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .pill-green  { background: rgba(16,185,129,.15);  color: #34d399; }
+  .pill-amber  { background: rgba(245,158,11,.12);  color: var(--accent-amber); }
+  .pill-cyan   { background: rgba(0,212,255,.12);   color: var(--accent-cyan); }
+  .pill-red    { background: rgba(239,68,68,.12);   color: var(--accent-red); }
+  .pill-purple { background: rgba(124,58,237,.15);  color: #a78bfa; }
+  .pill-orange { background: rgba(249,115,22,.15);  color: var(--accent-orange); }
+
+  /* ======== KPIカードグリッド ======== */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .kpi-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 18px 16px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .kpi-card:hover { border-color: var(--border-light); box-shadow: var(--shadow-glow); }
+  .kpi-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .kpi-label-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .kpi-value { font-size: 26px; font-weight: 800; line-height: 1.1; margin-bottom: 6px; }
+  .kpi-sub   { font-size: 11px; color: var(--text-muted); }
+  .kpi-trend { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; margin-top: 6px; }
+  .kpi-trend.up   { color: var(--accent-green); }
+  .kpi-trend.down { color: var(--accent-red); }
+
+  /* ======== チャンネル別カード ======== */
+  .channel-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 680px) { .channel-grid { grid-template-columns: 1fr; } }
+  .channel-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .channel-card:hover { border-color: var(--border-light); box-shadow: var(--shadow-glow); }
+  .channel-card-head {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .channel-logo {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .channel-name { font-size: 14px; font-weight: 700; }
+  .channel-body { padding: 14px 16px; }
+  .channel-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .channel-row:last-child { border-bottom: none; }
+  .channel-row-label { color: var(--text-muted); }
+  .channel-row-val   { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* ======== 商品TOP3 ======== */
+  .top-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .top-item {
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .top-rank {
+    min-width: 30px; height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .top-rank.r1 { background: linear-gradient(135deg,#f59e0b,#d97706); color: #000; }
+  .top-rank.r2 { background: linear-gradient(135deg,#9ca3af,#6b7280); color: #000; }
+  .top-rank.r3 { background: linear-gradient(135deg,#a16207,#78350f); color: #fff; }
+  .top-info  { flex: 1; }
+  .top-name  { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+  .top-ch    { font-size: 11px; color: var(--text-muted); }
+  .top-sales { font-size: 14px; font-weight: 800; color: var(--accent-cyan); white-space: nowrap; }
+
+  /* ======== Chatworkモックアップ ======== */
+  .cw-room-wrap {
+    background: #2c2c2c;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,.5);
+    max-width: 680px;
+    margin: 0 auto;
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Meiryo', sans-serif;
+  }
+  .cw-topbar {
+    background: #1e1e1e;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #3a3a3a;
+  }
+  .cw-room-icon {
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #e00078, #ff4aa5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .cw-room-name { font-size: 14px; font-weight: 700; color: #f0f0f0; }
+  .cw-room-sub  { font-size: 11px; color: #888; }
+  .cw-messages  { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .cw-msg {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .cw-avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .cw-avatar-bot { background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); color: #000; font-size: 14px; }
+  .cw-bubble-wrap { flex: 1; }
+  .cw-sender {
+    font-size: 12px;
+    font-weight: 700;
+    color: #ccc;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cw-ts { font-size: 10px; color: #666; font-weight: 400; }
+  .cw-bubble {
+    background: #3a3a3a;
+    border-radius: 0 10px 10px 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #e8e8e8;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  /* Chatwork記法風 */
+  .cw-info-block {
+    background: #2a2a2a;
+    border: 1px solid #4a4a4a;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .cw-info-title {
+    background: #444;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #e00078;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .cw-info-body { padding: 12px 14px; font-size: 12px; color: #d0d0d0; line-height: 1.8; white-space: pre-wrap; }
+  .cw-msg-older {
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    opacity: .55;
+  }
+  .cw-msg-older .cw-bubble { background: var(--bg-card); color: var(--text-muted); font-size: 12px; }
+  .cw-divider {
+    text-align: center;
+    font-size: 11px;
+    color: #555;
+    padding: 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cw-divider::before, .cw-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #3a3a3a;
+  }
+
+  /* ======== Cronスケジュール ======== */
+  .sched-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .sched-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(0,212,255,.15), rgba(124,58,237,.15));
+    border: 1px solid rgba(0,212,255,.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .sched-info { flex: 1; }
+  .sched-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .sched-detail { font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+  .sched-cron {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px;
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 14px;
+    color: var(--accent-cyan);
+    display: inline-block;
+    margin-top: 8px;
+  }
+
+  /* ======== フッター ======== */
+  .demo-notice {
+    text-align: center;
+    padding: 16px;
+    font-size: 11px;
+    color: var(--text-dim);
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border);
+  }
+
+  /* ======== 制作仕様セクション ======== */
+  .spec-section {
+    background: linear-gradient(180deg, #0d0d1a 0%, #0a0a0f 100%);
+    border-top: 1px solid var(--border);
+    padding: 56px 24px 64px;
+  }
+  .spec-inner { max-width: 1100px; margin: 0 auto; }
+  .spec-heading {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .spec-heading-sub {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 48px;
+    line-height: 1.7;
+  }
+  .spec-block-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .spec-block-title::before {
+    content: '';
+    display: inline-block;
+    width: 4px; height: 20px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple));
+    flex-shrink: 0;
+  }
+
+  /* 1. アーキテクチャ図 */
+  .spec-arch {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 24px 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 36px;
+  }
+  .spec-arch-flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    flex-wrap: wrap;
+    row-gap: 16px;
+    justify-content: center;
+    margin-top: 12px;
+  }
+  .spec-arch-node {
+    background: var(--bg-card2);
+    border: 1.5px solid var(--border-light);
+    border-radius: 12px;
+    padding: 18px 16px;
+    text-align: center;
+    min-width: 150px;
+    flex: 1 1 150px;
+    max-width: 210px;
+    transition: border-color .2s;
+  }
+  .spec-arch-node:hover { border-color: var(--accent-cyan); }
+  .spec-arch-node.final-node { border-color: rgba(124,58,237,.5); }
+  .spec-arch-node.final-node:hover { border-color: var(--accent-purple); }
+  .spec-node-layer { font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--accent-purple); margin-bottom: 8px; }
+  .spec-node-icon  { font-size: 28px; margin-bottom: 8px; line-height: 1; }
+  .spec-node-name  { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .spec-node-desc  { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+  .spec-arch-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+    font-size: 22px;
+    color: var(--accent-cyan);
+    opacity: .5;
+    flex-shrink: 0;
+    align-self: center;
+  }
+  @media (max-width: 640px) {
+    .spec-arch-flow { flex-direction: column; align-items: center; }
+    .spec-arch-arrow { transform: rotate(90deg); padding: 4px 0; }
+    .spec-arch-node { max-width: 100%; width: 100%; }
+  }
+
+  /* 2. 技術スタック */
+  .spec-tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 36px;
+  }
+  .spec-tech-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    transition: border-color .2s;
+  }
+  .spec-tech-card:hover { border-color: var(--border-light); }
+  .spec-tech-icon { font-size: 24px; margin-bottom: 10px; }
+  .spec-tech-name { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .spec-tech-role { font-size: 12px; color: var(--accent-cyan); font-weight: 600; margin-bottom: 8px; }
+  .spec-tech-body { font-size: 12px; color: var(--text-muted); line-height: 1.65; }
+
+  /* 3. 実コードサンプル */
+  .spec-code-block {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .spec-code-header {
+    background: #161b22;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #30363d;
+  }
+  .spec-code-lang {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent-amber);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .spec-code-desc { font-size: 11px; color: #8b949e; }
+  .spec-code-body {
+    padding: 16px;
+    font-family: 'Courier New', 'Menlo', 'Monaco', Courier, monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #c9d1d9;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .code-comment { color: #8b949e; }
+  .code-keyword { color: #ff7b72; }
+  .code-string  { color: #a5d6ff; }
+  .code-func    { color: #d2a8ff; }
+  .code-var     { color: #79c0ff; }
+  .code-num     { color: #f2cc60; }
+
+  /* 4. 処理フロー */
+  .spec-steps {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 36px;
+  }
+  .spec-step-list { list-style: none; display: flex; flex-direction: column; }
+  .spec-step-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .spec-step-item:last-child { border-bottom: none; }
+  .spec-step-num {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    color: #000;
+    font-size: 14px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .spec-step-text { font-size: 14px; line-height: 1.7; color: var(--text); }
+  .spec-step-text strong { color: var(--accent-cyan); }
+
+  /* 5. 運用イメージ */
+  .spec-ops-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin-bottom: 36px;
+  }
+  .spec-ops-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 20px;
+    transition: border-color .2s;
+  }
+  .spec-ops-card:hover { border-color: var(--border-light); }
+  .spec-ops-icon  { font-size: 24px; margin-bottom: 10px; }
+  .spec-ops-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .spec-ops-body  { font-size: 12px; color: var(--text-muted); line-height: 1.65; }
+
+  /* 6. 費用感 */
+  .spec-cost {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 36px;
+  }
+  .spec-cost-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-top: 12px;
+  }
+  .spec-cost-item {
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .cost-service { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+  .cost-price   { font-size: 18px; font-weight: 800; color: var(--accent-cyan); }
+  .cost-note    { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
+
+  /* 7. 制作の進め方 */
+  .spec-process {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 24px;
+    box-shadow: var(--shadow);
+  }
+  .spec-process-flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    flex-wrap: wrap;
+    row-gap: 16px;
+    justify-content: center;
+    margin-top: 12px;
+  }
+  .spec-proc-node {
+    flex: 1 1 180px;
+    max-width: 240px;
+    background: var(--bg-card2);
+    border: 1.5px solid var(--border-light);
+    border-radius: 12px;
+    padding: 20px 16px;
+    text-align: center;
+  }
+  .spec-proc-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    color: #000;
+    font-size: 13px;
+    font-weight: 800;
+    margin-bottom: 10px;
+  }
+  .spec-proc-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .spec-proc-body  { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+  .spec-proc-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    font-size: 20px;
+    color: var(--accent-cyan);
+    opacity: .5;
+    flex-shrink: 0;
+    align-self: center;
+  }
+  @media (max-width: 640px) {
+    .spec-process-flow { flex-direction: column; align-items: center; }
+    .spec-proc-arrow { transform: rotate(90deg); padding: 4px 0; }
+    .spec-proc-node  { max-width: 100%; width: 100%; }
+  }
+  .spec-delivery-note {
+    margin-top: 20px;
+    background: linear-gradient(135deg, rgba(0,212,255,.06), rgba(124,58,237,.06));
+    border: 1px solid rgba(0,212,255,.2);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.7;
+  }
+  .spec-delivery-note strong { color: var(--accent-cyan); }
+
+  /* ======== レスポンシブ ======== */
+  @media (max-width: 640px) {
+    .hero h1 { font-size: 22px; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+    .spec-tech-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 420px) {
+    .kpi-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ======== ナビゲーション ======== -->
+<nav class="nav">
+  <div class="nav-left">
+    <a class="nav-back" href="../../index.html">← ポートフォリオに戻る</a>
+    <span class="nav-title">📊 EC売上 Chatwork 自動通知</span>
+  </div>
+  <div class="nav-badges">
+    <span class="badge badge-bot">Bot</span>
+    <span class="badge badge-ai">AI</span>
+    <span class="badge badge-demo">DEMO</span>
+  </div>
+  <div class="nav-status">
+    <span class="dot"></span>
+    毎朝 08:00 自動送信
+  </div>
+</nav>
+
+<!-- ======== ヒーロー ======== -->
+<div class="hero">
+  <div class="hero-icon">📊</div>
+  <h1>EC売上 日次レポート → Chatwork 自動通知</h1>
+  <p class="hero-sub">
+    Amazon・楽天・TikTok Shop の売上を毎朝集計し、<br>
+    整形された日次レポートを Chatwork へ自動 Post。手集計ゼロへ。
+  </p>
+  <div class="hero-chips">
+    <div class="hero-chip">🛍️ <span>マルチモール対応</span></div>
+    <div class="hero-chip">⏰ <span>毎朝 08:00 定時実行</span></div>
+    <div class="hero-chip">💬 <span>Chatwork API 自動投稿</span></div>
+    <div class="hero-chip">📈 <span>粗利・ACoS・前日比を自動算出</span></div>
+  </div>
+</div>
+
+<!-- ======== パイプライン図 ======== -->
+<div class="pipeline-section">
+  <div class="section-heading">4 ステップ パイプライン</div>
+  <div class="pipeline-flow">
+    <div class="pipeline-step">
+      <div class="step-layer">STEP 1</div>
+      <div class="step-icon">🔌</div>
+      <div class="step-title">売上データ取得</div>
+      <div class="step-desc">各モール API（Amazon SP-API・楽天 RMS・TikTok Shop API）から前日分の売上・注文データを自動取得。申請前はレポート CSV 取込で先行稼働。</div>
+      <div class="step-tech">
+        <span class="step-tech-tag">Amazon SP-API</span>
+        <span class="step-tech-tag">楽天 RMS</span>
+        <span class="step-tech-tag">TikTok Shop API</span>
+        <span class="step-tech-tag">CSV 取込</span>
+      </div>
+    </div>
+    <div class="pipeline-connector"><div class="pipeline-arrow">→</div></div>
+    <div class="pipeline-step">
+      <div class="step-layer">STEP 2</div>
+      <div class="step-icon">⚙️</div>
+      <div class="step-title">集計・加工</div>
+      <div class="step-desc">チャンネル別に売上・粗利・手数料・広告費を集計し、ACoS・粗利率・前日比を自動算出。スプレッドシートへ蓄積してトレンド管理も可能。</div>
+      <div class="step-tech">
+        <span class="step-tech-tag">GAS / Python</span>
+        <span class="step-tech-tag">Google Sheets</span>
+        <span class="step-tech-tag">SQLite</span>
+      </div>
+    </div>
+    <div class="pipeline-connector"><div class="pipeline-arrow">→</div></div>
+    <div class="pipeline-step">
+      <div class="step-layer">STEP 3</div>
+      <div class="step-icon">📝</div>
+      <div class="step-title">日次レポート生成</div>
+      <div class="step-desc">集計値をもとに Chatwork 記法（[info][title]…[/title]…[/info]）で整形されたレポートメッセージを自動生成。数値の前日比で ▲/▼ を自動付与。</div>
+      <div class="step-tech">
+        <span class="step-tech-tag">Chatwork 記法</span>
+        <span class="step-tech-tag">テンプレート</span>
+        <span class="step-tech-tag">フォーマット関数</span>
+      </div>
+    </div>
+    <div class="pipeline-connector"><div class="pipeline-arrow">→</div></div>
+    <div class="pipeline-step highlight">
+      <div class="step-layer purple">STEP 4 — 通知</div>
+      <div class="step-icon">💬</div>
+      <div class="step-title">Chatwork へ自動 Post</div>
+      <div class="step-desc">Chatwork API（POST /v2/rooms/{ROOM_ID}/messages）へリクエスト送信。毎朝 08:00 に GAS トリガーまたは cron で自動実行。チームに届く。</div>
+      <div class="step-tech">
+        <span class="step-tech-tag">Chatwork API</span>
+        <span class="step-tech-tag">GASトリガー</span>
+        <span class="step-tech-tag">cron</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== タブ UI ======== -->
+<div class="container">
+  <nav class="tab-nav" role="tablist">
+    <button class="tab-btn active" onclick="switchTab('report')" id="tab-report">
+      📊 日次レポート
+    </button>
+    <button class="tab-btn" onclick="switchTab('chatwork')" id="tab-chatwork">
+      💬 Chatwork 通知
+    </button>
+    <button class="tab-btn" onclick="switchTab('schedule')" id="tab-schedule">
+      ⏰ 自動実行ログ
+    </button>
+  </nav>
+
+  <!-- ========== 日次レポートパネル ========== -->
+  <div class="tab-pane active" id="pane-report">
+
+    <!-- KPI サマリー -->
+    <div class="section-heading" style="margin-bottom:16px">6/24（火）昨日の集計サマリー</div>
+    <div class="kpi-grid" id="kpi-grid"></div>
+
+    <!-- チャンネル別カード -->
+    <div class="section-heading" style="margin-bottom:16px">チャンネル別 内訳</div>
+    <div class="channel-grid" id="channel-grid"></div>
+
+    <!-- 商品 TOP3 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🏆 売上 TOP3 商品（全チャンネル合計）</div>
+        <span style="font-size:12px;color:var(--text-muted)">6/23（月）実績 — ダミーデータ</span>
+      </div>
+      <div class="card-body">
+        <ul class="top-list" id="top-list"></ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========== Chatwork 通知モックアップ ========== -->
+  <div class="tab-pane" id="pane-chatwork">
+    <div class="section-heading" style="margin-bottom:16px">毎朝 08:00 に届く通知のイメージ（モックアップ）</div>
+
+    <div class="cw-room-wrap">
+      <!-- トップバー -->
+      <div class="cw-topbar">
+        <div class="cw-room-icon">💹</div>
+        <div>
+          <div class="cw-room-name">EC売上 日次レポート</div>
+          <div class="cw-room-sub">メンバー: 4人 ／ 自動Bot送信</div>
+        </div>
+      </div>
+
+      <!-- メッセージエリア -->
+      <div class="cw-messages">
+
+        <!-- 前日の古いメッセージ（薄表示） -->
+        <div class="cw-divider">昨日 — 6/22（日）</div>
+        <div class="cw-msg-older">
+          <div class="cw-avatar cw-avatar-bot">🤖</div>
+          <div class="cw-bubble-wrap">
+            <div class="cw-sender">EC売上Bot <span class="cw-ts">08:00</span></div>
+            <div class="cw-bubble">📊 6/22 売上レポート ｜ 売上¥487,300（前日比 +3.2%）…</div>
+          </div>
+        </div>
+
+        <div class="cw-divider">本日 — 6/23（月）</div>
+
+        <!-- 本日のBot投稿（メイン） -->
+        <div class="cw-msg">
+          <div class="cw-avatar cw-avatar-bot">🤖</div>
+          <div class="cw-bubble-wrap">
+            <div class="cw-sender">EC売上Bot <span class="cw-ts">08:00</span></div>
+            <div class="cw-bubble">
+              <div class="cw-info-block">
+                <div class="cw-info-title">📊 6/23（月）EC売上 日次レポート</div>
+                <div class="cw-info-body" id="cw-message-body"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 返信例 -->
+        <div class="cw-msg" style="padding-left:44px;">
+          <div class="cw-avatar" style="background:#4a90e2;color:#fff;font-size:14px;font-weight:700;width:30px;height:30px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:50%;">田</div>
+          <div class="cw-bubble-wrap">
+            <div class="cw-sender" style="font-size:11px;">田中（EC担当） <span class="cw-ts">08:14</span></div>
+            <div class="cw-bubble" style="font-size:12px;background:#3a3a3a;">確認しました。Amazon のACoSが改善してますね！広告予算の最適化が効いてきたかも。</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div style="margin-top:16px;font-size:12px;color:var(--text-dim);text-align:center;">
+      ※ Chatwork の実際の UI とは異なります。メッセージ内容はダミーデータです。
+    </div>
+  </div>
+
+  <!-- ========== 自動実行ログ ========== -->
+  <div class="tab-pane" id="pane-schedule">
+    <div class="sched-card" style="margin-bottom:20px;">
+      <div class="sched-icon">⏰</div>
+      <div class="sched-info">
+        <div class="sched-title">毎朝 08:00 定時実行（月〜日）</div>
+        <div class="sched-detail">
+          GAS タイムドリガー または cron で毎朝自動起動。前日 00:00〜23:59 の売上を集計し、Chatwork へ自動送信します。
+          <div class="sched-cron">0 8 * * *　　# cron 設定（毎日 8:00）</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📋 実行ログ（直近7日）</div>
+        <span class="pill pill-green">● 全件成功</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>実行日時</th>
+              <th>集計日</th>
+              <th>総売上</th>
+              <th>前日比</th>
+              <th>取得モール</th>
+              <th>通知先ルーム</th>
+              <th>ステータス</th>
+              <th>処理時間</th>
+            </tr>
+          </thead>
+          <tbody id="log-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="demo-notice">
+  ⚠️ これはデモ画面です。実際の API は呼ばれておらず、すべてダミーデータです。<br>
+  実装では各ステップがリアルタイムに連携し、Chatwork へ自動投稿されます。
+</div>
+
+<!-- ======== 制作仕様・自動化の仕組みセクション ======== -->
+<section class="spec-section" id="spec-section">
+  <div class="spec-inner">
+
+    <div class="spec-heading">📋 制作仕様・自動化の仕組み</div>
+    <p class="spec-heading-sub">
+      このシステムがどう動くか、使用技術、実コード、運用イメージ、費用感、制作の流れをご説明します。
+    </p>
+
+    <!-- 1. アーキテクチャ -->
+    <div class="spec-block-title">1. システムアーキテクチャ（4ステップ構成）</div>
+    <div class="spec-arch">
+      <div class="spec-arch-flow">
+        <div class="spec-arch-node">
+          <div class="spec-node-layer">STEP1 — FETCH</div>
+          <div class="spec-node-icon">🔌</div>
+          <div class="spec-node-name">売上データ取得</div>
+          <div class="spec-node-desc">各モール API から前日分の売上・注文・広告データを自動取得。API 申請前は CSV 取込で先行稼働</div>
+        </div>
+        <div class="spec-arch-arrow">→</div>
+        <div class="spec-arch-node">
+          <div class="spec-node-layer">STEP2 — AGGREGATE</div>
+          <div class="spec-node-icon">⚙️</div>
+          <div class="spec-node-name">集計・加工</div>
+          <div class="spec-node-desc">売上・粗利・手数料・広告費・ACoS・前日比を算出。スプレッドシートへ蓄積しトレンド管理</div>
+        </div>
+        <div class="spec-arch-arrow">→</div>
+        <div class="spec-arch-node">
+          <div class="spec-node-layer">STEP3 — FORMAT</div>
+          <div class="spec-node-icon">📝</div>
+          <div class="spec-node-name">レポート生成</div>
+          <div class="spec-node-desc">Chatwork 記法 [info][title]…[/title]…[/info] で整形された投稿文を自動生成</div>
+        </div>
+        <div class="spec-arch-arrow">→</div>
+        <div class="spec-arch-node final-node">
+          <div class="spec-node-layer">STEP4 — NOTIFY</div>
+          <div class="spec-node-icon">💬</div>
+          <div class="spec-node-name">Chatwork 自動 Post</div>
+          <div class="spec-node-desc">Chatwork API へ POST リクエスト送信。GAS タイマーまたは cron で毎朝 08:00 自動実行</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 技術スタック -->
+    <div class="spec-block-title">2. 使用技術スタック</div>
+    <div class="spec-tech-grid">
+      <div class="spec-tech-card">
+        <div class="spec-tech-icon">🛍️</div>
+        <div class="spec-tech-name">各モール API</div>
+        <div class="spec-tech-role">売上データ取得元</div>
+        <div class="spec-tech-body">Amazon SP-API・楽天 RMS API・TikTok Shop API から前日分を自動取得。API 申請前はセラーセントラルの CSVレポートを自動読込で先行稼働できます。</div>
+      </div>
+      <div class="spec-tech-card">
+        <div class="spec-tech-icon">📊</div>
+        <div class="spec-tech-name">Google Sheets / GAS</div>
+        <div class="spec-tech-role">集計・蓄積・定時実行</div>
+        <div class="spec-tech-body">集計エンジンは GAS スクリプトで実装。スプレッドシートに日次データを蓄積しトレンド確認が可能。GAS のタイムドリガーで毎朝 08:00 に自動起動します。</div>
+      </div>
+      <div class="spec-tech-card">
+        <div class="spec-tech-icon">🐍</div>
+        <div class="spec-tech-name">Python</div>
+        <div class="spec-tech-role">代替バックエンド</div>
+        <div class="spec-tech-body">GAS の代わりに Python（requests + pandas）でも実装可能。サーバー環境があれば cron で同様に定時実行できます。既存システムへの組み込みに最適です。</div>
+      </div>
+      <div class="spec-tech-card">
+        <div class="spec-tech-icon">💬</div>
+        <div class="spec-tech-name">Chatwork API</div>
+        <div class="spec-tech-role">通知・メッセージ送信</div>
+        <div class="spec-tech-body">Chatwork 公式 API（POST /v2/rooms/{ROOM_ID}/messages）を使用。ヘッダに X-ChatWorkToken を設定するだけで指定ルームへメッセージを投稿できます。無料プランで利用可。</div>
+      </div>
+      <div class="spec-tech-card">
+        <div class="spec-tech-icon">🔔</div>
+        <div class="spec-tech-name">GAS タイムドリガー / cron</div>
+        <div class="spec-tech-role">定時実行エンジン</div>
+        <div class="spec-tech-body">GAS 版は GUI でトリガー設定するだけでサーバー不要。Python 版は VPS や Cloud Run に cron を設定します。どちらも毎朝 08:00 に確実に実行されます。</div>
+      </div>
+      <div class="spec-tech-card">
+        <div class="spec-tech-icon">📈</div>
+        <div class="spec-tech-name">Chatwork 記法</div>
+        <div class="spec-tech-role">メッセージ整形</div>
+        <div class="spec-tech-body">[info][title]…[/title]…[/info] 記法を使い、タイトル付きのボックス形式で見やすいレポートを生成。前日比の ▲/▼ 自動付与で一目で数値変化がわかります。</div>
+      </div>
+    </div>
+
+    <!-- 3. 実コードサンプル -->
+    <div class="spec-block-title">3. 実装コードサンプル（信頼の核）</div>
+
+    <!-- GAS版 Chatwork送信 -->
+    <div class="spec-code-block">
+      <div class="spec-code-header">
+        <span class="spec-code-lang">⚙️ Google Apps Script（GAS）</span>
+        <span class="spec-code-desc">Chatwork へメッセージ送信する関数</span>
+      </div>
+      <div class="spec-code-body"><span class="code-comment">// ==============================
+// Chatwork 投稿関数（GAS版）
+// ==============================</span>
+
+<span class="code-keyword">const</span> <span class="code-var">CW_TOKEN</span>   = <span class="code-string">'YOUR_CHATWORK_TOKEN'</span>;  <span class="code-comment">// Chatwork API トークン（プレースホルダ）</span>
+<span class="code-keyword">const</span> <span class="code-var">CW_ROOM_ID</span> = <span class="code-string">'YOUR_ROOM_ID'</span>;          <span class="code-comment">// 送信先ルーム ID（プレースホルダ）</span>
+
+<span class="code-keyword">function</span> <span class="code-func">postToChatwork</span>(<span class="code-var">message</span>) {
+  <span class="code-keyword">const</span> <span class="code-var">url</span>     = <span class="code-string">`https://api.chatwork.com/v2/rooms/<span class="code-var">${CW_ROOM_ID}</span>/messages`</span>;
+  <span class="code-keyword">const</span> <span class="code-var">options</span> = {
+    <span class="code-var">method</span>:  <span class="code-string">'POST'</span>,
+    <span class="code-var">headers</span>: { <span class="code-string">'X-ChatWorkToken'</span>: <span class="code-var">CW_TOKEN</span> },
+    <span class="code-var">payload</span>: { <span class="code-var">body</span>: <span class="code-var">message</span> },
+    <span class="code-var">muteHttpExceptions</span>: <span class="code-keyword">true</span>,
+  };
+  <span class="code-keyword">const</span> <span class="code-var">res</span> = UrlFetchApp.<span class="code-func">fetch</span>(<span class="code-var">url</span>, <span class="code-var">options</span>);
+  Logger.<span class="code-func">log</span>(<span class="code-string">'Chatwork 送信結果: '</span> + <span class="code-var">res</span>.<span class="code-func">getResponseCode</span>());
+}
+
+<span class="code-comment">// Chatwork 記法でレポートを組み立てる関数</span>
+<span class="code-keyword">function</span> <span class="code-func">buildReportMessage</span>(<span class="code-var">data</span>) {
+  <span class="code-keyword">const</span> <span class="code-func">fmt</span>  = (<span class="code-var">v</span>) => <span class="code-string">'¥'</span> + <span class="code-var">v</span>.<span class="code-func">toLocaleString</span>(<span class="code-string">'ja-JP'</span>);
+  <span class="code-keyword">const</span> <span class="code-func">sign</span> = (<span class="code-var">v</span>) => <span class="code-var">v</span> >= <span class="code-num">0</span> ? <span class="code-string">`▲ +<span class="code-var">${v.toFixed(1)}</span>%`</span> : <span class="code-string">`▼ <span class="code-var">${v.toFixed(1)}</span>%`</span>;
+
+  <span class="code-keyword">return</span> <span class="code-string">`[info][title]📊 <span class="code-var">${data.date}</span> EC売上 日次レポート[/title]
+【合計】 売上 <span class="code-var">${fmt(data.total.revenue)}</span>（前日比 <span class="code-var">${sign(data.total.diff)}</span>）
+粗利   <span class="code-var">${fmt(data.total.profit)}</span>（粗利率 <span class="code-var">${data.total.profitRate}</span>%）
+ACoS   <span class="code-var">${data.total.acos}</span>%  広告費 <span class="code-var">${fmt(data.total.adSpend)}</span>
+
+【チャンネル別売上】
+▶ Amazon　　 <span class="code-var">${fmt(data.amazon.revenue)}</span>（前日比 <span class="code-var">${sign(data.amazon.diff)}</span>）
+▶ 楽天市場　 <span class="code-var">${fmt(data.rakuten.revenue)}</span>（前日比 <span class="code-var">${sign(data.rakuten.diff)}</span>）
+▶ TikTok Shop  <span class="code-var">${fmt(data.tiktok.revenue)}</span>（前日比 <span class="code-var">${sign(data.tiktok.diff)}</span>）
+[/info]`</span>;
+}
+
+<span class="code-comment">// メインエントリ（GAS タイムドリガーから呼び出し）</span>
+<span class="code-keyword">function</span> <span class="code-func">runDailyReport</span>() {
+  <span class="code-keyword">const</span> <span class="code-var">data</span>    = <span class="code-func">aggregateSalesData</span>();   <span class="code-comment">// 集計処理（別関数）</span>
+  <span class="code-keyword">const</span> <span class="code-var">message</span> = <span class="code-func">buildReportMessage</span>(<span class="code-var">data</span>);
+  <span class="code-func">postToChatwork</span>(<span class="code-var">message</span>);
+}</div>
+    </div>
+
+    <!-- Python版 Chatwork送信 -->
+    <div class="spec-code-block">
+      <div class="spec-code-header">
+        <span class="spec-code-lang">🐍 Python</span>
+        <span class="spec-code-desc">requests ライブラリを使った Chatwork 投稿</span>
+      </div>
+      <div class="spec-code-body"><span class="code-keyword">import</span> requests
+
+<span class="code-var">CW_TOKEN</span>   = <span class="code-string">'YOUR_CHATWORK_TOKEN'</span>   <span class="code-comment"># プレースホルダ（実値は環境変数で管理）</span>
+<span class="code-var">CW_ROOM_ID</span> = <span class="code-string">'YOUR_ROOM_ID'</span>          <span class="code-comment"># プレースホルダ</span>
+
+<span class="code-keyword">def</span> <span class="code-func">post_to_chatwork</span>(<span class="code-var">message</span>: <span class="code-var">str</span>) -> <span class="code-var">dict</span>:
+    <span class="code-string">"""Chatwork API へメッセージを POST する"""</span>
+    <span class="code-var">url</span>     = <span class="code-string">f'https://api.chatwork.com/v2/rooms/<span class="code-var">{CW_ROOM_ID}</span>/messages'</span>
+    <span class="code-var">headers</span> = {<span class="code-string">'X-ChatWorkToken'</span>: <span class="code-var">CW_TOKEN</span>}
+    <span class="code-var">payload</span> = {<span class="code-string">'body'</span>: <span class="code-var">message</span>}
+    <span class="code-var">res</span> = requests.<span class="code-func">post</span>(<span class="code-var">url</span>, headers=<span class="code-var">headers</span>, data=<span class="code-var">payload</span>)
+    <span class="code-var">res</span>.<span class="code-func">raise_for_status</span>()
+    <span class="code-keyword">return</span> <span class="code-var">res</span>.<span class="code-func">json</span>()
+
+<span class="code-keyword">def</span> <span class="code-func">build_report_message</span>(<span class="code-var">data</span>: <span class="code-var">dict</span>) -> <span class="code-var">str</span>:
+    <span class="code-string">"""Chatwork 記法 [info][title]…[/title]…[/info] でレポートを整形"""</span>
+    <span class="code-keyword">def</span> <span class="code-func">sign</span>(<span class="code-var">v</span>): <span class="code-keyword">return</span> <span class="code-string">f"▲ +<span class="code-var">{v:.1f}</span>%"</span> <span class="code-keyword">if</span> <span class="code-var">v</span> >= <span class="code-num">0</span> <span class="code-keyword">else</span> <span class="code-string">f"▼ <span class="code-var">{v:.1f}</span>%"</span>
+    <span class="code-keyword">def</span> <span class="code-func">yen</span>(<span class="code-var">v</span>):  <span class="code-keyword">return</span> <span class="code-string">f"¥<span class="code-var">{v:,}</span>"</span>
+
+    <span class="code-keyword">return</span> (
+        <span class="code-string">f"[info][title]📊 <span class="code-var">{data['date']}</span> EC売上 日次レポート[/title]\n"</span>
+        <span class="code-string">f"【合計】 売上 <span class="code-var">{yen(data['total']['revenue'])}</span>（前日比 <span class="code-var">{sign(data['total']['diff'])}</span>）\n"</span>
+        <span class="code-string">f"粗利   <span class="code-var">{yen(data['total']['profit'])}</span>（粗利率 <span class="code-var">{data['total']['profit_rate']}</span>%）\n"</span>
+        <span class="code-string">f"ACoS   <span class="code-var">{data['total']['acos']}</span>%  広告費 <span class="code-var">{yen(data['total']['ad_spend'])}</span>\n\n"</span>
+        <span class="code-string">f"【チャンネル別売上】\n"</span>
+        <span class="code-string">f"▶ Amazon　　 <span class="code-var">{yen(data['amazon']['revenue'])}</span>（<span class="code-var">{sign(data['amazon']['diff'])}</span>）\n"</span>
+        <span class="code-string">f"▶ 楽天市場　 <span class="code-var">{yen(data['rakuten']['revenue'])}</span>（<span class="code-var">{sign(data['rakuten']['diff'])}</span>）\n"</span>
+        <span class="code-string">f"▶ TikTok Shop  <span class="code-var">{yen(data['tiktok']['revenue'])}</span>（<span class="code-var">{sign(data['tiktok']['diff'])}</span>）\n"</span>
+        <span class="code-string">"[/info]"</span>
+    )
+
+<span class="code-keyword">if</span> <span class="code-var">__name__</span> == <span class="code-string">'__main__'</span>:
+    <span class="code-var">data</span>    = <span class="code-func">aggregate_sales_data</span>()     <span class="code-comment"># 集計関数（別モジュール）</span>
+    <span class="code-var">message</span> = <span class="code-func">build_report_message</span>(<span class="code-var">data</span>)
+    <span class="code-func">post_to_chatwork</span>(<span class="code-var">message</span>)
+    <span class="code-func">print</span>(<span class="code-string">'✅ Chatwork 送信完了'</span>)</div>
+    </div>
+
+    <!-- 4. 処理フロー -->
+    <div class="spec-block-title">4. 処理フローの流れ（平易な日本語で）</div>
+    <div class="spec-steps">
+      <ol class="spec-step-list">
+        <li class="spec-step-item">
+          <div class="spec-step-num">1</div>
+          <div class="spec-step-text">
+            <strong>毎朝 08:00 に自動で起動</strong><br>
+            GAS のタイムドリガーまたは cron が定刻に集計スクリプトを起動します。休日も祝日も関係なく毎日実行されます（停止したい日は設定で除外可）。
+          </div>
+        </li>
+        <li class="spec-step-item">
+          <div class="spec-step-num">2</div>
+          <div class="spec-step-text">
+            <strong>各モールから前日分の売上データを自動取得</strong><br>
+            Amazon SP-API・楽天 RMS API・TikTok Shop API から前日 00:00〜23:59 の売上・注文・広告データを自動で引っ張ってきます。API 申請前の期間はセラーセントラルの CSV を所定フォルダに置くだけで同じ処理が走ります。
+          </div>
+        </li>
+        <li class="spec-step-item">
+          <div class="spec-step-num">3</div>
+          <div class="spec-step-text">
+            <strong>集計・加工（粗利/ACoS/前日比を自動計算）</strong><br>
+            チャンネルごとに売上・手数料・広告費・仕入れ原価を集計し、粗利・粗利率・ACoS（広告費÷広告売上）・前日比を自動計算します。結果はスプレッドシートに蓄積されるため、週次・月次の振り返りも可能です。
+          </div>
+        </li>
+        <li class="spec-step-item">
+          <div class="spec-step-num">4</div>
+          <div class="spec-step-text">
+            <strong>Chatwork 記法でメッセージを整形</strong><br>
+            [info][title]…[/title]…[/info] 記法を使い、タイトル付きのボックス形式で見やすいレポート文を生成します。前日比の▲/▼も自動で付与されるので、増減が一目でわかります。
+          </div>
+        </li>
+        <li class="spec-step-item">
+          <div class="spec-step-num">5</div>
+          <div class="spec-step-text">
+            <strong>Chatwork API で指定ルームへ自動投稿</strong><br>
+            Chatwork API（POST /v2/rooms/{ROOM_ID}/messages）へリクエストを送信し、指定したルームへレポートが届きます。チームメンバーは朝出社したら Chatwork を開くだけで最新の売上状況がわかります。
+          </div>
+        </li>
+      </ol>
+    </div>
+
+    <!-- 5. 運用イメージ -->
+    <div class="spec-block-title">5. 運用イメージ（人がやることはゼロ）</div>
+    <div class="spec-ops-grid">
+      <div class="spec-ops-card">
+        <div class="spec-ops-icon">☕</div>
+        <div class="spec-ops-title">人がやること</div>
+        <div class="spec-ops-body">毎朝 Chatwork を開くだけです。集計・計算・メッセージ送信はすべて自動。手でスプレッドシートを開いたり、数字をコピペする作業はゼロになります。</div>
+      </div>
+      <div class="spec-ops-card">
+        <div class="spec-ops-icon">🤖</div>
+        <div class="spec-ops-title">システムがやること</div>
+        <div class="spec-ops-body">データ取得・集計・粗利/ACoS/前日比の計算・メッセージ整形・Chatwork 送信・スプレッドシート蓄積をすべて自動実行します。</div>
+      </div>
+      <div class="spec-ops-card">
+        <div class="spec-ops-icon">🔔</div>
+        <div class="spec-ops-title">Slack / メールへの切替</div>
+        <div class="spec-ops-body">Chatwork を使わなくなっても、送信先を Slack（Incoming Webhook）やメール（GmailApp.sendEmail）に切り替えるだけで同じレポートが届きます。</div>
+      </div>
+      <div class="spec-ops-card">
+        <div class="spec-ops-icon">📐</div>
+        <div class="spec-ops-title">レポート内容の調整</div>
+        <div class="spec-ops-body">「在庫切れアラートも一緒に送りたい」「返品率を追加したい」など、項目の追加・削除はテンプレート関数を修正するだけで対応できます。</div>
+      </div>
+    </div>
+
+    <!-- 6. 費用感 -->
+    <div class="spec-block-title">6. 想定の費用感（月額目安）</div>
+    <div class="spec-cost">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:4px;">API の無料枠が中心のため、ランニングコストはほぼゼロに近い構成が可能です。</p>
+      <div class="spec-cost-grid">
+        <div class="spec-cost-item">
+          <div class="cost-service">Chatwork API</div>
+          <div class="cost-price">無料</div>
+          <div class="cost-note">フリープランで利用可能</div>
+        </div>
+        <div class="spec-cost-item">
+          <div class="cost-service">GAS（タイムドリガー）</div>
+          <div class="cost-price">無料</div>
+          <div class="cost-note">Google アカウントで利用可</div>
+        </div>
+        <div class="spec-cost-item">
+          <div class="cost-service">Amazon SP-API</div>
+          <div class="cost-price">無料</div>
+          <div class="cost-note">セラー登録があれば申請可</div>
+        </div>
+        <div class="spec-cost-item">
+          <div class="cost-service">楽天 RMS API</div>
+          <div class="cost-price">無料</div>
+          <div class="cost-note">楽天 RMS から申請</div>
+        </div>
+        <div class="spec-cost-item">
+          <div class="cost-service">実行環境（Python 版）</div>
+          <div class="cost-price">月数百円〜</div>
+          <div class="cost-note">VPS/Cloud Run 利用時のみ</div>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--text-dim);margin-top:16px;">
+        ※ GAS 版の場合ランニングコストはほぼ無料。Python 版で VPS を使う場合のみ月数百円程度。初期構築費用は別途お見積りします。
+      </p>
+    </div>
+
+    <!-- 7. 制作の進め方 -->
+    <div class="spec-block-title">7. 制作の進め方（4ステップ）</div>
+    <div class="spec-process">
+      <div class="spec-process-flow">
+        <div class="spec-proc-node">
+          <div class="spec-proc-num">1</div>
+          <div class="spec-proc-title">要件ヒアリング</div>
+          <div class="spec-proc-body">使用モール・欲しい指標・通知先ルーム・実行時刻・既存の CSV 形式を確認します</div>
+        </div>
+        <div class="spec-proc-arrow">→</div>
+        <div class="spec-proc-node">
+          <div class="spec-proc-num">2</div>
+          <div class="spec-proc-title">CSV 版で先行稼働</div>
+          <div class="spec-proc-body">API 申請を待たず CSV 取込で実装・動作確認。本番データで通知のイメージをすぐ確認できます</div>
+        </div>
+        <div class="spec-proc-arrow">→</div>
+        <div class="spec-proc-node">
+          <div class="spec-proc-num">3</div>
+          <div class="spec-proc-title">API 連携・自動化</div>
+          <div class="spec-proc-body">各モール API に切り替え、定時実行トリガーを設定。完全自動化を完成させます</div>
+        </div>
+        <div class="spec-proc-arrow">→</div>
+        <div class="spec-proc-node">
+          <div class="spec-proc-num">4</div>
+          <div class="spec-proc-title">納品・引き継ぎ</div>
+          <div class="spec-proc-body">スクリプト一式・スプレッドシート・図解マニュアルを納品。修正対応もお任せください</div>
+        </div>
+      </div>
+      <div class="spec-delivery-note">
+        📦 <strong>納期の目安：7〜10 営業日</strong>（CSV 版は 3〜5 営業日で先行稼働可能）　|　納品物：GAS スクリプト一式 or Python スクリプト・スプレッドシート雛形・図解付き操作マニュアル
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+// ======================================================
+// ダミーデータ
+// ======================================================
+
+const CHANNELS = [
+  {
+    id: 'amazon',
+    name: 'Amazon',
+    logo: '🛒',
+    logoColor: 'linear-gradient(135deg,#f59e0b,#d97706)',
+    revenue: 312400,
+    profit: 95800,
+    profitRate: 30.7,
+    fee: 46860,
+    adSpend: 52100,
+    acos: 19.4,
+    orders: 108,
+    diff: +6.2,
+  },
+  {
+    id: 'rakuten',
+    name: '楽天市場',
+    logo: '🦅',
+    logoColor: 'linear-gradient(135deg,#ef4444,#b91c1c)',
+    revenue: 218700,
+    profit: 78300,
+    profitRate: 35.8,
+    fee: 32805,
+    adSpend: 28400,
+    acos: 17.1,
+    orders: 76,
+    diff: +2.8,
+  },
+  {
+    id: 'tiktok',
+    name: 'TikTok Shop',
+    logo: '🎵',
+    logoColor: 'linear-gradient(135deg,#000,#333)',
+    revenue: 98600,
+    profit: 31200,
+    profitRate: 31.6,
+    fee: 14790,
+    adSpend: 18300,
+    acos: 22.8,
+    orders: 34,
+    diff: +14.7,
+  },
+];
+
+const TOTAL = {
+  revenue: 629700,
+  profit: 205300,
+  profitRate: 32.6,
+  fee: 94455,
+  adSpend: 98800,
+  acos: 19.4,
+  orders: 218,
+  diff: +6.8,
+};
+
+const TOP3 = [
+  { rank: 1, name: 'ワイヤレスイヤホン プロ モデル', channel: 'Amazon', revenue: 98400 },
+  { rank: 2, name: 'ステンレス水筒 500ml 限定カラー', channel: '楽天市場', revenue: 72100 },
+  { rank: 3, name: 'シリコン製スマホスタンド 折りたたみ', channel: 'TikTok Shop', revenue: 54300 },
+];
+
+const LOGS = [
+  { ts: '6/24 08:00:03', date: '6/23（月）', revenue: '¥629,700', diff: '+6.8%', malls: 'Amazon/楽天/TikTok', room: 'EC売上レポート', status: 'success', ms: '1,242ms' },
+  { ts: '6/23 08:00:02', date: '6/22（日）', revenue: '¥589,900', diff: '+3.2%', malls: 'Amazon/楽天/TikTok', room: 'EC売上レポート', status: 'success', ms: '1,187ms' },
+  { ts: '6/22 08:00:04', date: '6/21（土）', revenue: '¥571,300', diff: '-1.4%', malls: 'Amazon/楽天/TikTok', room: 'EC売上レポート', status: 'success', ms: '1,321ms' },
+  { ts: '6/21 08:00:01', date: '6/20（金）', revenue: '¥579,200', diff: '+5.1%', malls: 'Amazon/楽天/TikTok', room: 'EC売上レポート', status: 'success', ms: '1,098ms' },
+  { ts: '6/20 08:00:03', date: '6/19（木）', revenue: '¥551,100', diff: '+2.9%', malls: 'Amazon/楽天/TikTok', room: 'EC売上レポート', status: 'success', ms: '1,204ms' },
+  { ts: '6/19 08:00:02', date: '6/18（水）', revenue: '¥535,600', diff: '+4.3%', malls: 'Amazon/楽天/TikTok', room: 'EC売上レポート', status: 'success', ms: '1,155ms' },
+  { ts: '6/18 08:00:05', date: '6/17（火）', revenue: '¥513,400', diff: '+1.7%', malls: 'Amazon/楽天/TikTok', room: 'EC売上レポート', status: 'success', ms: '1,289ms' },
+];
+
+// ======================================================
+// タブ切り替え
+// ======================================================
+function switchTab(name) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('pane-' + name).classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ======================================================
+// フォーマットヘルパー
+// ======================================================
+const fmt   = v => '¥' + Math.round(v).toLocaleString('ja-JP');
+const fmtPct = v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+const sign  = v => v >= 0 ? '▲ ' : '▼ ';
+
+// ======================================================
+// KPI カード描画
+// ======================================================
+function renderKPI() {
+  const grid = document.getElementById('kpi-grid');
+  const items = [
+    { label: '総売上', dot: '#00d4ff', value: fmt(TOTAL.revenue), sub: '全チャンネル合計', trend: fmtPct(TOTAL.diff), up: TOTAL.diff >= 0 },
+    { label: '総粗利', dot: '#10b981', value: fmt(TOTAL.profit),   sub: `粗利率 ${TOTAL.profitRate}%`, trend: `粗利 = 売上 - 原価 - 手数料 - 広告費`, up: true },
+    { label: 'ACoS（全体）', dot: '#f59e0b', value: TOTAL.acos + '%', sub: `広告費 ${fmt(TOTAL.adSpend)}`, trend: '低いほど広告効率が良い', up: true },
+    { label: '総注文件数', dot: '#7c3aed', value: TOTAL.orders + '件', sub: '全チャンネル合計', trend: fmtPct(TOTAL.diff) + ' 前日比', up: TOTAL.diff >= 0 },
+    { label: 'Amazon 手数料',  dot: '#f97316', value: fmt(TOTAL.fee), sub: `売上比 ${(TOTAL.fee / TOTAL.revenue * 100).toFixed(1)}%`, trend: '手数料は売上の約15%', up: true },
+  ];
+  grid.innerHTML = items.map(i => `
+    <div class="kpi-card">
+      <div class="kpi-label">
+        <span class="kpi-label-dot" style="background:${i.dot}"></span>
+        ${i.label}
+      </div>
+      <div class="kpi-value" style="color:${i.dot}">${i.value}</div>
+      <div class="kpi-sub">${i.sub}</div>
+      <div class="kpi-trend ${i.up ? 'up' : 'down'}">${i.trend}</div>
+    </div>
+  `).join('');
+}
+
+// ======================================================
+// チャンネル別カード描画
+// ======================================================
+function renderChannels() {
+  const grid = document.getElementById('channel-grid');
+  grid.innerHTML = CHANNELS.map(ch => `
+    <div class="channel-card">
+      <div class="channel-card-head">
+        <div class="channel-logo" style="background:${ch.logoColor}">${ch.logo}</div>
+        <div>
+          <div class="channel-name">${ch.name}</div>
+          <span class="pill ${ch.diff >= 0 ? 'pill-green' : 'pill-red'}">${sign(ch.diff)}${Math.abs(ch.diff).toFixed(1)}% 前日比</span>
+        </div>
+      </div>
+      <div class="channel-body">
+        <div class="channel-row">
+          <span class="channel-row-label">売上</span>
+          <span class="channel-row-val" style="color:var(--accent-cyan)">${fmt(ch.revenue)}</span>
+        </div>
+        <div class="channel-row">
+          <span class="channel-row-label">粗利</span>
+          <span class="channel-row-val" style="color:var(--accent-green)">${fmt(ch.profit)} <span style="font-size:10px;color:var(--text-muted)">(${ch.profitRate}%)</span></span>
+        </div>
+        <div class="channel-row">
+          <span class="channel-row-label">Amazon/モール手数料</span>
+          <span class="channel-row-val">${fmt(ch.fee)}</span>
+        </div>
+        <div class="channel-row">
+          <span class="channel-row-label">広告費</span>
+          <span class="channel-row-val">${fmt(ch.adSpend)}</span>
+        </div>
+        <div class="channel-row">
+          <span class="channel-row-label">ACoS</span>
+          <span class="channel-row-val ${ch.acos <= 18 ? 'pill pill-green' : ch.acos <= 22 ? 'pill pill-amber' : 'pill pill-red'}" style="padding:2px 8px">${ch.acos}%</span>
+        </div>
+        <div class="channel-row">
+          <span class="channel-row-label">注文件数</span>
+          <span class="channel-row-val">${ch.orders}件</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ======================================================
+// TOP3 描画
+// ======================================================
+function renderTop3() {
+  const list = document.getElementById('top-list');
+  const rankClass = ['r1', 'r2', 'r3'];
+  list.innerHTML = TOP3.map((p, i) => `
+    <li class="top-item">
+      <div class="top-rank ${rankClass[i]}">${p.rank}</div>
+      <div class="top-info">
+        <div class="top-name">${p.name}</div>
+        <div class="top-ch">${p.channel}</div>
+      </div>
+      <div class="top-sales">${fmt(p.revenue)}</div>
+    </li>
+  `).join('');
+}
+
+// ======================================================
+// Chatwork メッセージ本文描画
+// ======================================================
+function renderChatworkMessage() {
+  const el = document.getElementById('cw-message-body');
+  const amazon  = CHANNELS.find(c => c.id === 'amazon');
+  const rakuten = CHANNELS.find(c => c.id === 'rakuten');
+  const tiktok  = CHANNELS.find(c => c.id === 'tiktok');
+
+  el.textContent = [
+    '【合計】 売上 ' + fmt(TOTAL.revenue) + '（前日比 ' + sign(TOTAL.diff) + Math.abs(TOTAL.diff).toFixed(1) + '%）',
+    '粗利   ' + fmt(TOTAL.profit) + '（粗利率 ' + TOTAL.profitRate + '%）',
+    'ACoS   ' + TOTAL.acos + '%　広告費 ' + fmt(TOTAL.adSpend),
+    '',
+    '【チャンネル別売上】',
+    '▶ Amazon　　 ' + fmt(amazon.revenue)  + '（' + sign(amazon.diff)  + Math.abs(amazon.diff).toFixed(1)  + '%）',
+    '▶ 楽天市場　 ' + fmt(rakuten.revenue) + '（' + sign(rakuten.diff) + Math.abs(rakuten.diff).toFixed(1) + '%）',
+    '▶ TikTok Shop ' + fmt(tiktok.revenue) + '（' + sign(tiktok.diff)  + Math.abs(tiktok.diff).toFixed(1)  + '%）',
+    '',
+    '【売上TOP商品】',
+    '🥇 ' + TOP3[0].name + ' ' + fmt(TOP3[0].revenue),
+    '🥈 ' + TOP3[1].name + ' ' + fmt(TOP3[1].revenue),
+    '🥉 ' + TOP3[2].name + ' ' + fmt(TOP3[2].revenue),
+    '',
+    '📌 詳細はスプレッドシートで確認できます。',
+  ].join('\n');
+}
+
+// ======================================================
+// 実行ログ描画
+// ======================================================
+function renderLogs() {
+  const tbody = document.getElementById('log-tbody');
+  tbody.innerHTML = LOGS.map(l => {
+    const up = l.diff.startsWith('+');
+    return `
+      <tr>
+        <td style="font-size:12px;color:var(--text-muted);font-variant-numeric:tabular-nums">${l.ts}</td>
+        <td style="font-weight:700">${l.date}</td>
+        <td style="color:var(--accent-cyan);font-weight:700">${l.revenue}</td>
+        <td><span class="pill ${up ? 'pill-green' : 'pill-red'}">${up ? '▲' : '▼'} ${l.diff}</span></td>
+        <td style="font-size:11px;color:var(--text-muted)">${l.malls}</td>
+        <td style="font-size:12px">${l.room}</td>
+        <td><span class="pill pill-green">✓ 成功</span></td>
+        <td style="font-size:12px;color:var(--text-dim)">${l.ms}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ======================================================
+// 初期化
+// ======================================================
+document.addEventListener('DOMContentLoaded', () => {
+  renderKPI();
+  renderChannels();
+  renderTop3();
+  renderChatworkMessage();
+  renderLogs();
+});
+</script>
+</body>
+</html>
