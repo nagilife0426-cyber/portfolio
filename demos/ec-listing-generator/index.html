@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>スプシ1行 → モール別 出品文ジェネレーター | Demo</title>
+<style>
+:root{
+  --bg:#0a0e1a; --bg2:#111827; --bg3:#1f2937; --bg4:#374151;
+  --border:#1f2937; --border2:#374151;
+  --green:#10b981; --yellow:#f59e0b; --blue:#3b82f6; --red:#ef4444;
+  --purple:#8b5cf6; --text:#f9fafb; --text2:#9ca3af; --text3:#6b7280;
+  --claude:#d97706;
+  --rakuten:#bf0000; --amazon:#ff9900; --yahoo:#ff0033;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.6;min-height:100vh}
+a{color:inherit}
+nav{background:var(--bg2);border-bottom:1px solid var(--border2);padding:0 18px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.nav-logo{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.nav-logo .dot{width:9px;height:9px;border-radius:50%;background:var(--claude);box-shadow:0 0 10px var(--claude)}
+.nav-back{font-size:13px;color:var(--text2);text-decoration:none;padding:6px 12px;border:1px solid var(--border2);border-radius:7px}
+.nav-back:hover{color:var(--text);border-color:var(--text3)}
+.wrap{max-width:1180px;margin:0 auto;padding:26px 18px 70px}
+.head h1{font-size:23px;font-weight:800;letter-spacing:.2px}
+.head .sub{color:var(--text2);font-size:14px;margin-top:6px}
+.demo-flag{display:inline-block;margin-top:12px;font-size:12px;color:var(--yellow);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35);padding:5px 11px;border-radius:999px}
+.grid{display:grid;grid-template-columns:340px 1fr;gap:20px;margin-top:22px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:18px}
+.panel h2{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.presets{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.preset{font-size:12px;padding:6px 11px;border:1px solid var(--border2);border-radius:8px;background:var(--bg3);color:var(--text2);cursor:pointer}
+.preset.active{border-color:var(--claude);color:var(--text);background:rgba(217,119,6,.12)}
+.field{margin-bottom:11px}
+.field label{display:block;font-size:11px;color:var(--text3);margin-bottom:4px}
+.field input,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--text);padding:8px 10px;font-size:13px;font-family:inherit}
+.field textarea{resize:vertical;min-height:46px}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--claude)}
+.gen-btn{width:100%;margin-top:6px;background:linear-gradient(135deg,var(--claude),#b45309);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.gen-btn:hover{filter:brightness(1.08)}
+.gen-btn:disabled{opacity:.6;cursor:default}
+.spin{width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.tab{flex:1;min-width:120px;border:1px solid var(--border2);background:var(--bg2);border-radius:10px;padding:10px 8px;cursor:pointer;text-align:center}
+.tab .m{font-size:14px;font-weight:800}
+.tab .t{font-size:10px;color:var(--text3);margin-top:2px}
+.tab[data-m="rakuten"].active{border-color:var(--rakuten);box-shadow:0 0 0 1px var(--rakuten) inset}
+.tab[data-m="amazon"].active{border-color:var(--amazon);box-shadow:0 0 0 1px var(--amazon) inset}
+.tab[data-m="yahoo"].active{border-color:var(--yahoo);box-shadow:0 0 0 1px var(--yahoo) inset}
+.out{display:none}
+.out.show{display:block;animation:fade .35s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.block{background:var(--bg3);border:1px solid var(--border);border-radius:11px;padding:14px;margin-bottom:13px}
+.block .bh{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.block .bl{font-size:11px;color:var(--text3);font-weight:700;letter-spacing:.4px}
+.counter{font-size:11px;color:var(--green)}
+.counter.over{color:var(--red)}
+.block .bv{font-size:13.5px;white-space:pre-wrap;word-break:break-word}
+.block code{display:block;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:10px;font-size:12px;color:#cbd5e1;white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.chip{font-size:11px;padding:4px 9px;border-radius:999px;background:var(--bg);border:1px solid var(--border2);color:var(--text2)}
+.chip.ok{color:var(--green);border-color:rgba(16,185,129,.4)}
+.chip.note{color:var(--blue);border-color:rgba(59,130,246,.4)}
+.empty{color:var(--text3);text-align:center;padding:54px 14px;font-size:14px}
+.pipe{margin-top:26px;background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:18px}
+.pipe h3{font-size:13px;color:var(--text2);margin-bottom:12px}
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px}
+.step{background:var(--bg3);border:1px solid var(--border2);border-radius:9px;padding:8px 12px}
+.arr{color:var(--claude);font-weight:800}
+.foot{margin-top:18px;font-size:12px;color:var(--text3)}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo"><span class="dot"></span>なぎ｜業務自動化デモ</div>
+  <a class="nav-back" href="../../">← ポートフォリオに戻る</a>
+</nav>
+
+<div class="wrap">
+  <div class="head">
+    <h1>スプシ1行 → モール別 出品文ジェネレーター</h1>
+    <div class="sub">スプレッドシートの商品1行から、楽天・Amazon・Yahoo!ショッピング向けに最適化した「タイトル / 商品説明 / 検索キーワード」を出し分けます。各モールの文字数上限・説明文の形式（HTML可否）・禁止表現を踏まえて自動整形。</div>
+    <span class="demo-flag">⚠ これはサンプル出力デモです（APIキー不使用）。本番はClaude APIが御社スプシから各モールのトーンで自動生成します。</span>
+  </div>
+
+  <div class="grid">
+    <!-- INPUT -->
+    <div class="panel">
+      <h2>📄 商品データ（スプシ1行・編集可）</h2>
+      <div class="presets" id="presets"></div>
+      <div class="field"><label>商品名</label><input id="f_name"></div>
+      <div class="field"><label>ブランド</label><input id="f_brand"></div>
+      <div class="field"><label>型番 / 品番</label><input id="f_model"></div>
+      <div class="field"><label>カラー</label><input id="f_color"></div>
+      <div class="field"><label>素材 / 仕様</label><input id="f_spec"></div>
+      <div class="field"><label>価格（円）</label><input id="f_price"></div>
+      <div class="field"><label>特徴メモ（自由記述）</label><textarea id="f_note"></textarea></div>
+      <button class="gen-btn" id="gen">⚡ 3モール分を生成</button>
+    </div>
+
+    <!-- OUTPUT -->
+    <div class="panel">
+      <h2>🛒 生成結果</h2>
+      <div class="tabs" id="tabs">
+        <div class="tab active" data-m="rakuten"><div class="m" style="color:var(--rakuten)">楽天市場</div><div class="t">タイトル目安255字・説明HTML可</div></div>
+        <div class="tab" data-m="amazon"><div class="m" style="color:var(--amazon)">Amazon</div><div class="t">タイトル目安200字・型番必須</div></div>
+        <div class="tab" data-m="yahoo"><div class="m" style="color:var(--yahoo)">Yahoo!ショッピング</div><div class="t">タイトル目安75字・前寄せ</div></div>
+      </div>
+      <div id="result"><div class="empty">左で「⚡ 3モール分を生成」を押すと、ここに出し分け結果が表示されます。</div></div>
+    </div>
+  </div>
+
+  <div class="pipe">
+    <h3>本番の仕組み（このデモの先）</h3>
+    <div class="flow">
+      <span class="step">スプレッドシート（商品マスタ）</span><span class="arr">→</span>
+      <span class="step">Claude API でモール別に文章生成</span><span class="arr">→</span>
+      <span class="step">禁止語フィルタ＋文字数最適化</span><span class="arr">→</span>
+      <span class="step">出品用CSV / 各モールAPIへ書き出し</span>
+    </div>
+    <div class="foot">※ GAS（スプレッドシート連携）またはPythonで構築。Amazonは SP-API、楽天は RMS、Yahoo!ショッピングは各連携 or CSV一括登録に対応。出品文は人の最終確認を挟むドラフト生成として組みます。</div>
+  </div>
+</div>
+
+<script>
+const PRESETS=[
+  {key:"レザー財布",f_name:"二つ折り財布 本革 メンズ",f_brand:"NAGI Leather",f_model:"NL-W210",f_color:"ダークブラウン",f_spec:"イタリアンレザー/カード12枚/BOX型小銭入れ",f_price:"8980",f_note:"使うほど味が出る本革。薄型で胸ポケットにも収まる。ギフト箱付き。"},
+  {key:"ワイヤレスイヤホン",f_name:"ワイヤレスイヤホン Bluetooth5.3",f_brand:"SoundPeak",f_model:"SP-A7",f_color:"マットブラック",f_spec:"ノイズキャンセリング/IPX7防水/最大36時間再生",f_price:"4280",f_note:"通勤・スポーツ向け。ケース込み軽量。タッチ操作対応。"},
+  {key:"ステンレスボトル",f_name:"真空断熱 ステンレスボトル 500ml",f_brand:"DAILYWARE",f_model:"DW-500",f_color:"アイボリー",f_spec:"6時間保温保冷/直飲み/食洗機対応パーツ",f_price:"2480",f_note:"オフィス・アウトドアに。結露しにくい。軽量340g。"}
+];
+const LIMIT={rakuten:255,amazon:200,yahoo:75};
+const $=id=>document.getElementById(id);
+const fields=["f_name","f_brand","f_model","f_color","f_spec","f_price","f_note"];
+let cur={};
+
+function loadPreset(i){
+  const p=PRESETS[i];fields.forEach(k=>$(k).value=p[k]);
+  document.querySelectorAll('.preset').forEach((b,bi)=>b.classList.toggle('active',bi===i));
+}
+function readForm(){const o={};fields.forEach(k=>o[k]=$(k).value.trim());o.yen=Number(o.f_price||0).toLocaleString();return o;}
+
+// 禁止表現フィルタ（誇大広告ワードを除去/言い換え）
+const BAN=[["完全","しっかり"],["最安","お買い得"],["日本一","人気"],["世界一","注目"],["完治",""],["No.1","話題"],["絶対","安心の"]];
+function clean(s){BAN.forEach(([b,r])=>{s=s.split(b).join(r)});return s.replace(/\s+/g,' ').trim();}
+function cut(s,n){return s.length>n?s.slice(0,n):s;}
+
+function build(d){
+  const kw=[d.f_brand,d.f_name.split(' ')[0],d.f_color,(d.f_spec.split(/[\/、]/)[0]||'')].filter(Boolean);
+  // 楽天: キーワード前寄せ＋送料訴求、説明はHTML
+  const rakutenTitle=clean(`【送料無料】${d.f_brand} ${d.f_name} ${d.f_model} ${d.f_color} ${d.f_spec.split('/').join(' ')} ギフト プレゼント`);
+  const rakutenDesc=`<h2>${clean(d.f_brand+' '+d.f_name)}</h2>\n<p>${clean(d.f_note)}</p>\n<ul>\n  <li>カラー：${d.f_color}</li>\n  <li>仕様：${d.f_spec.split('/').join(' / ')}</li>\n  <li>品番：${d.f_model}</li>\n  <li>価格：${d.yen}円（税込）</li>\n</ul>`;
+  // Amazon: 簡潔・型番ブランド必須・箇条書き説明
+  const amazonTitle=clean(`${d.f_brand} ${d.f_name} ${d.f_color} ${d.f_model}（${d.f_spec.split('/')[0]||''}）`);
+  const amazonDesc=`■ ${clean(d.f_brand)}「${clean(d.f_name)}」\n${d.f_spec.split('/').map(s=>'・'+s.trim()).join('\n')}\n・カラー：${d.f_color}　・型番：${d.f_model}\n${clean(d.f_note)}`;
+  // Yahoo: 75字前寄せ・装飾控えめ
+  const yahooTitle=cut(clean(`${d.f_brand} ${d.f_name} ${d.f_color} ${d.f_spec.split('/')[0]||''} ${d.f_model}`),75);
+  const yahooDesc=`${clean(d.f_brand+' '+d.f_name)}。${clean(d.f_note)} 仕様：${d.f_spec.split('/').join('、')}。カラー${d.f_color}／品番${d.f_model}／${d.yen}円。`;
+  return {
+    rakuten:{title:rakutenTitle,descHtml:rakutenDesc,kw:kw.concat(['送料無料','ギフト']),notes:["説明文はHTMLタグで装飾","キーワードを上限内で多めに","禁止表現フィルタ通過"]},
+    amazon:{title:amazonTitle,desc:amazonDesc,kw:kw.concat([d.f_model]),notes:["ブランド+型番を明記（必須項目）","箇条書きで仕様を簡潔に","煽り表現を排除"]},
+    yahoo:{title:yahooTitle,desc:yahooDesc,kw:kw,notes:["75字に収め重要語を前寄せ","装飾控えめのテキスト説明","禁止表現フィルタ通過"]}
+  };
+}
+
+function render(data){
+  const r=$('result');
+  const card=(m,o)=>{
+    const lim=LIMIT[m],over=o.title.length>lim;
+    const descBlock=o.descHtml
+      ? `<div class="block"><div class="bh"><span class="bl">商品説明（HTML）</span><span class="chip note">楽天はHTML可</span></div><code>${o.descHtml.replace(/</g,'&lt;')}</code></div>`
+      : `<div class="block"><div class="bl">商品説明</div><div class="bv">${o.desc}</div></div>`;
+    return `<div class="out${m==='rakuten'?' show':''}" data-out="${m}">
+      <div class="block">
+        <div class="bh"><span class="bl">出品タイトル</span><span class="counter${over?' over':''}">${o.title.length} / ${lim}字目安</span></div>
+        <div class="bv">${o.title}</div>
+      </div>
+      ${descBlock}
+      <div class="block">
+        <div class="bl">検索キーワード</div>
+        <div class="chips">${o.kw.map(k=>`<span class="chip">${k}</span>`).join('')}</div>
+      </div>
+      <div class="block">
+        <div class="bl">このモール向けの最適化ポイント</div>
+        <div class="chips">${o.notes.map(n=>`<span class="chip ok">✓ ${n}</span>`).join('')}</div>
+      </div>
+    </div>`;
+  };
+  r.innerHTML=card('rakuten',data.rakuten)+card('amazon',data.amazon)+card('yahoo',data.yahoo);
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.m==='rakuten'));
+}
+
+$('gen').addEventListener('click',()=>{
+  const d=readForm();
+  if(!d.f_name){alert('商品名を入力してください');return;}
+  const btn=$('gen');btn.disabled=true;btn.innerHTML='<span class="spin"></span> 生成中…';
+  setTimeout(()=>{
+    cur=build(d);render(cur);
+    btn.disabled=false;btn.innerHTML='⚡ 3モール分を生成';
+  },650);
+});
+
+$('tabs').addEventListener('click',e=>{
+  const t=e.target.closest('.tab');if(!t)return;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+  document.querySelectorAll('.out').forEach(o=>o.classList.toggle('show',o.dataset.out===t.dataset.m));
+});
+
+// init presets
+PRESETS.forEach((p,i)=>{const b=document.createElement('div');b.className='preset'+(i===0?' active':'');b.textContent=p.key;b.onclick=()=>loadPreset(i);$('presets').appendChild(b);});
+loadPreset(0);
+</script>
+</body>
+</html>
