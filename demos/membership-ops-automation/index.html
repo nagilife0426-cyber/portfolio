@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>会員制コミュニティ運営 自動化ダッシュボード | Demo</title>
+<style>
+:root{
+  --bg:#0a0e1a; --bg2:#111827; --bg3:#1f2937; --bg4:#374151;
+  --border:#1f2937; --border2:#374151;
+  --green:#10b981; --yellow:#f59e0b; --blue:#3b82f6; --red:#ef4444;
+  --purple:#8b5cf6; --text:#f9fafb; --text2:#9ca3af; --text3:#6b7280;
+  --claude:#d97706; --slack:#4a154b; --stripe:#635bff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.6;min-height:100vh}
+nav{background:var(--bg2);border-bottom:1px solid var(--border2);padding:0 18px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.nav-logo{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.nav-logo .dot{width:9px;height:9px;border-radius:50%;background:var(--claude);box-shadow:0 0 10px var(--claude)}
+.nav-back{font-size:13px;color:var(--text2);text-decoration:none;padding:6px 12px;border:1px solid var(--border2);border-radius:7px}
+.nav-back:hover{color:var(--text);border-color:var(--text3)}
+.wrap{max-width:1200px;margin:0 auto;padding:24px 18px 70px}
+.head h1{font-size:22px;font-weight:800}
+.head .sub{color:var(--text2);font-size:13.5px;margin-top:6px;max-width:880px}
+.stack{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.tech{font-size:11px;padding:4px 10px;border-radius:6px;background:var(--bg3);border:1px solid var(--border2);color:var(--text2)}
+.demo-flag{display:inline-block;margin-top:12px;font-size:12px;color:var(--yellow);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35);padding:5px 11px;border-radius:999px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:22px 0 16px}
+.tab{font-size:13px;padding:9px 14px;border:1px solid var(--border2);border-radius:9px;background:var(--bg2);color:var(--text2);cursor:pointer}
+.tab.active{border-color:var(--claude);color:var(--text);background:rgba(217,119,6,.12)}
+.view{display:none}.view.show{display:block;animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--bg2);border:1px solid var(--border2);border-radius:13px;padding:16px}
+.kpi .l{font-size:12px;color:var(--text3)}
+.kpi .v{font-size:26px;font-weight:800;margin-top:4px}
+.kpi .d{font-size:11px;color:var(--green);margin-top:3px}
+.panel{background:var(--bg2);border:1px solid var(--border2);border-radius:13px;padding:18px;margin-top:16px}
+.panel h2{font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+.bars{display:flex;align-items:flex-end;gap:10px;height:130px;padding-top:8px}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;justify-content:flex-end}
+.bar .col{width:100%;background:linear-gradient(180deg,var(--claude),#b45309);border-radius:6px 6px 0 0;min-height:4px}
+.bar .lab{font-size:10px;color:var(--text3)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border)}
+th{font-size:11px;color:var(--text3);font-weight:600}
+tr:hover td{background:var(--bg3)}
+.badge{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:700}
+.b-gold{background:rgba(245,158,11,.15);color:var(--yellow)}
+.b-silver{background:rgba(148,163,184,.18);color:#cbd5e1}
+.b-bronze{background:rgba(180,120,80,.2);color:#d6a17a}
+.b-none{background:var(--bg3);color:var(--text3)}
+.stage{font-size:11px;font-weight:700;color:var(--blue)}
+.btn{background:linear-gradient(135deg,var(--claude),#b45309);color:#fff;border:none;border-radius:8px;padding:7px 13px;font-size:12.5px;font-weight:700;cursor:pointer}
+.btn:hover{filter:brightness(1.08)}
+.btn.sm{padding:5px 10px;font-size:11.5px}
+.report{margin-top:14px;background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--claude);border-radius:10px;padding:15px;font-size:13.5px;display:none}
+.report.show{display:block;animation:fade .35s ease}
+.report .ai{font-size:11px;color:var(--claude);font-weight:700;margin-bottom:8px}
+.report h4{font-size:14px;margin:10px 0 4px}
+.report .pair{color:var(--green);font-weight:700}
+.slackfeed{display:flex;flex-direction:column;gap:10px}
+.smsg{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;gap:11px}
+.smsg .av{width:34px;height:34px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px}
+.smsg .bot{background:var(--slack)}
+.smsg .ttl{font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px}
+.smsg .tag{font-size:10px;color:var(--text3);font-weight:500}
+.smsg .body{font-size:13px;color:var(--text2);margin-top:3px;white-space:pre-wrap}
+.alert{border-left:3px solid var(--red)}
+.ok{border-left:3px solid var(--green)}
+.up{border-left:3px solid var(--blue)}
+code,pre{font-family:ui-monospace,Menlo,monospace}
+pre{background:var(--bg);border:1px solid var(--border2);border-radius:9px;padding:13px;font-size:12px;color:#cbd5e1;overflow-x:auto;white-space:pre-wrap}
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;margin-top:12px}
+.step{background:var(--bg3);border:1px solid var(--border2);border-radius:9px;padding:8px 12px}
+.arr{color:var(--stripe);font-weight:800}
+.note{font-size:12px;color:var(--text3);margin-top:10px}
+.honest{margin-top:24px;background:var(--bg2);border:1px dashed var(--border2);border-radius:13px;padding:16px;font-size:12.5px;color:var(--text2)}
+.honest b{color:var(--text)}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo"><span class="dot"></span>なぎ｜業務自動化デモ</div>
+  <a class="nav-back" href="../../">← ポートフォリオに戻る</a>
+</nav>
+
+<div class="wrap">
+  <div class="head">
+    <h1>会員制コミュニティ運営 自動化ダッシュボード</h1>
+    <div class="sub">入会・継続・マッチング配信・月次レポート・KPI集計といったCSの定型業務を、GAS×Claude API×Stripe Webhook×Slackで自動化。CS担当の月次工数削減を狙うバックエンドの中核を、動く形でご確認いただけます。</div>
+    <div class="stack">
+      <span class="tech">Google Apps Script</span><span class="tech">Claude API</span><span class="tech">Stripe Webhook</span><span class="tech">Slack API</span><span class="tech">Gmail API</span><span class="tech">スプレッドシートDB</span>
+    </div>
+    <span class="demo-flag">⚠ サンプル出力デモです（APIキー不使用・会員データはすべてダミー）。本番はClaude API／Stripe Webhook／Slack APIに接続します。</span>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-v="kpi">📊 KPIダッシュボード</div>
+    <div class="tab" data-v="members">👥 会員管理（Stage・Badge自動）</div>
+    <div class="tab" data-v="match">🤝 AIマッチングレポート</div>
+    <div class="tab" data-v="slack">🔔 Slack通知（異常検知）</div>
+    <div class="tab" data-v="webhook">💳 Stripe Webhook処理</div>
+  </div>
+
+  <!-- KPI -->
+  <div class="view show" data-view="kpi">
+    <div class="kpis" id="kpis"></div>
+    <div class="panel">
+      <h2>会員数の推移（月次・自動集計）</h2>
+      <div class="bars" id="bars"></div>
+    </div>
+    <div class="note">※ スプレッドシートの会員DB・成約ログから GAS が自動集計。Looker Studio 連携も可能です。</div>
+  </div>
+
+  <!-- MEMBERS -->
+  <div class="view" data-view="members">
+    <div class="panel">
+      <h2>会員DB（入会記念日→Stage自動進級／紹介数→Badge自動付与）</h2>
+      <table><thead><tr><th>会員</th><th>業種</th><th>入会</th><th>継続</th><th>紹介</th><th>Stage</th><th>Badge</th><th>課金状態</th></tr></thead>
+      <tbody id="mtbody"></tbody></table>
+      <div class="note">※ Stage・Badge は手動更新せず、入会日と紹介数から GAS が毎日自動再計算。進級時は Slack＋メールへ自動通知。</div>
+    </div>
+  </div>
+
+  <!-- MATCH -->
+  <div class="view" data-view="match">
+    <div class="panel">
+      <h2>Claude API による個別マッチングレポート生成</h2>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span style="font-size:13px;color:var(--text2)">対象会員：</span>
+        <select id="msel" style="background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 10px;border-radius:8px;font-size:13px"></select>
+        <button class="btn" id="genmatch">⚡ マッチングレポート生成</button>
+      </div>
+      <div class="report" id="matchout"></div>
+    </div>
+  </div>
+
+  <!-- SLACK -->
+  <div class="view" data-view="slack">
+    <div class="panel">
+      <h2>Slack 自動通知（CSが朝に見るだけで状況把握）</h2>
+      <div class="slackfeed" id="slackfeed"></div>
+    </div>
+  </div>
+
+  <!-- WEBHOOK -->
+  <div class="view" data-view="webhook">
+    <div class="panel">
+      <h2>Stripe Webhook 受信 → 自動処理（実装イメージ）</h2>
+      <div class="flow">
+        <span class="step">Stripe イベント</span><span class="arr">→</span>
+        <span class="step">GAS doPost で受信・署名検証</span><span class="arr">→</span>
+        <span class="step">会員DB更新</span><span class="arr">→</span>
+        <span class="step">Slack／メール通知</span>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin:14px 0 6px">受信イベント例：継続課金の失敗（退会リスク検知）</p>
+      <pre id="wh-event"></pre>
+      <p style="font-size:13px;color:var(--text2);margin:14px 0 6px">GAS 側の処理（擬似コード）</p>
+      <pre id="wh-code"></pre>
+      <div class="note">※ 決済情報そのものは保持せず、Stripe の event だけを受けて会員状態とCS通知を駆動する設計です。</div>
+    </div>
+  </div>
+
+  <div class="honest">
+    <b>このデモについて（正直にお伝えします）</b><br>
+    GAS × Claude API × Slack ／ Gmail ／ スプレッドシートDB は私の実領域です。一方 <b>Stripe Webhook は本デモで実装イメージを示したもので、Stripe 案件そのものの納品実績はこれからです</b>。決済まわりは要件が明確なので、上の受信→処理フローのとおり確実にキャッチアップして実装します。「できないことをできる」と言わない前提で、まず動くもので実力をご判断ください。
+  </div>
+</div>
+
+<script>
+// ===== ダミー会員DB =====
+const today=new Date('2026-06-27');
+const M=[
+  {name:"佐藤 健一",co:"スリーアロー(株)",ind:"SaaS",join:"2024-01-15",refs:6,active:true,deals:3,amt:4200000,listed:true,need:"資金調達の壁打ち相手"},
+  {name:"田中 美咲",co:"Minato Design",ind:"デザイン",join:"2025-09-02",refs:2,active:true,deals:1,amt:600000,listed:false,need:"BtoB営業の知見"},
+  {name:"鈴木 大輔",co:"日本ロジ(株)",ind:"物流",join:"2023-05-20",refs:9,active:true,deals:5,amt:9800000,listed:true,need:"DX人材の採用"},
+  {name:"高橋 彩",co:"くらしテック",ind:"EC",join:"2026-02-10",refs:1,active:true,deals:0,amt:0,listed:false,need:"EC多販路の出品自動化"},
+  {name:"伊藤 涼",co:"Reazon Capital",ind:"投資",join:"2024-11-08",refs:4,active:false,deals:2,amt:3100000,listed:false,need:"スタートアップ紹介"},
+  {name:"渡辺 翔",co:"フードリンク",ind:"飲食",join:"2025-03-25",refs:3,active:true,deals:1,amt:850000,listed:false,need:"店舗オペの仕組み化"},
+];
+function monthsSince(d){const a=new Date(d);return (today.getFullYear()-a.getFullYear())*12+(today.getMonth()-a.getMonth());}
+function stageOf(m){const n=monthsSince(m.join);if(n>=24)return 4;if(n>=12)return 3;if(n>=6)return 2;return 1;}
+function badgeOf(m){if(m.refs>=5)return['Gold','b-gold'];if(m.refs>=3)return['Silver','b-silver'];if(m.refs>=1)return['Bronze','b-bronze'];return['—','b-none'];}
+
+// ===== KPI =====
+function renderKPI(){
+  const members=M.length, deals=M.reduce((s,m)=>s+m.deals,0), amt=M.reduce((s,m)=>s+m.amt,0), listed=M.filter(m=>m.listed).length;
+  const data=[{l:"会員数",v:members+"名",d:"+2 今月"},{l:"成約数",v:deals+"件",d:"+1 今月"},{l:"累計成約額",v:"¥"+(amt/10000).toLocaleString()+"万",d:"+¥420万"},{l:"上場企業輩出数",v:listed+"社",d:"継続支援中"}];
+  document.getElementById('kpis').innerHTML=data.map(k=>`<div class="kpi"><div class="l">${k.l}</div><div class="v">${k.v}</div><div class="d">▲ ${k.d}</div></div>`).join('');
+  const series=[3,4,4,5,5,6];const max=Math.max(...series);
+  document.getElementById('bars').innerHTML=series.map((v,i)=>`<div class="bar"><div class="col" style="height:${Math.round(v/max*110)}px"></div><div class="lab">${i+1}月</div></div>`).join('');
+}
+
+// ===== 会員テーブル =====
+function renderMembers(){
+  document.getElementById('mtbody').innerHTML=M.map(m=>{
+    const st=stageOf(m),[bn,bc]=badgeOf(m);
+    return `<tr><td><b>${m.name}</b><br><span style="font-size:11px;color:var(--text3)">${m.co}</span></td><td>${m.ind}</td><td>${m.join}</td><td>${monthsSince(m.join)}ヶ月</td><td>${m.refs}名</td><td><span class="stage">Stage ${st}</span></td><td><span class="badge ${bc}">${bn}</span></td><td>${m.active?'<span style="color:var(--green)">●課金中</span>':'<span style="color:var(--red)">●失敗</span>'}</td></tr>`;
+  }).join('');
+  const sel=document.getElementById('msel');sel.innerHTML=M.map((m,i)=>`<option value="${i}">${m.name}（${m.co}）</option>`).join('');
+}
+
+// ===== AIマッチングレポート（ルールベース＋テンプレ・本番はClaude API） =====
+function genMatch(){
+  const i=+document.getElementById('msel').value, me=M[i];
+  const cands=M.map((m,idx)=>({m,idx})).filter(x=>x.idx!==i);
+  // 「相手の業種が自分のneedに関係しそう」を素朴スコア＋紹介力(refs)で並べ替え
+  const score=x=>{let s=x.m.refs;if(me.need.includes('EC')&&x.m.ind==='EC')s+=5;if(me.need.includes('営業')&&['SaaS','物流'].includes(x.m.ind))s+=4;if(me.need.includes('投資')||me.need.includes('資金')){if(x.m.ind==='投資')s+=6;}if(me.need.includes('採用')&&x.m.refs>=4)s+=3;return s;};
+  const top=cands.sort((a,b)=>score(b)-score(a)).slice(0,2);
+  const reason=(c)=>{const r=[];if(c.m.ind==='投資')r.push('資金調達・出資の相談に乗れる');if(c.m.refs>=5)r.push('紹介力が高くネットワーク拡張に貢献');if(me.need.includes('EC')&&c.m.ind==='EC')r.push('EC運営の実務知見を直接共有できる');if(!r.length)r.push(c.m.ind+'領域の知見で'+me.need+'を補完できる');return r.join('／');};
+  const out=document.getElementById('matchout');
+  out.innerHTML=`<div class="ai">✦ Claude API 生成（サンプル）</div>
+    <h4>${me.name} 様への今月のマッチング提案</h4>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:8px">課題：${me.need} ／ Stage ${stageOf(me)}</div>
+    ${top.map((c,n)=>`<div style="margin:10px 0;padding:10px;background:var(--bg);border-radius:8px">
+      <div><span class="pair">提案${n+1}：${c.m.name} 様（${c.m.co}・${c.m.ind}）</span></div>
+      <div style="font-size:12.5px;color:var(--text2);margin-top:4px">理由：${reason(c)}。${c.m.name}様はStage ${stageOf(c.m)}・紹介${c.m.refs}名。1on1のアジェンダ案：「${me.need}」を軸に30分。</div>
+    </div>`).join('')}
+    <div style="font-size:11.5px;color:var(--text3);margin-top:6px">→ 本番は会員プロフィール全体をClaude APIに渡し、相性と提案理由・アジェンダまで自動生成。月初にSlack DM＋メールで自動配信します。</div>`;
+  out.classList.add('show');
+}
+
+// ===== Slack通知フィード =====
+function renderSlack(){
+  const feed=[
+    {cls:'alert',ic:'🚨',t:'退会リスク検知',tag:'#cs-alert ・ Stripe Webhook',b:'伊藤 涼 様（Reazon Capital）の継続課金が失敗しました（invoice.payment_failed）。\n→ 自動でCS担当へアサイン・フォローDM下書きを作成済み。'},
+    {cls:'up',ic:'⬆️',t:'Stage自動進級',tag:'#member-ops',b:'佐藤 健一 様が入会2年でStage 4へ自動進級。進級記念のメール＋特典案内を送信しました。'},
+    {cls:'ok',ic:'📈',t:'月次レポート配信完了',tag:'#cs-report ・ Claude API',b:'6月度の個別マッチングレポートを全6名へ自動配信（Claude生成）。CS手作業ゼロ。今月の想定削減工数：約11時間。'},
+    {cls:'up',ic:'🏅',t:'Badge自動付与',tag:'#member-ops',b:'鈴木 大輔 様が紹介9名でGold Badgeを獲得。お祝いDMを送信しました。'},
+  ];
+  document.getElementById('slackfeed').innerHTML=feed.map(f=>`<div class="smsg ${f.cls}"><div class="av bot">${f.ic}</div><div><div class="ttl">運営Bot <span class="tag">${f.tag}</span></div><div class="body"><b>${f.t}</b>\n${f.b}</div></div></div>`).join('');
+}
+
+// ===== Stripe Webhook =====
+function renderWebhook(){
+  document.getElementById('wh-event').textContent=JSON.stringify({
+    id:"evt_1Nxxxx",type:"invoice.payment_failed",
+    data:{object:{customer:"cus_xxx",customer_email:"member@example.com",amount_due:33000,attempt_count:2}}
+  },null,2);
+  document.getElementById('wh-code').textContent=
+`function doPost(e){
+  const sig = e.parameter['stripe-signature'];
+  const event = verifyAndParse(e.postData.contents, sig); // 署名検証
+  if (event.type === 'invoice.payment_failed') {
+    const email = event.data.object.customer_email;
+    flagMemberAtRisk_(email);          // 会員DBに退会リスクフラグ
+    notifySlack_('#cs-alert',
+      \`🚨 \${email} の決済失敗。フォローをお願いします\`);
+    draftFollowUpMail_(email);          // Gmail下書きを自動作成
+  }
+  return ContentService.createTextOutput('ok');
+}`;
+}
+
+// ===== タブ =====
+document.querySelector('.tabs').addEventListener('click',e=>{
+  const t=e.target.closest('.tab');if(!t)return;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('show',v.dataset.view===t.dataset.v));
+});
+document.getElementById('genmatch').addEventListener('click',genMatch);
+
+renderKPI();renderMembers();renderSlack();renderWebhook();
+</script>
+</body>
+</html>
