@@ -212,14 +212,14 @@
   .card-body { padding: 18px; }
 
   /* ======== デモUI ======== */
-  .demo-grid {
+  .demo-two-col {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
   }
   @media (max-width: 768px) {
-    .demo-grid { grid-template-columns: 1fr; }
+    .demo-two-col { grid-template-columns: 1fr; }
   }
 
   .input-group {
@@ -234,57 +234,49 @@
     text-transform: uppercase;
     letter-spacing: .05em;
   }
+  .input-label-note {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-dim);
+    text-transform: none;
+    letter-spacing: 0;
+    margin-top: 2px;
+  }
 
   textarea {
     width: 100%;
-    min-height: 180px;
     background: var(--bg-surface);
     border: 1px solid var(--border);
     border-radius: 8px;
     color: var(--text);
     font-family: var(--font-mono);
     font-size: 12px;
-    line-height: 1.7;
+    line-height: 1.8;
     padding: 12px;
     resize: vertical;
     outline: none;
     transition: border-color .2s;
   }
   textarea:focus { border-color: var(--accent-cyan); }
+  .textarea-single { min-height: 120px; }
+  .textarea-multi  { min-height: 220px; }
 
-  .option-row {
+  /* Before → After 矢印 */
+  .transform-arrow {
     display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    align-items: flex-end;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: var(--accent-cyan);
+    opacity: .7;
+    padding: 8px 0;
   }
-  .option-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    flex: 1;
-    min-width: 140px;
-  }
-  select, input[type="number"] {
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-size: 13px;
-    padding: 8px 12px;
-    outline: none;
-    transition: border-color .2s;
-    width: 100%;
-    font-family: inherit;
-  }
-  select:focus, input[type="number"]:focus { border-color: var(--accent-cyan); }
-  select option { background: #1a1a26; }
 
   .btn-row {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
-    margin-top: 4px;
+    margin-top: 16px;
   }
 
   .btn-primary {
@@ -320,27 +312,41 @@
   }
   .btn-secondary:hover { border-color: var(--accent-cyan); background: rgba(87,211,194,.06); }
 
-  /* ======== 揺れサンプルバッジ ======== */
-  .wobble-chips {
+  /* ======== タブ切り替え ======== */
+  .demo-tab-nav {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 8px;
+    gap: 4px;
+    background: var(--bg-card2);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 20px;
   }
-  .wobble-chip {
-    background: rgba(87,211,194,.08);
-    border: 1px solid rgba(87,211,194,.2);
-    border-radius: 6px;
-    padding: 3px 10px;
-    font-size: 11px;
+  .demo-tab-btn {
+    flex: 1;
+    padding: 8px 14px;
+    border: none;
+    background: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: all .2s;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+  .demo-tab-btn:hover { background: rgba(255,255,255,.04); color: var(--text); }
+  .demo-tab-btn.active {
+    background: linear-gradient(135deg, rgba(87,211,194,.18), rgba(126,162,255,.18));
     color: var(--accent-cyan);
-    font-family: var(--font-mono);
+    border: 1px solid rgba(87,211,194,.25);
   }
+  .demo-tab-pane { display: none; }
+  .demo-tab-pane.active { display: block; }
 
   /* ======== 結果テーブル ======== */
   .result-wrap {
     overflow-x: auto;
-    margin-top: 16px;
   }
   .result-table {
     width: 100%;
@@ -349,24 +355,31 @@
     font-family: var(--font-mono);
   }
   .result-table th {
-    padding: 8px 12px;
-    text-align: center;
+    padding: 8px 14px;
+    text-align: left;
     font-size: 11px;
     font-weight: 700;
     color: #000;
     background: linear-gradient(135deg, var(--accent-cyan), var(--accent-azure));
     border: 1px solid rgba(87,211,194,.3);
     white-space: nowrap;
-    min-width: 90px;
+    min-width: 110px;
+  }
+  .result-table th.row-num-th {
+    min-width: 36px;
+    text-align: center;
+    background: var(--bg-card2);
+    color: var(--text-dim);
+    border-color: var(--border);
   }
   .result-table td {
-    padding: 9px 12px;
+    padding: 9px 14px;
     font-size: 12px;
     border: 1px solid var(--border);
     vertical-align: middle;
     color: var(--text);
     background: var(--bg-surface);
-    max-width: 180px;
+    max-width: 200px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -395,7 +408,7 @@
     border-radius: 8px;
     font-size: 12px;
     color: var(--text-muted);
-    margin-bottom: 12px;
+    margin-bottom: 14px;
     flex-wrap: wrap;
   }
   .status-tag {
@@ -407,9 +420,26 @@
     font-size: 11px;
     font-weight: 700;
   }
-  .tag-cyan { background: rgba(87,211,194,.15); color: var(--accent-cyan); border: 1px solid rgba(87,211,194,.3); }
+  .tag-cyan  { background: rgba(87,211,194,.15); color: var(--accent-cyan); border: 1px solid rgba(87,211,194,.3); }
   .tag-amber { background: rgba(245,158,11,.12); color: var(--accent-amber); border: 1px solid rgba(245,158,11,.3); }
   .tag-green { background: rgba(16,185,129,.12); color: #34d399; border: 1px solid rgba(16,185,129,.3); }
+
+  /* ======== wobble chips ======== */
+  .wobble-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .wobble-chip {
+    background: rgba(87,211,194,.08);
+    border: 1px solid rgba(87,211,194,.2);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 11px;
+    color: var(--accent-cyan);
+    font-family: var(--font-mono);
+  }
 
   /* ======== コピー成功トースト ======== */
   .toast {
@@ -470,7 +500,6 @@
     flex-shrink: 0;
   }
 
-  /* 仕組み説明カード */
   .spec-steps {
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -504,7 +533,6 @@
   .spec-step-text { font-size: 14px; line-height: 1.7; color: var(--text); }
   .spec-step-text strong { color: var(--accent-cyan); }
 
-  /* 揺れ吸収グリッド */
   .spec-tech-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -524,7 +552,6 @@
   .spec-tech-role { font-size: 12px; color: var(--accent-cyan); font-weight: 600; margin-bottom: 8px; }
   .spec-tech-body { font-size: 12px; color: var(--text-muted); line-height: 1.65; }
 
-  /* 制作の流れ */
   .spec-process {
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -564,7 +591,7 @@
     margin-bottom: 10px;
   }
   .spec-proc-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-  .spec-proc-body { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+  .spec-proc-body  { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
   .spec-proc-arrow {
     display: flex;
     align-items: center;
@@ -672,12 +699,12 @@
     background: none;
     tab-size: 2;
   }
-  .kw  { color: #ff7b72; }   /* keyword: function, var, const, return */
-  .fn  { color: #d2a8ff; }   /* function name */
-  .str { color: #a5d6ff; }   /* string */
-  .cmt { color: #8b949e; font-style: italic; }  /* comment */
-  .num { color: #f2cc60; }   /* number */
-  .op  { color: #79c0ff; }   /* operator / builtin */
+  .kw  { color: #ff7b72; }
+  .fn  { color: #d2a8ff; }
+  .str { color: #a5d6ff; }
+  .cmt { color: #8b949e; font-style: italic; }
+  .num { color: #f2cc60; }
+  .op  { color: #79c0ff; }
 
   /* ======== フッター ======== */
   .demo-notice {
@@ -718,15 +745,16 @@
 <!-- ======== ヒーロー ======== -->
 <div class="hero">
   <div class="hero-icon">📋</div>
-  <h1>セル貼り付け → 複数列に自動分割</h1>
+  <h1>縦の貼り付け → 横1行に自動仕分け</h1>
   <p class="hero-sub">
-    システムからコピーした情報を 1 セルに貼り付けるだけで、<br>
-    A・B・C…列へ自動的に振り分ける GAS ツール
+    メモアプリから縦にコピーした複数行を A2 に貼り付けるだけで、<br>
+    名前・食べ物・アーティスト… と横1行に自動展開する GAS ツール
   </p>
   <div class="hero-chips">
     <div class="hero-chip">📌 GAS <span>スプレッドシート優先</span></div>
-    <div class="hero-chip">🔄 区切り <span>自動判定 or 手動選択</span></div>
-    <div class="hero-chip">🧹 揺れ吸収 <span>全角/半角・連続空白・前後trim</span></div>
+    <div class="hero-chip">↕→↔ <span>縦ブロック → 横1行に転置</span></div>
+    <div class="hero-chip">👥 複数人 <span>空行区切りで5名分まとめて</span></div>
+    <div class="hero-chip">🧹 揺れ吸収 <span>前後trim・空行スキップ・項目数の過不足</span></div>
     <div class="hero-chip">⚡ VBA <span>Excel版コードも同梱</span></div>
   </div>
 </div>
@@ -738,66 +766,109 @@
 
   <div class="card">
     <div class="card-header">
-      <div class="card-title">📥 入力：システムからコピーした貼り付け文字列（1行 = 1レコード）</div>
+      <div class="card-title">↕→↔ 縦の複数行 → 横1行に変換</div>
     </div>
     <div class="card-body">
-      <div class="input-group">
-        <label class="input-label" for="input-text">貼り付けエリア</label>
-        <textarea id="input-text" placeholder="ここにデータを貼り付けてください…" spellcheck="false"></textarea>
+
+      <!-- タブ: 1人分 / 5人分 -->
+      <div class="demo-tab-nav">
+        <button class="demo-tab-btn active" onclick="switchDemoTab('single')">1人分（基本）</button>
+        <button class="demo-tab-btn" onclick="switchDemoTab('multi')">5人分まとめて（空行区切り）</button>
       </div>
 
-      <div style="margin-top: 14px;">
-        <div class="input-label" style="margin-bottom:8px;">揺れ吸収の例（含まれていても正しく分割）</div>
-        <div class="wobble-chips">
-          <span class="wobble-chip">全角スペース「　」</span>
-          <span class="wobble-chip">連続スペース「  」</span>
-          <span class="wobble-chip">タブ混在</span>
-          <span class="wobble-chip">前後の空白</span>
-          <span class="wobble-chip">項目数の過不足</span>
+      <!-- ===== 1人分 タブ ===== -->
+      <div class="demo-tab-pane active" id="dpane-single">
+        <div class="demo-two-col">
+          <div class="input-group">
+            <div class="input-label">Before：縦に並んだメモ（1項目=1行）</div>
+            <div class="input-label-note">メモアプリや管理システムからそのままコピーした状態</div>
+            <textarea id="input-single" class="textarea-single" spellcheck="false"></textarea>
+            <div class="wobble-chips">
+              <span class="wobble-chip">各行をtrim</span>
+              <span class="wobble-chip">空行は無視</span>
+              <span class="wobble-chip">項目数の過不足OK</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div class="input-label">After：横1行に展開された結果</div>
+            <div class="input-label-note">スプレッドシートの A2〜D2（以降）に自動配置</div>
+            <div id="result-single-preview" style="display:none;">
+              <div class="result-wrap">
+                <table class="result-table" id="tbl-single-preview">
+                  <thead id="thead-single-preview"></thead>
+                  <tbody id="tbody-single-preview"></tbody>
+                </table>
+              </div>
+            </div>
+            <div id="result-single-placeholder" style="
+              flex:1; min-height:100px;
+              background:var(--bg-surface);
+              border:1px dashed var(--border);
+              border-radius:8px;
+              display:flex; align-items:center; justify-content:center;
+              color:var(--text-dim); font-size:12px;">
+              「横に変換」を押すと結果が表示されます
+            </div>
+          </div>
+        </div>
+
+        <div class="transform-arrow">↕ → ↔</div>
+
+        <div class="btn-row" style="margin-top:0;">
+          <button class="btn-primary" onclick="runSingle()">↔ 横に変換する</button>
+          <button class="btn-secondary" onclick="loadSampleSingle()">📂 サンプルを読み込む</button>
+          <button class="btn-secondary" id="btn-tsv-single" onclick="copyTsvSingle()" disabled>📋 TSVでコピー</button>
         </div>
       </div>
 
-      <div class="option-row" style="margin-top: 20px;">
-        <div class="option-group">
-          <label class="input-label" for="sep-select">区切り文字</label>
-          <select id="sep-select">
-            <option value="auto">自動判定（タブ ＞ カンマ ＞ 空白）</option>
-            <option value="tab">タブ</option>
-            <option value="newline">改行（1行を1項目）</option>
-            <option value="comma">カンマ</option>
-            <option value="space">スペース（連続圧縮）</option>
-          </select>
+      <!-- ===== 5人分 タブ ===== -->
+      <div class="demo-tab-pane" id="dpane-multi">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">
+          人と人の間を<strong style="color:var(--accent-cyan)">空行1行</strong>で区切って貼り付けると、各ブロック=1行として横に積まれます。
+        </p>
+        <div class="demo-two-col">
+          <div class="input-group">
+            <div class="input-label">Before：5人分（空行区切り）</div>
+            <div class="input-label-note">1人ぶんのブロックを空行で区切って連続貼り付け</div>
+            <textarea id="input-multi" class="textarea-multi" spellcheck="false"></textarea>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div class="input-label">After：5行の表に展開</div>
+            <div class="input-label-note">各人が1行になり、スプレッドシートの A2〜A6 に積まれる</div>
+            <div id="result-multi-preview" style="display:none;">
+              <div class="result-wrap">
+                <table class="result-table" id="tbl-multi-preview">
+                  <thead id="thead-multi-preview"></thead>
+                  <tbody id="tbody-multi-preview"></tbody>
+                </table>
+              </div>
+            </div>
+            <div id="result-multi-placeholder" style="
+              flex:1; min-height:160px;
+              background:var(--bg-surface);
+              border:1px dashed var(--border);
+              border-radius:8px;
+              display:flex; align-items:center; justify-content:center;
+              color:var(--text-dim); font-size:12px;">
+              「5人分まとめて変換」を押すと結果が表示されます
+            </div>
+          </div>
         </div>
-        <div class="option-group">
-          <label class="input-label" for="cols-input">最大列数（0＝自動）</label>
-          <input id="cols-input" type="number" value="0" min="0" max="26">
+
+        <div class="transform-arrow">↕↕ → ↔ × 5行</div>
+
+        <div class="btn-row" style="margin-top:0;">
+          <button class="btn-primary" onclick="runMulti()">↔ 5人分まとめて変換</button>
+          <button class="btn-secondary" onclick="loadSampleMulti()">📂 サンプルを読み込む</button>
+          <button class="btn-secondary" id="btn-tsv-multi" onclick="copyTsvMulti()" disabled>📋 TSVでコピー</button>
         </div>
       </div>
 
-      <div class="btn-row" style="margin-top: 16px;">
-        <button class="btn-primary" onclick="runSplit()">▶ 分割する</button>
-        <button class="btn-secondary" onclick="loadSample()">📂 サンプルを読み込む</button>
-        <button class="btn-secondary" id="btn-tsv" onclick="copyTsv()" disabled>📋 TSVでコピー</button>
-      </div>
     </div>
   </div>
 
-  <div id="result-container" style="display:none;">
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">📊 分割結果（スプレッドシートに貼れるTSVでコピーできます）</div>
-        <div id="status-bar" class="status-bar"></div>
-      </div>
-      <div class="card-body">
-        <div class="result-wrap">
-          <table class="result-table" id="result-table">
-            <thead id="result-thead"></thead>
-            <tbody id="result-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- ステータス / 結果エリア（サマリ） -->
+  <div id="status-container" style="display:none;" class="status-bar"></div>
 
 </div>
 
@@ -811,7 +882,7 @@
 
     <div class="spec-heading">📋 制作仕様・自動化の仕組み</div>
     <p class="spec-heading-sub">
-      「1セルに貼り付けた情報を複数列へ自動分割する」ツールの仕組み・揺れ吸収の方針・実装フローをご説明します。
+      「縦に貼り付けた複数行を横1行に自動仕分けする」ツールの仕組み・揺れ吸収の方針・実装フローをご説明します。
     </p>
 
     <!-- 1. 仕組み -->
@@ -821,60 +892,54 @@
         <li class="spec-step-item">
           <div class="spec-step-num">1</div>
           <div class="spec-step-text">
-            <strong>システムからコピーして 1 つのセルに貼り付ける</strong><br>
-            社内管理システムや外部ツールから情報をコピーすると、名前・食べ物・アーティスト名などが 1 つの文字列にまとまって貼り付けられることがあります。これがそのまま 1 セルに収まってしまう状態です。
+            <strong>メモや管理システムから縦ブロックをそのままコピーする</strong><br>
+            名前・好きな食べ物・好きなアーティスト・おすすめのドラマ…といった回答がメモアプリに1項目=1行で縦並びになっています。それをそのまま全選択コピーします。
           </div>
         </li>
         <li class="spec-step-item">
           <div class="spec-step-num">2</div>
           <div class="spec-step-text">
-            <strong>GAS が区切り文字を自動判定して各列に振り分ける</strong><br>
-            貼り付けた瞬間（onEdit）またはボタン押下でスクリプトが起動。タブ → カンマ → 空白の優先順でどの区切りかを自動判定し、A列の文字列を B・C・D…列へ自動展開します。
+            <strong>スプレッドシートの A 列に1回貼り付けるだけ</strong><br>
+            A2 セルに貼り付けると、スプレッドシートは縦4行（A2〜A5）にデータを配置します。これが「1人分が縦に広がった状態」です。
           </div>
         </li>
         <li class="spec-step-item">
           <div class="spec-step-num">3</div>
           <div class="spec-step-text">
-            <strong>揺れを吸収してきれいに揃える</strong><br>
-            全角スペースを半角に変換、連続するスペース/タブを 1 つに圧縮、前後の余分な空白をトリム。項目数が行によって異なってもエラーにならず、足りない列は空欄のまま保持します。
+            <strong>GAS が自動検知して横1行（A2 / B2 / C2 / D2）に転置する</strong><br>
+            onEdit トリガーが A 列への2行以上の貼り付けを検知。縦に並んだ値を横1行に並べ替え（転置）し、A2 に全データを横展開します。1行目のヘッダー（名前 / 好きな食べ物…）に合わせて自動配置。
           </div>
         </li>
         <li class="spec-step-item">
           <div class="spec-step-num">4</div>
           <div class="spec-step-text">
-            <strong>A 列の元データは残す or 消すを設定で切り替え</strong><br>
-            分割後に A 列の元テキストを消すかどうかをコード内の定数 <code style="font-family:var(--font-mono);color:var(--accent-cyan)">CLEAR_SOURCE</code> で制御できます。メンテが容易なシンプルな構成です。
+            <strong>5人分は人ごとに次の行へ繰り返すだけ</strong><br>
+            2人目は A3 に貼り付ければ B3・C3・D3 に自動展開。5人分を繰り返せば5行の表が完成します。空行で区切った一括貼り付けには GAS のカスタムメニュー版が対応します。
           </div>
         </li>
       </ol>
     </div>
 
     <!-- 2. 揺れ吸収 -->
-    <div class="spec-block-title">2. 揺れ吸収の方針（4 パターン）</div>
+    <div class="spec-block-title">2. 揺れ吸収の方針（3 パターン）</div>
     <div class="spec-tech-grid">
-      <div class="spec-tech-card">
-        <div class="spec-tech-icon">⬛</div>
-        <div class="spec-tech-name">全角 / 半角スペース</div>
-        <div class="spec-tech-role">統一変換</div>
-        <div class="spec-tech-body">全角スペース「　」を半角スペース「 」に置換。IME 切り替えミスや、コピー元の文字コード差異によるスペース混在を自動解消します。</div>
-      </div>
-      <div class="spec-tech-card">
-        <div class="spec-tech-icon">🔤</div>
-        <div class="spec-tech-name">連続空白 / タブ</div>
-        <div class="spec-tech-role">圧縮（collapseWhitespace）</div>
-        <div class="spec-tech-body">「スペース 3 つ続き」「スペース＋タブ混在」を正規表現 <code style="font-family:var(--font-mono);font-size:11px">/[\s　]+/g</code> で 1 つに圧縮。見えない文字による列ズレを防ぎます。</div>
-      </div>
       <div class="spec-tech-card">
         <div class="spec-tech-icon">✂️</div>
         <div class="spec-tech-name">前後の余白</div>
-        <div class="spec-tech-role">trim（各セル単位）</div>
-        <div class="spec-tech-body">分割後の各項目に個別に trim を適用。行頭・行末だけでなく、分割後の各フィールドの先頭・末尾スペースも除去するため、セル内に空白が残りません。</div>
+        <div class="spec-tech-role">各行を個別 trim</div>
+        <div class="spec-tech-body">各行の先頭・末尾のスペース・タブを除去してからセルへ書き込み。コピー元のインデントや末尾スペースが残っていても正しく配置されます。</div>
+      </div>
+      <div class="spec-tech-card">
+        <div class="spec-tech-icon">⬜</div>
+        <div class="spec-tech-name">空行の混入</div>
+        <div class="spec-tech-role">自動スキップ</div>
+        <div class="spec-tech-body">メモの先頭・末尾・途中に空行が入っていても無視します。trim 後が空文字の行はフィールドとしてカウントしないため、列がズレません。</div>
       </div>
       <div class="spec-tech-card">
         <div class="spec-tech-icon">📐</div>
         <div class="spec-tech-name">項目数の過不足</div>
         <div class="spec-tech-role">安全な長さ合わせ</div>
-        <div class="spec-tech-body">分割結果が最大列数より少ない行は末尾に空文字を補完。多い行はそのまま末尾に追加。どちらも崩れず、既存データを上書きしません。</div>
+        <div class="spec-tech-body">人によって記入項目数が違っても崩れません。項目が少ない場合は末尾セルを空欄のまま保持、多い場合は右方向へ追加で展開します。</div>
       </div>
     </div>
 
@@ -885,13 +950,13 @@
         <div class="spec-proc-node">
           <div class="spec-proc-num">1</div>
           <div class="spec-proc-title">データ確認</div>
-          <div class="spec-proc-body">実際にコピーされる文字列のサンプルをいただき、区切りパターンと列数（A〜R 列など）を確認します</div>
+          <div class="spec-proc-body">実際の縦ブロックのサンプルをいただき、項目数・ヘッダー名（A〜R 列など）を確認します</div>
         </div>
         <div class="spec-proc-arrow">→</div>
         <div class="spec-proc-node">
           <div class="spec-proc-num">2</div>
           <div class="spec-proc-title">GAS 実装</div>
-          <div class="spec-proc-body">カスタムメニュー版・onEdit 版の両方を実装。ヘッダー行（A・B・C…）の自動挿入や対象列名もカスタマイズします</div>
+          <div class="spec-proc-body">onEdit 版（1人ずつ貼り付け）とカスタムメニュー版（複数人まとめて処理）の両方を実装します</div>
         </div>
         <div class="spec-proc-arrow">→</div>
         <div class="spec-proc-node">
@@ -910,278 +975,209 @@
 
     <div class="code-section">
       <div class="code-tab-nav">
-        <button class="code-tab-btn active" onclick="switchCodeTab('gas-menu')">GAS（カスタムメニュー版）</button>
-        <button class="code-tab-btn" onclick="switchCodeTab('gas-onedit')">GAS（onEdit 自動実行版）</button>
-        <button class="code-tab-btn" onclick="switchCodeTab('vba')">Excel VBA（おまけ）</button>
+        <button class="code-tab-btn active" onclick="switchCodeTab('gas-onedit', event)">GAS（onEdit 自動実行版）</button>
+        <button class="code-tab-btn" onclick="switchCodeTab('gas-menu', event)">GAS（カスタムメニュー版）</button>
+        <button class="code-tab-btn" onclick="switchCodeTab('vba', event)">Excel VBA（おまけ）</button>
       </div>
 
-      <!-- GAS カスタムメニュー版 -->
-      <div class="code-pane active" id="cpane-gas-menu">
-        <div class="code-header">
-          <span class="code-lang">Google Apps Script</span>
-          <button class="btn-copy" onclick="copyCode('gas-menu')">📋 コードをコピー</button>
-        </div>
-        <pre id="code-gas-menu"><span class="cmt">// =====================================================
-// データ分割ツール（カスタムメニュー実行版）
-// スプレッドシートに貼り付けて「データ分割」メニューから実行
-// =====================================================</span>
-
-<span class="cmt">// ===== 設定（ここだけ変えれば動く） =====</span>
-<span class="kw">const</span> CONFIG = {
-  SHEET_NAME:   <span class="str">'Sheet1'</span>,       <span class="cmt">// 対象シート名</span>
-  SOURCE_COL:   <span class="num">1</span>,              <span class="cmt">// 貼り付け列（1=A列）</span>
-  TARGET_START: <span class="num">2</span>,              <span class="cmt">// 分割先の開始列（2=B列）</span>
-  MAX_COLS:     <span class="num">18</span>,             <span class="cmt">// 分割先の最大列数（A〜R列）</span>
-  HEADER_ROW:   <span class="num">1</span>,              <span class="cmt">// ヘッダー行番号（1=1行目）</span>
-  DATA_START:   <span class="num">2</span>,              <span class="cmt">// データ開始行（2=2行目）</span>
-  CLEAR_SOURCE: <span class="kw">false</span>,          <span class="cmt">// 分割後にA列の元テキストを消すか</span>
-  HEADERS: [                      <span class="cmt">// ヘッダー名（実データに合わせて変更）</span>
-    <span class="str">'名前'</span>, <span class="str">'好きな食べもの'</span>, <span class="str">'好きなアーティスト'</span>,
-    <span class="str">'おすすめドラマ'</span>, <span class="str">'出身地'</span>, <span class="str">'趣味'</span>,
-    <span class="str">'好きな映画'</span>, <span class="str">'好きな季節'</span>, <span class="str">'将来の夢'</span>, <span class="str">'座右の銘'</span>
-  ]
-};
-
-<span class="cmt">// ===== メニュー追加 =====</span>
-<span class="kw">function</span> <span class="fn">onOpen</span>() {
-  <span class="op">SpreadsheetApp</span>.getUi()
-    .createMenu(<span class="str">'データ分割'</span>)
-    .addItem(<span class="str">'選択列を分割する'</span>, <span class="str">'splitData'</span>)
-    .addItem(<span class="str">'ヘッダーを設定する'</span>, <span class="str">'setupHeaders'</span>)
-    .addToUi();
-}
-
-<span class="cmt">// ===== ヘッダー自動設定 =====</span>
-<span class="kw">function</span> <span class="fn">setupHeaders</span>() {
-  <span class="kw">const</span> sheet = <span class="op">SpreadsheetApp</span>.<span class="fn">getActiveSpreadsheet</span>()
-    .<span class="fn">getSheetByName</span>(CONFIG.SHEET_NAME);
-  <span class="kw">if</span> (!sheet) <span class="kw">return</span>;
-
-  <span class="cmt">// A列ヘッダー</span>
-  sheet.<span class="fn">getRange</span>(CONFIG.HEADER_ROW, CONFIG.SOURCE_COL)
-    .<span class="fn">setValue</span>(<span class="str">'貼り付けデータ（元）'</span>);
-
-  <span class="cmt">// B列以降のヘッダー</span>
-  CONFIG.HEADERS.forEach(<span class="kw">function</span>(name, i) {
-    sheet.<span class="fn">getRange</span>(CONFIG.HEADER_ROW, CONFIG.TARGET_START + i)
-      .<span class="fn">setValue</span>(name);
-  });
-}
-
-<span class="cmt">// ===== メイン：データ分割処理 =====</span>
-<span class="kw">function</span> <span class="fn">splitData</span>() {
-  <span class="kw">const</span> sheet = <span class="op">SpreadsheetApp</span>.<span class="fn">getActiveSpreadsheet</span>()
-    .<span class="fn">getSheetByName</span>(CONFIG.SHEET_NAME);
-  <span class="kw">if</span> (!sheet) {
-    <span class="op">SpreadsheetApp</span>.<span class="fn">getUi</span>().<span class="fn">alert</span>(<span class="str">'シートが見つかりません: '</span> + CONFIG.SHEET_NAME);
-    <span class="kw">return</span>;
-  }
-
-  <span class="kw">const</span> lastRow = sheet.<span class="fn">getLastRow</span>();
-  <span class="kw">if</span> (lastRow < CONFIG.DATA_START) <span class="kw">return</span>; <span class="cmt">// データなし</span>
-
-  <span class="cmt">// A列のデータ行を一括取得</span>
-  <span class="kw">const</span> srcRange = sheet.<span class="fn">getRange</span>(CONFIG.DATA_START, CONFIG.SOURCE_COL,
-    lastRow - CONFIG.DATA_START + <span class="num">1</span>, <span class="num">1</span>);
-  <span class="kw">const</span> srcValues = srcRange.<span class="fn">getValues</span>();
-
-  <span class="cmt">// 分割結果を配列に格納</span>
-  <span class="kw">const</span> output = srcValues.<span class="fn">map</span>(<span class="kw">function</span>(row) {
-    <span class="kw">const</span> raw = <span class="op">String</span>(row[<span class="num">0</span>]);
-    <span class="kw">if</span> (!raw.trim()) <span class="kw">return</span> <span class="op">Array</span>(CONFIG.MAX_COLS).<span class="fn">fill</span>(<span class="str">''</span>);
-    <span class="kw">return</span> <span class="fn">parseFields</span>(raw, CONFIG.MAX_COLS);
-  });
-
-  <span class="cmt">// B列以降に一括書き込み（高速）</span>
-  sheet.<span class="fn">getRange</span>(CONFIG.DATA_START, CONFIG.TARGET_START,
-    output.length, CONFIG.MAX_COLS)
-    .<span class="fn">setValues</span>(output);
-
-  <span class="cmt">// A列の元データを消すオプション</span>
-  <span class="kw">if</span> (CONFIG.CLEAR_SOURCE) {
-    srcRange.<span class="fn">clearContent</span>();
-  }
-
-  <span class="op">SpreadsheetApp</span>.<span class="fn">getUi</span>().<span class="fn">alert</span>(output.length + <span class="str">' 行を分割しました。'</span>);
-}
-
-<span class="cmt">// ===== 区切り自動判定 + 揺れ吸収 =====</span>
-<span class="kw">function</span> <span class="fn">parseFields</span>(raw, maxCols) {
-  <span class="cmt">// 1. 全角スペースを半角に統一</span>
-  <span class="kw">let</span> text = raw.<span class="fn">replace</span>(<span class="str">/　/g</span>, <span class="str">' '</span>);
-
-  <span class="cmt">// 2. 区切り文字を自動判定（タブ → カンマ → 空白の優先）</span>
-  <span class="kw">let</span> parts;
-  <span class="kw">if</span> (text.<span class="fn">indexOf</span>(<span class="str">'\t'</span>) !== -<span class="num">1</span>) {
-    <span class="cmt">// タブ区切り: 各フィールドをtrimするだけ（連続タブは空フィールド扱い）</span>
-    parts = text.<span class="fn">split</span>(<span class="str">'\t'</span>).<span class="fn">map</span>(<span class="kw">function</span>(s) { <span class="kw">return</span> s.trim(); });
-  } <span class="kw">else if</span> (text.<span class="fn">indexOf</span>(<span class="str">','</span>) !== -<span class="num">1</span>) {
-    <span class="cmt">// カンマ区切り</span>
-    parts = text.<span class="fn">split</span>(<span class="str">','</span>).<span class="fn">map</span>(<span class="kw">function</span>(s) { <span class="kw">return</span> s.trim(); });
-  } <span class="kw">else</span> {
-    <span class="cmt">// スペース区切り: 連続スペースを1つに圧縮してから分割</span>
-    parts = text.<span class="fn">trim</span>().<span class="fn">replace</span>(<span class="str">/\s+/g</span>, <span class="str">' '</span>).<span class="fn">split</span>(<span class="str">' '</span>);
-  }
-
-  <span class="cmt">// 3. 最大列数に合わせてパディング or トリム</span>
-  <span class="kw">const</span> result = [];
-  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i < maxCols; i++) {
-    result.push(i < parts.length ? parts[i] : <span class="str">''</span>);
-  }
-  <span class="kw">return</span> result;
-}</pre>
-      </div>
-
-      <!-- GAS onEdit版 -->
-      <div class="code-pane" id="cpane-gas-onedit">
+      <!-- GAS onEdit版（指定コード） -->
+      <div class="code-pane active" id="cpane-gas-onedit">
         <div class="code-header">
           <span class="code-lang">Google Apps Script — onEdit 自動実行版</span>
           <button class="btn-copy" onclick="copyCode('gas-onedit')">📋 コードをコピー</button>
         </div>
-        <pre id="code-gas-onedit"><span class="cmt">// =====================================================
-// データ分割ツール（onEdit 自動実行版）
-// A列に貼り付けた瞬間に自動でB列以降へ展開する
-// =====================================================</span>
+        <pre id="code-gas-onedit"><span class="cmt">/**
+ * 縦に貼り付けた複数行を、自動で横1行に並べ替える
+ * 使い方: A列の空いている行に、メモからコピーした複数行をそのまま貼り付けるだけ。
+ *         例) 名前 / 好きな食べ物 / 好きなアーティスト / おすすめのドラマ の4行
+ *         → 貼り付けた行の A・B・C・D… に横並びで自動配置。5名ぶん繰り返せます。
+ */</span>
+<span class="kw">function</span> <span class="fn">onEdit</span>(e) {
+  <span class="kw">if</span> (!e || !e.range) <span class="kw">return</span>;
+  <span class="kw">var</span> range = e.range;
+  <span class="kw">if</span> (range.<span class="fn">getColumn</span>() !== <span class="num">1</span> || range.<span class="fn">getNumColumns</span>() !== <span class="num">1</span> || range.<span class="fn">getNumRows</span>() < <span class="num">2</span>) <span class="kw">return</span>;
+  <span class="kw">var</span> topRow = range.<span class="fn">getRow</span>();
+  <span class="kw">var</span> values = range.<span class="fn">getValues</span>()
+    .<span class="fn">map</span>(<span class="kw">function</span> (r) { <span class="kw">return</span> (r[<span class="num">0</span>] === <span class="kw">null</span> ? <span class="str">''</span> : <span class="op">String</span>(r[<span class="num">0</span>]).<span class="fn">trim</span>()); })
+    .<span class="fn">filter</span>(<span class="kw">function</span> (v) { <span class="kw">return</span> v !== <span class="str">''</span>; });
+  <span class="kw">if</span> (values.length < <span class="num">2</span>) <span class="kw">return</span>;
+  <span class="kw">var</span> sheet = range.<span class="fn">getSheet</span>();
+  sheet.<span class="fn">getRange</span>(topRow, <span class="num">1</span>, range.<span class="fn">getNumRows</span>(), <span class="num">1</span>).<span class="fn">clearContent</span>();
+  sheet.<span class="fn">getRange</span>(topRow, <span class="num">1</span>, <span class="num">1</span>, values.length).<span class="fn">setValues</span>([values]);
+}</pre>
+      </div>
 
-<span class="cmt">// ===== 設定 =====</span>
-<span class="kw">const</span> SPLIT_CONFIG = {
-  SHEET_NAME:   <span class="str">'Sheet1'</span>,
-  SOURCE_COL:   <span class="num">1</span>,              <span class="cmt">// 1=A列</span>
-  TARGET_START: <span class="num">2</span>,              <span class="cmt">// 2=B列</span>
-  MAX_COLS:     <span class="num">18</span>,             <span class="cmt">// A〜R列（A除く最大18）</span>
-  HEADER_ROW:   <span class="num">1</span>,              <span class="cmt">// この行は処理スキップ</span>
-  CLEAR_SOURCE: <span class="kw">false</span>
+      <!-- GAS カスタムメニュー版（複数人まとめて処理） -->
+      <div class="code-pane" id="cpane-gas-menu">
+        <div class="code-header">
+          <span class="code-lang">Google Apps Script — カスタムメニュー版（複数人まとめて処理）</span>
+          <button class="btn-copy" onclick="copyCode('gas-menu')">📋 コードをコピー</button>
+        </div>
+        <pre id="code-gas-menu"><span class="cmt">/**
+ * カスタムメニュー版: A列の縦ブロックを横1行に転置（複数人まとめて処理）
+ * 使い方: A列に複数人分のデータを縦に貼り付けた後、
+ *         「データ整形」メニュー →「縦→横に転置」を実行する。
+ *
+ * 前提: 人と人の間は空行1行で区切る。1行目はヘッダー行。
+ * 例:
+ *   A2: テスト花子     → A2=テスト花子 / B2=りんご / C2=Michael Jackson / D2=愛の不時着
+ *   A3: りんご
+ *   A4: Michael Jackson
+ *   A5: 愛の不時着
+ *   A6: （空行）
+ *   A7: 鈴木次郎       → A3=鈴木次郎 / B3=ラーメン / ...
+ *   ...
+ */</span>
+
+<span class="cmt">// ===== 設定（ここだけ変えれば動く） =====</span>
+<span class="kw">var</span> CONF = {
+  SHEET_NAME:  <span class="str">'Sheet1'</span>,  <span class="cmt">// 対象シート名</span>
+  SOURCE_COL:  <span class="num">1</span>,         <span class="cmt">// 貼り付け列（1=A列）</span>
+  HEADER_ROW:  <span class="num">1</span>,         <span class="cmt">// ヘッダー行番号（スキップ）</span>
+  DATA_START:  <span class="num">2</span>,         <span class="cmt">// データ開始行（2=A2）</span>
+  HEADERS: [<span class="str">'名前'</span>, <span class="str">'好きな食べ物'</span>, <span class="str">'好きなアーティスト'</span>, <span class="str">'おすすめのドラマ'</span>]
+           <span class="cmt">// ↑ 実際の項目名に合わせて変更する</span>
 };
 
-<span class="cmt">// ===== onEdit トリガー =====</span>
-<span class="kw">function</span> <span class="fn">onEdit</span>(e) {
-  <span class="kw">const</span> range = e.range;
-  <span class="kw">const</span> sheet = range.<span class="fn">getSheet</span>();
-
-  <span class="cmt">// 対象シートかチェック</span>
-  <span class="kw">if</span> (sheet.<span class="fn">getName</span>() !== SPLIT_CONFIG.SHEET_NAME) <span class="kw">return</span>;
-
-  <span class="cmt">// A列（SOURCE_COL）かチェック</span>
-  <span class="kw">if</span> (range.<span class="fn">getColumn</span>() !== SPLIT_CONFIG.SOURCE_COL) <span class="kw">return</span>;
-
-  <span class="cmt">// ヘッダー行はスキップ</span>
-  <span class="kw">const</span> startRow = range.<span class="fn">getRow</span>();
-  <span class="kw">if</span> (startRow <= SPLIT_CONFIG.HEADER_ROW) <span class="kw">return</span>;
-
-  <span class="cmt">// 編集された A 列の行を全部処理</span>
-  <span class="kw">const</span> numRows = range.<span class="fn">getNumRows</span>();
-  <span class="kw">const</span> srcValues = sheet
-    .<span class="fn">getRange</span>(startRow, SPLIT_CONFIG.SOURCE_COL, numRows, <span class="num">1</span>)
-    .<span class="fn">getValues</span>();
-
-  <span class="kw">const</span> output = srcValues.<span class="fn">map</span>(<span class="kw">function</span>(row) {
-    <span class="kw">const</span> raw = <span class="op">String</span>(row[<span class="num">0</span>]);
-    <span class="kw">if</span> (!raw.trim()) <span class="kw">return</span> <span class="op">Array</span>(SPLIT_CONFIG.MAX_COLS).<span class="fn">fill</span>(<span class="str">''</span>);
-    <span class="kw">return</span> <span class="fn">parseFieldsEdit</span>(raw, SPLIT_CONFIG.MAX_COLS);
-  });
-
-  <span class="cmt">// B列以降に書き込み</span>
-  sheet.<span class="fn">getRange</span>(startRow, SPLIT_CONFIG.TARGET_START, numRows, SPLIT_CONFIG.MAX_COLS)
-    .<span class="fn">setValues</span>(output);
-
-  <span class="kw">if</span> (SPLIT_CONFIG.CLEAR_SOURCE) {
-    sheet.<span class="fn">getRange</span>(startRow, SPLIT_CONFIG.SOURCE_COL, numRows, <span class="num">1</span>).<span class="fn">clearContent</span>();
-  }
+<span class="cmt">// ===== メニュー追加 =====</span>
+<span class="kw">function</span> <span class="fn">onOpen</span>() {
+  <span class="op">SpreadsheetApp</span>.<span class="fn">getUi</span>()
+    .<span class="fn">createMenu</span>(<span class="str">'データ整形'</span>)
+    .<span class="fn">addItem</span>(<span class="str">'縦→横に転置する'</span>, <span class="str">'transposeAll'</span>)
+    .<span class="fn">addItem</span>(<span class="str">'ヘッダーを設定する'</span>, <span class="str">'setupHeaders'</span>)
+    .<span class="fn">addToUi</span>();
 }
 
-<span class="cmt">// ===== 区切り自動判定 + 揺れ吸収 =====</span>
-<span class="kw">function</span> <span class="fn">parseFieldsEdit</span>(raw, maxCols) {
-  <span class="kw">let</span> text = raw.<span class="fn">replace</span>(<span class="str">/　/g</span>, <span class="str">' '</span>); <span class="cmt">// 全角スペース→半角</span>
+<span class="cmt">// ===== ヘッダー設定 =====</span>
+<span class="kw">function</span> <span class="fn">setupHeaders</span>() {
+  <span class="kw">var</span> sheet = <span class="op">SpreadsheetApp</span>.<span class="fn">getActiveSpreadsheet</span>().<span class="fn">getSheetByName</span>(CONF.SHEET_NAME);
+  <span class="kw">if</span> (!sheet) <span class="kw">return</span>;
+  CONF.HEADERS.<span class="fn">forEach</span>(<span class="kw">function</span>(name, i) {
+    sheet.<span class="fn">getRange</span>(CONF.HEADER_ROW, CONF.SOURCE_COL + i).<span class="fn">setValue</span>(name);
+  });
+}
 
-  <span class="kw">let</span> parts;
-  <span class="kw">if</span> (text.<span class="fn">indexOf</span>(<span class="str">'\t'</span>) !== -<span class="num">1</span>) {
-    parts = text.<span class="fn">split</span>(<span class="str">'\t'</span>).<span class="fn">map</span>(<span class="kw">function</span>(s) { <span class="kw">return</span> s.trim(); });
-  } <span class="kw">else if</span> (text.<span class="fn">indexOf</span>(<span class="str">','</span>) !== -<span class="num">1</span>) {
-    parts = text.<span class="fn">split</span>(<span class="str">','</span>).<span class="fn">map</span>(<span class="kw">function</span>(s) { <span class="kw">return</span> s.trim(); });
-  } <span class="kw">else</span> {
-    parts = text.<span class="fn">trim</span>().<span class="fn">replace</span>(<span class="str">/\s+/g</span>, <span class="str">' '</span>).<span class="fn">split</span>(<span class="str">' '</span>);
+<span class="cmt">// ===== メイン: A列の縦ブロックを横1行に転置 =====</span>
+<span class="kw">function</span> <span class="fn">transposeAll</span>() {
+  <span class="kw">var</span> sheet = <span class="op">SpreadsheetApp</span>.<span class="fn">getActiveSpreadsheet</span>().<span class="fn">getSheetByName</span>(CONF.SHEET_NAME);
+  <span class="kw">if</span> (!sheet) {
+    <span class="op">SpreadsheetApp</span>.<span class="fn">getUi</span>().<span class="fn">alert</span>(<span class="str">'シートが見つかりません: '</span> + CONF.SHEET_NAME);
+    <span class="kw">return</span>;
   }
+  <span class="kw">var</span> lastRow = sheet.<span class="fn">getLastRow</span>();
+  <span class="kw">if</span> (lastRow < CONF.DATA_START) <span class="kw">return</span>;
 
-  <span class="kw">const</span> result = [];
-  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i < maxCols; i++) {
-    result.push(i < parts.length ? parts[i] : <span class="str">''</span>);
-  }
-  <span class="kw">return</span> result;
+  <span class="cmt">// A列のデータを一括取得</span>
+  <span class="kw">var</span> srcValues = sheet
+    .<span class="fn">getRange</span>(CONF.DATA_START, CONF.SOURCE_COL, lastRow - CONF.DATA_START + <span class="num">1</span>, <span class="num">1</span>)
+    .<span class="fn">getValues</span>();
+
+  <span class="cmt">// 空行で区切ってブロックに分割</span>
+  <span class="kw">var</span> blocks = [];
+  <span class="kw">var</span> current = [];
+  srcValues.<span class="fn">forEach</span>(<span class="kw">function</span>(row) {
+    <span class="kw">var</span> v = (row[<span class="num">0</span>] === <span class="kw">null</span> ? <span class="str">''</span> : <span class="op">String</span>(row[<span class="num">0</span>]).<span class="fn">trim</span>());
+    <span class="kw">if</span> (v === <span class="str">''</span>) {
+      <span class="kw">if</span> (current.length > <span class="num">0</span>) { blocks.<span class="fn">push</span>(current); current = []; }
+    } <span class="kw">else</span> {
+      current.<span class="fn">push</span>(v);
+    }
+  });
+  <span class="kw">if</span> (current.length > <span class="num">0</span>) blocks.<span class="fn">push</span>(current);
+  <span class="kw">if</span> (blocks.length === <span class="num">0</span>) <span class="kw">return</span>;
+
+  <span class="cmt">// 最大列数を計算</span>
+  <span class="kw">var</span> maxCols = blocks.<span class="fn">reduce</span>(<span class="kw">function</span>(m, b) { <span class="kw">return</span> <span class="op">Math</span>.<span class="fn">max</span>(m, b.length); }, <span class="num">0</span>);
+
+  <span class="cmt">// 各ブロックを横1行に（列数を揃えてパディング）</span>
+  <span class="kw">var</span> output = blocks.<span class="fn">map</span>(<span class="kw">function</span>(b) {
+    <span class="kw">var</span> row = b.<span class="fn">slice</span>();
+    <span class="kw">while</span> (row.length < maxCols) row.<span class="fn">push</span>(<span class="str">''</span>);
+    <span class="kw">return</span> row;
+  });
+
+  <span class="cmt">// A列のデータを消してから横書き（DATA_START行目から）</span>
+  sheet.<span class="fn">getRange</span>(CONF.DATA_START, CONF.SOURCE_COL, lastRow - CONF.DATA_START + <span class="num">1</span>, <span class="num">1</span>)
+    .<span class="fn">clearContent</span>();
+  sheet.<span class="fn">getRange</span>(CONF.DATA_START, CONF.SOURCE_COL, output.length, maxCols)
+    .<span class="fn">setValues</span>(output);
+
+  <span class="op">SpreadsheetApp</span>.<span class="fn">getUi</span>().<span class="fn">alert</span>(output.length + <span class="str">' 件を横1行に転置しました。'</span>);
 }</pre>
       </div>
 
       <!-- Excel VBA -->
       <div class="code-pane" id="cpane-vba">
         <div class="code-header">
-          <span class="code-lang">Excel VBA（おまけ：同等処理の簡潔版）</span>
+          <span class="code-lang">Excel VBA（おまけ：縦選択 → 横1行に転置）</span>
           <button class="btn-copy" onclick="copyCode('vba')">📋 コードをコピー</button>
         </div>
         <pre id="code-vba"><span class="cmt">' =====================================================
-' データ分割マクロ（Excel VBA版）
-' A列のデータをB列以降に自動分割する
+' 縦転置マクロ（Excel VBA版）
+' A列の縦ブロックを読み取り、横1行に転置して出力する
+' 使い方: A列に縦ブロックを貼り付けた後、このマクロを実行する。
+'         空行区切りで複数人分をまとめて処理できる。
 ' =====================================================</span>
 
-<span class="kw">Sub</span> <span class="fn">SplitCellData</span>()
+<span class="kw">Sub</span> <span class="fn">TransposeToCols</span>()
 
-    <span class="kw">Const</span> SOURCE_COL   <span class="kw">As Long</span> = <span class="num">1</span>   <span class="cmt">' A列</span>
-    <span class="kw">Const</span> TARGET_START <span class="kw">As Long</span> = <span class="num">2</span>   <span class="cmt">' B列から出力</span>
-    <span class="kw">Const</span> MAX_COLS     <span class="kw">As Long</span> = <span class="num">18</span>  <span class="cmt">' 最大分割列数</span>
-    <span class="kw">Const</span> HEADER_ROW   <span class="kw">As Long</span> = <span class="num">1</span>   <span class="cmt">' ヘッダー行（スキップ）</span>
-    <span class="kw">Const</span> CLEAR_SOURCE <span class="kw">As Boolean</span> = <span class="kw">False</span>
+    <span class="kw">Const</span> SOURCE_COL  <span class="kw">As Long</span> = <span class="num">1</span>   <span class="cmt">' A列</span>
+    <span class="kw">Const</span> HEADER_ROW  <span class="kw">As Long</span> = <span class="num">1</span>   <span class="cmt">' ヘッダー行（スキップ）</span>
+    <span class="kw">Const</span> DATA_START  <span class="kw">As Long</span> = <span class="num">2</span>   <span class="cmt">' データ開始行</span>
 
-    <span class="kw">Dim</span> ws      <span class="kw">As</span> Worksheet
-    <span class="kw">Dim</span> lastRow <span class="kw">As Long</span>
-    <span class="kw">Dim</span> r       <span class="kw">As Long</span>
-    <span class="kw">Dim</span> raw     <span class="kw">As</span> String
-    <span class="kw">Dim</span> parts() <span class="kw">As</span> String
-    <span class="kw">Dim</span> i       <span class="kw">As Long</span>
+    <span class="kw">Dim</span> ws       <span class="kw">As</span> Worksheet
+    <span class="kw">Dim</span> lastRow  <span class="kw">As Long</span>
+    <span class="kw">Dim</span> r        <span class="kw">As Long</span>
+    <span class="kw">Dim</span> outRow   <span class="kw">As Long</span>
+    <span class="kw">Dim</span> col      <span class="kw">As Long</span>
+    <span class="kw">Dim</span> v        <span class="kw">As</span> String
+    <span class="kw">Dim</span> block()  <span class="kw">As</span> String
+    <span class="kw">Dim</span> cnt      <span class="kw">As Long</span>
 
     <span class="kw">Set</span> ws = ActiveSheet
     lastRow = ws.Cells(ws.Rows.Count, SOURCE_COL).End(xlUp).Row
+    <span class="kw">If</span> lastRow < DATA_START <span class="kw">Then Exit Sub</span>
 
     Application.ScreenUpdating = <span class="kw">False</span>
 
-    <span class="kw">For</span> r = HEADER_ROW + <span class="num">1</span> <span class="kw">To</span> lastRow
+    outRow = DATA_START
+    cnt = <span class="num">0</span>
+    <span class="kw">ReDim</span> block(<span class="num">0</span>)
 
-        raw = ws.Cells(r, SOURCE_COL).Value
+    <span class="kw">For</span> r = DATA_START <span class="kw">To</span> lastRow + <span class="num">1</span>  <span class="cmt">' +1 で末尾ブロックを確実に処理</span>
 
-        <span class="cmt">' 空行はスキップ</span>
-        <span class="kw">If</span> Trim(raw) = <span class="str">""</span> <span class="kw">Then GoTo NextRow</span>
-
-        <span class="cmt">' 全角スペースを半角に変換</span>
-        raw = Replace(raw, Chr(<span class="num">12288</span>), <span class="str">" "</span>)
-
-        <span class="cmt">' 区切り判定（タブ → カンマ → スペース）</span>
-        <span class="kw">If</span> InStr(raw, vbTab) > <span class="num">0</span> <span class="kw">Then</span>
-            parts = Split(raw, vbTab)
-        <span class="kw">ElseIf</span> InStr(raw, <span class="str">","</span>) > <span class="num">0</span> <span class="kw">Then</span>
-            parts = Split(raw, <span class="str">","</span>)
+        <span class="kw">If</span> r <= lastRow <span class="kw">Then</span>
+            v = Trim(ws.Cells(r, SOURCE_COL).Value)
         <span class="kw">Else</span>
-            <span class="cmt">' 連続スペースを1つに圧縮（簡易版）</span>
-            <span class="kw">Do While</span> InStr(raw, <span class="str">"  "</span>) > <span class="num">0</span>
-                raw = Replace(raw, <span class="str">"  "</span>, <span class="str">" "</span>)
-            <span class="kw">Loop</span>
-            parts = Split(Trim(raw), <span class="str">" "</span>)
+            v = <span class="str">""</span>  <span class="cmt">' 末尾フラッシュ用</span>
         <span class="kw">End If</span>
 
-        <span class="cmt">' B列以降に書き込み（MAX_COLS 分）</span>
-        <span class="kw">For</span> i = <span class="num">0</span> <span class="kw">To</span> MAX_COLS - <span class="num">1</span>
-            <span class="kw">If</span> i <= UBound(parts) <span class="kw">Then</span>
-                ws.Cells(r, TARGET_START + i).Value = Trim(parts(i))
-            <span class="kw">Else</span>
-                ws.Cells(r, TARGET_START + i).Value = <span class="str">""</span>
+        <span class="kw">If</span> v = <span class="str">""</span> <span class="kw">Then</span>
+            <span class="cmt">' 空行 or 終端 → ブロックを横1行に書き出す</span>
+            <span class="kw">If</span> cnt > <span class="num">0</span> <span class="kw">Then</span>
+                <span class="kw">For</span> col = <span class="num">0</span> <span class="kw">To</span> cnt - <span class="num">1</span>
+                    ws.Cells(outRow, SOURCE_COL + col).Value = block(col)
+                <span class="kw">Next</span> col
+                outRow = outRow + <span class="num">1</span>
+                cnt = <span class="num">0</span>
+                <span class="kw">ReDim</span> block(<span class="num">0</span>)
             <span class="kw">End If</span>
-        <span class="kw">Next</span> i
-
-        <span class="kw">If</span> CLEAR_SOURCE <span class="kw">Then</span>
-            ws.Cells(r, SOURCE_COL).Value = <span class="str">""</span>
+        <span class="kw">Else</span>
+            <span class="cmt">' 値あり → ブロックに追記</span>
+            <span class="kw">ReDim Preserve</span> block(cnt)
+            block(cnt) = v
+            cnt = cnt + <span class="num">1</span>
         <span class="kw">End If</span>
 
-NextRow:
     <span class="kw">Next</span> r
 
+    <span class="cmt">' 元の縦データ（outRow以降）が残っていれば消去</span>
+    <span class="kw">If</span> outRow <= lastRow <span class="kw">Then</span>
+        ws.<span class="fn">Range</span>(ws.Cells(outRow, SOURCE_COL), ws.Cells(lastRow, SOURCE_COL)).<span class="fn">ClearContents</span>
+    <span class="kw">End If</span>
+
     Application.ScreenUpdating = <span class="kw">True</span>
-    MsgBox <span class="str">"分割完了しました。"</span>, vbInformation
+    MsgBox (outRow - DATA_START) & <span class="str">" 件を横1行に転置しました。"</span>, vbInformation
 
 <span class="kw">End Sub</span></pre>
       </div>
@@ -1194,146 +1190,179 @@ NextRow:
 <div class="toast" id="toast">コピーしました</div>
 
 <script>
-// ======= サンプルデータ =======
-const SAMPLE = `田中　花子　すし　米津玄師　silent
-佐藤 次郎	ラーメン	Official髭男dism	ドクターホワイト
-鈴木　美咲　ピザ　YOASOBI　コンフィデンスマンJP
-山田　一郎  カレー   back number   アンメット
-中村　恵子\tから揚げ\tOfficial髭男dism\t逃げ恥`;
+// ======= 定数 =======
+const HEADERS = ['名前', '好きな食べ物', '好きなアーティスト', 'おすすめのドラマ'];
+
+const SAMPLE_SINGLE = `テスト花子
+りんご
+Michael Jackson
+愛の不時着`;
+
+const SAMPLE_MULTI = `テスト花子
+りんご
+Michael Jackson
+愛の不時着
+
+鈴木次郎
+ラーメン
+Official髭男dism
+ドクターホワイト
+
+山田三枝子
+ピザ
+YOASOBI
+コンフィデンスマンJP
+
+佐藤四郎
+カレー
+back number
+アンメット
+
+中村五月
+から揚げ
+米津玄師
+silent`;
+
+// ======= デモタブ切替 =======
+function switchDemoTab(id) {
+  document.querySelectorAll('.demo-tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.demo-tab-pane').forEach(p => p.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('dpane-' + id).classList.add('active');
+  document.getElementById('status-container').style.display = 'none';
+}
 
 // ======= サンプル読み込み =======
-function loadSample() {
-  document.getElementById('input-text').value = SAMPLE;
+function loadSampleSingle() {
+  document.getElementById('input-single').value = SAMPLE_SINGLE;
+}
+function loadSampleMulti() {
+  document.getElementById('input-multi').value = SAMPLE_MULTI;
 }
 
-// ======= 分割ロジック =======
-function detectSeparator(lines) {
-  const hasTab    = lines.some(l => l.includes('\t'));
-  const hasComma  = lines.some(l => l.includes(','));
-  if (hasTab)   return 'tab';
-  if (hasComma) return 'comma';
-  return 'space';
+// ======= 縦ブロック → 横1行（1人分） =======
+let lastSingleRow = [];
+
+function runSingle() {
+  const raw = document.getElementById('input-single').value;
+  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(l => l !== '');
+  if (lines.length === 0) return;
+
+  lastSingleRow = lines;
+  const maxCols = Math.max(lines.length, HEADERS.length);
+
+  // ヘッダーを生成（HEADERS が足りない場合は列記号で補完）
+  const ths = Array.from({length: maxCols}, (_, i) =>
+    HEADERS[i] || String.fromCharCode(65 + i));
+
+  // テーブル描画
+  const thead = document.getElementById('thead-single-preview');
+  const tbody = document.getElementById('tbody-single-preview');
+
+  thead.innerHTML = '<tr><th class="row-num-th">#</th>' +
+    ths.map(h => `<th>${h}</th>`).join('') + '</tr>';
+
+  const cells = Array.from({length: maxCols}, (_, i) => lines[i] || '');
+  tbody.innerHTML = '<tr><td class="row-num">1</td>' +
+    cells.map(c => c === ''
+      ? '<td><span class="cell-empty">（空）</span></td>'
+      : `<td>${c}</td>`
+    ).join('') + '</tr>';
+
+  document.getElementById('result-single-preview').style.display = 'block';
+  document.getElementById('result-single-placeholder').style.display = 'none';
+  document.getElementById('btn-tsv-single').disabled = false;
+
+  showStatus(`変換完了 — ${lines.length} 項目 → 横1行 （${maxCols} 列）`);
 }
 
-function parseFields(raw, sep, maxCols) {
-  // 1. 全角スペース → 半角
-  let text = raw.replace(/　/g, ' ');
+// ======= 縦ブロック群 → 複数行（5人分） =======
+let lastMultiRows = [];
+let lastMultiHeaders = [];
 
-  let parts;
-  if (sep === 'tab') {
-    parts = text.split('\t').map(s => s.trim());
-  } else if (sep === 'comma') {
-    parts = text.split(',').map(s => s.trim());
-  } else if (sep === 'newline') {
-    // 1行=1項目モード（既に行分割済みの場合は1フィールド）
-    parts = [text.trim()];
-  } else {
-    // space: 連続空白(全角含む)を1つに圧縮
-    parts = text.trim().replace(/[\s]+/g, ' ').split(' ');
-  }
+function runMulti() {
+  const raw = document.getElementById('input-multi').value;
+  const lines = raw.split(/\r?\n/).map(l => l.trim());
 
-  // 空文字フィールドを除去（タブ以外）
-  if (sep !== 'tab') {
-    parts = parts.filter((p, i) => p !== '' || i === 0);
-  }
+  // 空行でブロックに分割
+  const blocks = [];
+  let current = [];
+  lines.forEach(l => {
+    if (l === '') {
+      if (current.length > 0) { blocks.push(current); current = []; }
+    } else {
+      current.push(l);
+    }
+  });
+  if (current.length > 0) blocks.push(current);
+  if (blocks.length === 0) return;
 
-  // maxCols に合わせてパディング
-  const result = [];
-  for (let i = 0; i < maxCols; i++) {
-    result.push(i < parts.length ? parts[i] : '');
-  }
-  return result;
-}
+  const maxCols = Math.max(
+    blocks.reduce((m, b) => Math.max(m, b.length), 0),
+    HEADERS.length
+  );
 
-// ======= 実行 =======
-let lastResult = [];
-let lastHeaders = [];
+  lastMultiHeaders = Array.from({length: maxCols}, (_, i) =>
+    HEADERS[i] || String.fromCharCode(65 + i));
 
-function runSplit() {
-  const raw = document.getElementById('input-text').value.trim();
-  if (!raw) return;
-
-  const sepMode = document.getElementById('sep-select').value;
-  const maxColsInput = parseInt(document.getElementById('cols-input').value) || 0;
-
-  // 行分割（改行）
-  const lines = raw.split(/\r?\n/).filter(l => l.trim() !== '');
-  if (!lines.length) return;
-
-  // 区切り判定
-  const sep = (sepMode === 'auto') ? detectSeparator(lines) : sepMode;
-
-  // 各行を分割
-  const rows = lines.map(l => {
-    const parts = parseFields(l, sep, 999); // 一旦制限なしで分割
-    return parts;
+  lastMultiRows = blocks.map(b => {
+    const row = b.slice();
+    while (row.length < maxCols) row.push('');
+    return row;
   });
 
-  // 最大列数を決定
-  const maxNatural = rows.reduce((m, r) => Math.max(m, r.filter(c => c !== '').length), 0);
-  const maxCols = maxColsInput > 0 ? maxColsInput : Math.min(maxNatural, 26);
+  // テーブル描画
+  const thead = document.getElementById('thead-multi-preview');
+  const tbody = document.getElementById('tbody-multi-preview');
 
-  // maxCols でクリップ
-  const clipped = rows.map(r => {
-    const out = [];
-    for (let i = 0; i < maxCols; i++) out.push(r[i] || '');
-    return out;
-  });
+  thead.innerHTML = '<tr><th class="row-num-th">#</th>' +
+    lastMultiHeaders.map(h => `<th>${h}</th>`).join('') + '</tr>';
 
-  lastResult = clipped;
-  lastHeaders = Array.from({length: maxCols}, (_, i) =>
-    String.fromCharCode(65 + i)); // A, B, C ...
-
-  renderResult(sep);
-  document.getElementById('result-container').style.display = 'block';
-  document.getElementById('btn-tsv').disabled = false;
-}
-
-function renderResult(detectedSep) {
-  const thead = document.getElementById('result-thead');
-  const tbody = document.getElementById('result-tbody');
-  const statusBar = document.getElementById('status-bar');
-  const maxCols = lastHeaders.length;
-
-  // ステータス
-  const sepLabel = {tab:'タブ', comma:'カンマ', space:'スペース', newline:'改行'};
-  statusBar.innerHTML = `
-    <span class="status-tag tag-cyan">列数: ${maxCols}</span>
-    <span class="status-tag tag-green">行数: ${lastResult.length}</span>
-    <span class="status-tag tag-amber">区切り: ${sepLabel[detectedSep] || detectedSep}</span>
-    <span style="color:var(--text-dim)">揺れ吸収 ON（全角・連続空白・前後trim）</span>
-  `;
-
-  // ヘッダー行
-  thead.innerHTML = '<tr><th style="min-width:36px;font-size:10px;">#</th>' +
-    lastHeaders.map(h => `<th>${h}</th>`).join('') + '</tr>';
-
-  // データ行
-  tbody.innerHTML = lastResult.map((row, ri) =>
+  tbody.innerHTML = lastMultiRows.map((row, ri) =>
     '<tr><td class="row-num">' + (ri + 1) + '</td>' +
-    row.map(cell =>
-      cell === '' ? '<td><span class="cell-empty">（空）</span></td>'
-                  : `<td title="${cell.replace(/"/g,'&quot;')}">${cell}</td>`
+    row.map(c => c === ''
+      ? '<td><span class="cell-empty">（空）</span></td>'
+      : `<td>${c}</td>`
     ).join('') + '</tr>'
   ).join('');
+
+  document.getElementById('result-multi-preview').style.display = 'block';
+  document.getElementById('result-multi-placeholder').style.display = 'none';
+  document.getElementById('btn-tsv-multi').disabled = false;
+
+  showStatus(`変換完了 — ${blocks.length} 件 × ${maxCols} 列`);
 }
 
 // ======= TSV コピー =======
-function copyTsv() {
-  if (!lastResult.length) return;
-  const header = lastHeaders.join('\t');
-  const rows = lastResult.map(r => r.join('\t'));
-  const tsv = [header, ...rows].join('\n');
-
+function copyTsvSingle() {
+  if (!lastSingleRow.length) return;
+  const header = lastMultiHeaders.length
+    ? lastMultiHeaders.join('\t')
+    : HEADERS.join('\t');
+  const tsv = header + '\n' + lastSingleRow.join('\t');
   navigator.clipboard.writeText(tsv).then(() => showToast('TSVをコピーしました'));
+}
+
+function copyTsvMulti() {
+  if (!lastMultiRows.length) return;
+  const header = lastMultiHeaders.join('\t');
+  const rows = lastMultiRows.map(r => r.join('\t'));
+  const tsv = [header, ...rows].join('\n');
+  navigator.clipboard.writeText(tsv).then(() => showToast('TSVをコピーしました'));
+}
+
+// ======= ステータス =======
+function showStatus(msg) {
+  const el = document.getElementById('status-container');
+  el.innerHTML = `<span class="status-tag tag-green">✓ ${msg}</span>
+    <span style="color:var(--text-dim)">揺れ吸収 ON（trim・空行スキップ・項目数過不足）</span>`;
+  el.style.display = 'flex';
 }
 
 // ======= コードコピー =======
 const RAW_CODES = {};
-
 function copyCode(id) {
   if (!RAW_CODES[id]) {
-    // preタグのinnerTextからシンタックス除去
     const pre = document.getElementById('code-' + id);
     RAW_CODES[id] = pre ? pre.innerText : '';
   }
@@ -1341,10 +1370,10 @@ function copyCode(id) {
 }
 
 // ======= コードタブ切替 =======
-function switchCodeTab(id) {
+function switchCodeTab(id, evt) {
   document.querySelectorAll('.code-tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.code-pane').forEach(p => p.classList.remove('active'));
-  event.currentTarget.classList.add('active');
+  (evt || event).currentTarget.classList.add('active');
   document.getElementById('cpane-' + id).classList.add('active');
 }
 
@@ -1358,7 +1387,8 @@ function showToast(msg) {
 
 // ======= 初期化 =======
 document.addEventListener('DOMContentLoaded', () => {
-  loadSample();
+  loadSampleSingle();
+  loadSampleMulti();
 });
 </script>
 </body>
