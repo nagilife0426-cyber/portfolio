@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEO運用代行 クライアント・セットアップ自動化（n8n） | Demo</title>
+<style>
+:root{
+  --bg:#0a0e1a; --bg2:#111827; --bg3:#1f2937; --bg4:#374151;
+  --border:#1f2937; --border2:#374151;
+  --green:#10b981; --yellow:#f59e0b; --blue:#3b82f6; --red:#ef4444;
+  --purple:#8b5cf6; --text:#f9fafb; --text2:#9ca3af; --text3:#6b7280;
+  --n8n:#ea4b71; --slack:#4a154b; --google:#4285f4;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.6;min-height:100vh}
+nav{background:var(--bg2);border-bottom:1px solid var(--border2);padding:0 18px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.nav-logo{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.nav-logo .dot{width:9px;height:9px;border-radius:50%;background:var(--n8n);box-shadow:0 0 10px var(--n8n)}
+.nav-back{font-size:13px;color:var(--text2);text-decoration:none;padding:6px 12px;border:1px solid var(--border2);border-radius:7px}
+.nav-back:hover{color:var(--text);border-color:var(--text3)}
+.wrap{max-width:1200px;margin:0 auto;padding:24px 18px 70px}
+.head h1{font-size:21px;font-weight:800}
+.head .sub{color:var(--text2);font-size:13.5px;margin-top:6px;max-width:900px}
+.stack{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.tech{font-size:11px;padding:4px 10px;border-radius:6px;background:var(--bg3);border:1px solid var(--border2);color:var(--text2)}
+.demo-flag{display:inline-block;margin-top:12px;font-size:12px;color:var(--yellow);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35);padding:5px 11px;border-radius:999px}
+.grid{display:grid;grid-template-columns:330px 1fr;gap:20px;margin-top:22px}
+@media(max-width:880px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--bg2);border:1px solid var(--border2);border-radius:13px;padding:18px}
+.panel h2{font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+.presets{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.preset{font-size:12px;padding:6px 11px;border:1px solid var(--border2);border-radius:8px;background:var(--bg3);color:var(--text2);cursor:pointer}
+.preset.active{border-color:var(--n8n);color:var(--text);background:rgba(234,75,113,.12)}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:11px;color:var(--text3);margin-bottom:3px}
+.field input,.field select{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--text);padding:7px 9px;font-size:12.5px;font-family:inherit}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.gen-btn{width:100%;margin-top:8px;background:linear-gradient(135deg,var(--n8n),#c0395d);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.gen-btn:hover{filter:brightness(1.08)}
+.gen-btn:disabled{opacity:.6}
+.spin{width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.tabs{display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap}
+.tab{font-size:12.5px;padding:8px 12px;border:1px solid var(--border2);border-radius:9px;background:var(--bg2);color:var(--text2);cursor:pointer}
+.tab.active{border-color:var(--n8n);color:var(--text);background:rgba(234,75,113,.12)}
+.view{display:none}.view.show{display:block;animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.empty{color:var(--text3);text-align:center;padding:50px 14px}
+.block{background:var(--bg3);border:1px solid var(--border);border-radius:11px;padding:14px;margin-bottom:12px}
+.block .bl{font-size:11px;color:var(--text3);font-weight:700;letter-spacing:.4px;margin-bottom:7px;display:flex;align-items:center;gap:7px}
+.ai{font-size:10px;color:var(--n8n);font-weight:700}
+.review{border-left:3px solid var(--border2);padding-left:11px;margin-bottom:12px}
+.stars{color:var(--yellow);font-size:13px}
+.rv-txt{font-size:13px;color:var(--text2);margin:3px 0}
+.reply{background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px;font-size:13px;margin-top:5px}
+.reply .lbl{font-size:10px;color:var(--green);font-weight:700;margin-bottom:3px}
+.sched{display:flex;flex-direction:column;gap:8px}
+.sched-item{display:flex;gap:10px;align-items:center;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:9px 11px;font-size:13px}
+.sched-item .d{font-size:11px;color:var(--blue);font-weight:700;min-width:64px}
+.slackbox{background:var(--bg3);border:1px solid var(--border);border-radius:11px;padding:14px}
+.smsg{background:var(--bg);border:1px solid var(--border2);border-radius:9px;padding:11px;display:flex;gap:10px;margin-top:8px}
+.smsg .av{width:30px;height:30px;border-radius:7px;background:var(--slack);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.smsg .approve{margin-top:8px;display:flex;gap:7px}
+.btn-s{font-size:11px;padding:4px 12px;border-radius:6px;border:none;font-weight:700;cursor:default}
+.btn-ok{background:var(--green);color:#06281c}
+.btn-ng{background:var(--bg3);color:var(--text2);border:1px solid var(--border2)}
+pre{background:var(--bg);border:1px solid var(--border2);border-radius:9px;padding:13px;font-size:11.5px;color:#cbd5e1;overflow-x:auto;white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace}
+.flow{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:12px;margin-top:6px}
+.node{background:var(--bg3);border:1px solid var(--border2);border-radius:9px;padding:8px 11px}
+.node.n8n{border-color:var(--n8n)}.node.g{border-color:var(--google)}.node.s{border-color:#6b4a6b}
+.arr{color:var(--n8n);font-weight:800}
+.note{font-size:12px;color:var(--text3);margin-top:10px}
+.honest{margin-top:24px;background:var(--bg2);border:1px dashed var(--border2);border-radius:13px;padding:16px;font-size:12.5px;color:var(--text2)}
+.honest b{color:var(--text)}
+.pipe{margin-top:18px;background:var(--bg2);border:1px solid var(--border2);border-radius:13px;padding:18px}
+.pipe h3{font-size:13px;color:var(--text2);margin-bottom:10px}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo"><span class="dot"></span>なぎ｜業務自動化デモ</div>
+  <a class="nav-back" href="../../">← ポートフォリオに戻る</a>
+</nav>
+
+<div class="wrap">
+  <div class="head">
+    <h1>MEO運用代行 クライアント・セットアップ自動化（n8n）</h1>
+    <div class="sub">新規クライアントの店舗情報をフォームに入れるだけで、Googleビジネスプロフィール運用の初期設定（口コミ返信テンプレ・投稿スケジュール・Slack承認フロー）を半自動で生成。1社あたりのセットアップ作業をゼロに近づけ、営業で取った店舗をそのまま運用に乗せます。</div>
+    <div class="stack">
+      <span class="tech">n8n</span><span class="tech">Webhook</span><span class="tech">Google Business Profile</span><span class="tech">Slack承認</span><span class="tech">Claude（返信生成）</span><span class="tech">クライアント別 認証分離</span>
+    </div>
+    <span class="demo-flag">⚠ サンプル出力デモです（APIキー不使用・店舗データはダミー）。本番はn8nでGBP／Slack APIに接続します。</span>
+  </div>
+
+  <div class="grid">
+    <!-- 入力フォーム -->
+    <div class="panel">
+      <h2>📋 新規クライアント登録（フォーム）</h2>
+      <div class="presets" id="presets"></div>
+      <div class="field"><label>店舗名</label><input id="f_name"></div>
+      <div class="row2">
+        <div class="field"><label>業種</label><input id="f_ind"></div>
+        <div class="field"><label>電話</label><input id="f_tel"></div>
+      </div>
+      <div class="field"><label>住所</label><input id="f_addr"></div>
+      <div class="field"><label>主なサービス</label><input id="f_svc"></div>
+      <div class="row2">
+        <div class="field"><label>返信トーン</label><select id="f_tone"><option>丁寧・フォーマル</option><option>親しみ・フレンドリー</option><option>元気・カジュアル</option></select></div>
+        <div class="field"><label>投稿頻度</label><select id="f_freq"><option>週1回</option><option>週2回</option><option>週3回</option></select></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Slack通知先</label><input id="f_slack"></div>
+        <div class="field"><label>承認者</label><input id="f_appr"></div>
+      </div>
+      <button class="gen-btn" id="gen">⚡ 運用セットアップを生成</button>
+      <div class="note">※ 実務では15〜25項目（営業時間・マップURL・画像URL等）に拡張。</div>
+    </div>
+
+    <!-- 出力 -->
+    <div class="panel">
+      <h2>🚀 生成された運用セットアップ</h2>
+      <div class="tabs">
+        <div class="tab active" data-v="review">💬 口コミ返信テンプレ</div>
+        <div class="tab" data-v="post">📅 投稿スケジュール</div>
+        <div class="tab" data-v="slack">✅ Slack承認フロー</div>
+        <div class="tab" data-v="config">🔧 設定の保存（JSON）</div>
+      </div>
+      <div id="result"><div class="empty">左で店舗情報を入れて「⚡ 運用セットアップを生成」を押すと、ここに初期設定が出ます。</div></div>
+    </div>
+  </div>
+
+  <div class="pipe">
+    <h3>n8nワークフロー（この自動化の全体像）</h3>
+    <div class="flow">
+      <span class="node">フォーム入力</span><span class="arr">→</span>
+      <span class="node n8n">n8n Webhook受信</span><span class="arr">→</span>
+      <span class="node n8n">設定データ生成（Claudeで返信/投稿文）</span><span class="arr">→</span>
+      <span class="node g">GBP接続・登録</span><span class="arr">→</span>
+      <span class="node s">Slack承認</span><span class="arr">→</span>
+      <span class="node">運用開始・ログ保存</span>
+    </div>
+    <div class="note">※ クライアントごとに認証情報とデータを分離（n8nのクレデンシャル＋クライアントIDで名前空間を分け、他店舗に混ざらない設計）。</div>
+  </div>
+
+  <div class="honest">
+    <b>このデモについて（正直にお伝えします）</b><br>
+    n8n・Webhook・Slack連携・Claudeでの文章生成は私の実領域です。<b>Google Business Profile API の連携は本デモでは実装イメージ（ダミー出力）で、GBP案件そのものの納品実績はこれからです</b>。GBPは公式コネクタ／APIの仕様が明確なので、テスト用プロフィールで先に通して確実に実装します。「できること」と「これからの部分」を分けてお伝えしたうえで、まず動くもので実力をご判断ください。
+  </div>
+</div>
+
+<script>
+const PRESETS=[
+  {key:"美容室",f_name:"hair atelier LUCE",f_ind:"美容室・ヘアサロン",f_tel:"03-1234-5678",f_addr:"東京都品川区北品川1-2-3",f_svc:"カット・カラー・髪質改善トリートメント",f_tone:"親しみ・フレンドリー",f_freq:"週2回",f_slack:"#meo-luce",f_appr:"店長 田中"},
+  {key:"整体院",f_name:"からだ調整院 そら",f_ind:"整体・リラクゼーション",f_tel:"06-9876-5432",f_addr:"大阪市中央区本町4-5-6",f_svc:"骨盤矯正・肩こり改善・産後ケア",f_tone:"丁寧・フォーマル",f_freq:"週1回",f_slack:"#meo-sora",f_appr:"院長 山本"},
+  {key:"カフェ",f_name:"CAFE & BAKE moku",f_ind:"カフェ・喫茶店",f_tel:"052-111-2222",f_addr:"名古屋市中区栄7-8-9",f_svc:"自家焙煎コーヒー・焼き菓子・モーニング",f_tone:"元気・カジュアル",f_freq:"週3回",f_slack:"#meo-moku",f_appr:"オーナー 鈴木"},
+];
+const fields=["f_name","f_ind","f_tel","f_addr","f_svc","f_tone","f_freq","f_slack","f_appr"];
+const $=id=>document.getElementById(id);
+let cur={};
+
+function loadPreset(i){const p=PRESETS[i];fields.forEach(k=>{const el=$(k);if(el)el.value=p[k];});document.querySelectorAll('.preset').forEach((b,bi)=>b.classList.toggle('active',bi===i));}
+function readForm(){const o={};fields.forEach(k=>o[k]=$(k).value.trim());return o;}
+
+function toneStyle(t){
+  if(t.includes('フレンドリー'))return {pre:'この度は',suf:'またのご来店を心よりお待ちしております！',ng:'貴重なご意見をありがとうございます。'};
+  if(t.includes('カジュアル'))return {pre:'',suf:'またぜひ遊びにきてくださいね！',ng:'教えていただきありがとうございます！'};
+  return {pre:'この度は',suf:'またのご利用を心よりお待ち申し上げております。',ng:'貴重なご意見を賜り、誠にありがとうございます。'};
+}
+
+function build(d){
+  const ts=toneStyle(d.f_tone);
+  const svc=(d.f_svc.split(/[・,、]/)[0]||'サービス');
+  return {
+    reviews:[
+      {stars:'★★★★★',txt:`${svc}をお願いしました。とても丁寧で大満足です！`,
+       reply:`${d.f_name}をご利用いただきありがとうございます。${svc}にご満足いただけて大変嬉しく思います。${ts.suf}`},
+      {stars:'★★☆☆☆',txt:'予約時間より少し待たされました。',
+       reply:`${ts.ng}お待たせしてしまい申し訳ございませんでした。予約枠の運用を見直し、よりスムーズなご案内に努めます。${ts.suf}`},
+    ],
+    posts:(()=>{const n={'週1回':1,'週2回':2,'週3回':3}[d.f_freq]||2;const themes=[`【${svc}のご紹介】`,'【お客様の声】','【今週の空き状況】','【スタッフのおすすめ】','【季節のキャンペーン】','【店内の様子】'];const out=[];const days=['月','水','金','火','木','土'];for(let i=0;i<n;i++)out.push({day:`毎週${days[i]}曜`,theme:themes[i%themes.length]});return out;})(),
+    tone:d.f_tone, freq:d.f_freq,
+    slack:{ch:d.f_slack||'#meo-notify',appr:d.f_appr||'承認者'},
+    config:{client_id:'cl_'+(d.f_name||'shop').replace(/\s/g,'').slice(0,6).toLowerCase(),store_name:d.f_name,industry:d.f_ind,tel:d.f_tel,address:d.f_addr,services:d.f_svc.split(/[・,、]/),reply_tone:d.f_tone,post_frequency:d.f_freq,slack_channel:d.f_slack,approver:d.f_appr,gbp_credential:'cred_'+(d.f_name||'shop').replace(/\s/g,'').slice(0,6).toLowerCase()+'(クライアント別に分離)'}
+  };
+}
+
+function render(d){
+  const r=$('result');
+  const reviewView=`<div class="view show" data-out="review">
+    <div class="block"><div class="bl"><span>口コミ自動返信テンプレ</span><span class="ai">✦ Claude生成（${d.tone}）</span></div>
+    ${d.reviews.map(rv=>`<div class="review"><div class="stars">${rv.stars}</div><div class="rv-txt">「${rv.txt}」</div><div class="reply"><div class="lbl">自動返信案</div>${rv.reply}</div></div>`).join('')}
+    <div class="note">★3以下は自動でSlack承認に回し、人が確認してから返信する設計にできます。</div></div></div>`;
+  const postView=`<div class="view" data-out="post">
+    <div class="block"><div class="bl">投稿スケジュール（${d.freq}・画像付き投稿）</div>
+    <div class="sched">${d.posts.map(p=>`<div class="sched-item"><span class="d">${p.day}</span><span>${p.theme} 自動下書き→Slack承認→GBPへ投稿</span></div>`).join('')}</div>
+    <div class="note">投稿頻度に合わせてテンプレ枠を自動作成。各回はClaudeで下書き生成します。</div></div></div>`;
+  const slackView=`<div class="view" data-out="slack">
+    <div class="slackbox"><div class="bl">Slack承認フロー（${d.slack.ch}）</div>
+      <div class="smsg"><div class="av">🤖</div><div><div style="font-size:13px;font-weight:700">MEO運用Bot <span style="font-size:10px;color:var(--text3)">${d.slack.ch}</span></div>
+        <div style="font-size:13px;color:var(--text2);margin-top:3px">新規投稿の下書きができました。<b>${d.slack.appr}</b> さん、確認をお願いします。<br>「【今週の空き状況】本日空きあり…」</div>
+        <div class="approve"><span class="btn-s btn-ok">承認して投稿</span><span class="btn-s btn-ng">修正</span></div>
+      </div></div></div>
+    <div class="note">承認者・通知先はクライアントごとに設定。承認されたものだけがGBPへ自動投稿されます。</div></div>`;
+  const configView=`<div class="view" data-out="config">
+    <div class="block"><div class="bl">クライアント設定（保存データ・認証は分離）</div>
+    <pre>${JSON.stringify(d.config,null,2)}</pre>
+    <div class="note">この1レコードが新規クライアント1社分。以降の運用はこの設定を読んで自動で回ります。</div></div></div>`;
+  r.innerHTML=reviewView+postView+slackView+configView;
+}
+
+$('gen').addEventListener('click',()=>{
+  const d=readForm();if(!d.f_name){alert('店舗名を入力してください');return;}
+  const b=$('gen');b.disabled=true;b.innerHTML='<span class="spin"></span> 生成中…';
+  setTimeout(()=>{cur=build(d);render(cur);b.disabled=false;b.innerHTML='⚡ 運用セットアップを生成';},700);
+});
+document.querySelector('.tabs').addEventListener('click',e=>{
+  const t=e.target.closest('.tab');if(!t)return;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('show',v.dataset.out===t.dataset.v));
+});
+PRESETS.forEach((p,i)=>{const b=document.createElement('div');b.className='preset'+(i===0?' active':'');b.textContent=p.key;b.onclick=()=>loadPreset(i);$('presets').appendChild(b);});
+loadPreset(0);
+</script>
+</body>
+</html>
