@@ -4,6 +4,9 @@
 
 'use strict';
 
+/* JSが動く環境でだけ reveal の初期非表示を有効化（no-JS環境の白画面防止） */
+document.documentElement.classList.add('js');
+
 /* ----------------------------------
    Smooth scroll for anchor links
    ---------------------------------- */
@@ -91,37 +94,37 @@ document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
 })();
 
 /* ----------------------------------
-   Counter animation for hero stats
+   Counter animation — 署名モーメントは「39」1点のみ。
+   静的HTMLに最終値が入っているため、動かさない場合は一切触らない。
+   prefers-reduced-motion 時はアニメ自体を行わない。
    ---------------------------------- */
 (function() {
-  var counters = document.querySelectorAll('.stat-num[data-target]');
-  if (!counters.length) return;
+  var counter = document.querySelector('.stat-num[data-target="39"]');
+  if (!counter) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
   var animated = false;
 
-  function animateCounters() {
+  function animateCounter() {
     if (animated) return;
     animated = true;
 
-    counters.forEach(function(el) {
-      var target = parseInt(el.dataset.target, 10);
-      var suffix = el.dataset.suffix || '';
-      var duration = 1200;
-      var start = performance.now();
+    var target = parseInt(counter.dataset.target, 10);
+    var suffix = counter.dataset.suffix || '';
+    var duration = 1200;
+    var start = performance.now();
 
-      function step(now) {
-        var elapsed = now - start;
-        var progress = Math.min(elapsed / duration, 1);
-        // ease-out
-        var ease = 1 - Math.pow(1 - progress, 3);
-        var value = Math.round(ease * target);
-        el.textContent = value + suffix;
-        if (progress < 1) {
-          requestAnimationFrame(step);
-        }
+    function step(now) {
+      var elapsed = now - start;
+      var progress = Math.min(elapsed / duration, 1);
+      // ease-out
+      var ease = 1 - Math.pow(1 - progress, 3);
+      counter.textContent = Math.round(ease * target) + suffix;
+      if (progress < 1) {
+        requestAnimationFrame(step);
       }
-      requestAnimationFrame(step);
-    });
+    }
+    requestAnimationFrame(step);
   }
 
   var heroStats = document.querySelector('.hero-stats');
@@ -129,7 +132,7 @@ document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
 
   var io = new IntersectionObserver(function(entries) {
     if (entries[0].isIntersecting) {
-      animateCounters();
+      animateCounter();
       io.disconnect();
     }
   }, { threshold: 0.3 });
