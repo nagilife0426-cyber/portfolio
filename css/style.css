@@ -628,6 +628,30 @@ html.js .reveal.visible { opacity: 1; transform: none; }
 .hero > .container { position: relative; z-index: 1; }
 .hero-content { max-width: 780px; }
 
+/* Hero 非対称2カラム（右: 手作業→自動化 ミニカード） REDESIGN-SPEC §6.2 */
+.hero-layout { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; align-items: center; }
+.hero-visual { display: flex; justify-content: flex-end; min-width: 0; }
+.hero-card {
+  width: 100%; max-width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 24px;
+}
+.hero-card-head { display: flex; align-items: center; gap: 8px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.hero-card-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand); flex: none; }
+.hero-card-title { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em; color: var(--text-2); }
+.hero-card-rows { list-style: none; margin: 0; padding: 0; }
+.hero-card-row { padding: 13px 0; border-bottom: 1px solid var(--line); }
+.hero-card-row:last-child { border-bottom: none; padding-bottom: 4px; }
+.hcr-label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--text-3); margin-bottom: 4px; }
+.hcr-flow { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; flex-wrap: wrap; }
+.hcr-before { color: var(--text-3); text-decoration: line-through; }
+.hcr-arrow { color: var(--brand); font-weight: 700; flex: none; }
+.hcr-after { color: var(--text); font-weight: 600; }
+.hero-card-note { margin: 12px 0 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: 0.75rem; color: var(--text-3); }
+
 /* 稼働ステータス */
 .hero-status {
   display: inline-flex; align-items: center; gap: 10px;
@@ -1047,6 +1071,9 @@ html.js .reveal.visible { opacity: 1; transform: none; }
    Responsive
    ---------------------------------------- */
 @media (max-width: 900px) {
+  .hero-layout { grid-template-columns: 1fr; gap: 44px; }
+  .hero-visual { justify-content: flex-start; }
+  .hero-card { max-width: 460px; }
   .about-grid { grid-template-columns: 1fr; gap: 28px; }
   .skills-layout { grid-template-columns: 1fr; gap: 28px; }
   .strengths-grid { grid-template-columns: repeat(2, 1fr); }

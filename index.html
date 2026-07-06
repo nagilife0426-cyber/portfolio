@@ -26,7 +26,7 @@
   }
   </script>
   <script>document.documentElement.classList.add('js');</script>
-  <link rel="stylesheet" href="css/style.css?v=5">
+  <link rel="stylesheet" href="css/style.css?v=6">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230e7d68'/><text x='50' y='72' font-size='60' text-anchor='middle' fill='white'>な</text></svg>">
 </head>
 <body>
@@ -58,6 +58,7 @@
     <div class="hero-bg" aria-hidden="true"></div>
     <div class="hero-grid" aria-hidden="true"></div>
     <div class="container">
+      <div class="hero-layout">
       <div class="hero-content">
         <div class="hero-status fade-up">
           <span class="status-dot" aria-hidden="true"></span>
@@ -102,6 +103,42 @@
             <span class="stat-label">ブラウザで動作</span>
           </div>
         </div>
+      </div>
+      <aside class="hero-visual fade-up fade-up-delay-3" aria-label="自動化のビフォーアフター例">
+        <div class="hero-card">
+          <div class="hero-card-head">
+            <span class="hero-card-dot" aria-hidden="true"></span>
+            <span class="hero-card-title">手作業 → 自動化</span>
+          </div>
+          <ul class="hero-card-rows">
+            <li class="hero-card-row">
+              <span class="hcr-label">広告キャンペーンCSV設定</span>
+              <span class="hcr-flow">
+                <span class="hcr-before"><span class="sr-only">以前: </span>1件ずつ手入力</span>
+                <span class="hcr-arrow" aria-hidden="true">→</span>
+                <span class="hcr-after"><span class="sr-only">今: </span>一括自動生成</span>
+              </span>
+            </li>
+            <li class="hero-card-row">
+              <span class="hcr-label">入札調整</span>
+              <span class="hcr-flow">
+                <span class="hcr-before"><span class="sr-only">以前: </span>都度みて手直し</span>
+                <span class="hcr-arrow" aria-hidden="true">→</span>
+                <span class="hcr-after"><span class="sr-only">今: </span>ルールで自動計算</span>
+              </span>
+            </li>
+            <li class="hero-card-row">
+              <span class="hcr-label">日次売上レポート</span>
+              <span class="hcr-flow">
+                <span class="hcr-before"><span class="sr-only">以前: </span>毎朝あつめて集計</span>
+                <span class="hcr-arrow" aria-hidden="true">→</span>
+                <span class="hcr-after"><span class="sr-only">今: </span>自動でチャット通知</span>
+              </span>
+            </li>
+          </ul>
+          <p class="hero-card-note">すべて公開デモで動作を確認できます</p>
+        </div>
+      </aside>
       </div>
     </div>
   </section>
