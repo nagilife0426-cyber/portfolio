@@ -1053,6 +1053,42 @@ html.js .reveal.visible { opacity: 1; transform: none; }
 }
 .contact-btn:hover { background: var(--brand-700); color: var(--text-on-brand); transform: translateY(-2px); box-shadow: var(--shadow-brand); }
 .contact-btn span:last-child { transition: transform var(--t-fast); }
+.contact-actions { display: flex; justify-content: center; align-items: center; gap: 16px; flex-wrap: wrap; }
+.contact-btn--sub { background: var(--surface); border-color: var(--line-strong); color: var(--text); }
+.contact-btn--sub:hover { background: var(--surface-sunken); border-color: var(--brand); color: var(--text); box-shadow: var(--shadow-sm); }
+
+/* ----------------------------------------
+   Pricing（実出品価格の3ステップ表示）
+   ---------------------------------------- */
+.pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; align-items: stretch; }
+.pricing-card {
+  position: relative;
+  display: flex; flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 32px 28px;
+  color: var(--text);
+  transition: transform var(--t), box-shadow var(--t), border-color var(--t-fast);
+}
+a.pricing-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-sm); border-color: var(--brand); color: var(--text); }
+.pricing-card--entry { border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand) inset; }
+.pricing-step { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; color: var(--brand); margin-bottom: 14px; }
+.pricing-title { font-size: 1.12rem; font-weight: 700; margin-bottom: 8px; }
+.pricing-price { font-family: var(--font-mono); font-size: 1.7rem; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 14px; font-variant-numeric: tabular-nums; }
+.pricing-desc { font-size: 0.92rem; color: var(--text-2); line-height: var(--lh-body); }
+.pricing-items { list-style: none; margin: 0; padding: 0; }
+.pricing-items li { border-bottom: 1px solid var(--line); }
+.pricing-items li:last-child { border-bottom: none; }
+.pricing-items a { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 11px 0; color: var(--text); font-size: 0.9rem; }
+.pricing-items a:hover span { color: var(--brand); }
+.pricing-items b { font-family: var(--font-mono); font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pricing-note { margin-top: 12px; font-size: 0.8rem; color: var(--text-3); }
+.pricing-link { margin-top: auto; padding-top: 16px; font-size: 0.88rem; font-weight: 700; color: var(--brand); }
+
+/* About プロフィール写真 */
+.about-photo { margin: 0 0 18px; overflow: hidden; border-radius: var(--radius); border: 1px solid var(--line); }
+.about-photo img { display: block; width: 100%; height: auto; }
 .contact-btn:hover span:last-child { transform: translate(3px, -3px); }
 
 .contact-note { margin-top: 22px; font-size: 0.8rem; color: var(--text-3); font-family: var(--font-mono); }
@@ -1074,6 +1110,8 @@ html.js .reveal.visible { opacity: 1; transform: none; }
   .hero-layout { grid-template-columns: 1fr; gap: 44px; }
   .hero-visual { justify-content: flex-start; }
   .hero-card { max-width: 460px; }
+  .pricing-grid { grid-template-columns: 1fr; }
+  .about-photo { max-width: 340px; }
   .about-grid { grid-template-columns: 1fr; gap: 28px; }
   .skills-layout { grid-template-columns: 1fr; gap: 28px; }
   .strengths-grid { grid-template-columns: repeat(2, 1fr); }
